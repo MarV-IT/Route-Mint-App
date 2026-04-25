@@ -5,6 +5,8 @@ import '../../shared/utils/distance_utils.dart';
 import '../../shared/widgets/summary_card.dart';
 import '../trips/models/trip.dart';
 import '../trips/services/trip_service.dart';
+import '../../core/tax/tax_service.dart';
+import '../../core/storage/settings_service.dart';
 
 class ReportsScreen extends StatefulWidget {
   final AppStrings strings;
@@ -34,6 +36,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   Map<String, double> _monthPlatformBreakdown = {};
 
+  final _taxService = TaxService();
+  final _settingsService = SettingsService();
+
+  double _monthTax = 0;
+  double _yearTax = 0;
+  Country _country = Country.usa;
+
   @override
   void initState() {
     super.initState();
@@ -43,6 +52,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Future<void> _loadReports() async {
     final allTrips = await _tripService.loadTrips();
     final now = DateTime.now();
+    final country = await _settingsService.loadCountry();
 
     final monthTrips = allTrips.where((trip) {
       return trip.date.year == now.year && trip.date.month == now.month;
@@ -81,7 +91,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
         yearBusiness += trip.distance;
       }
     }
+    final monthTax =
+       _taxService.calculateTaxFromKm(monthBusiness, country);
 
+    final yearTax =
+       _taxService.calculateTaxFromKm(yearBusiness, country);
+       
     if (!mounted) return;
 
     setState(() {
@@ -92,6 +107,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
       _yearTotalDistance = yearTotal;
       _yearBusinessDistance = yearBusiness;
       _monthPlatformBreakdown = monthBreakdown;
+      _monthTax = monthTax;
+      _yearTax = yearTax;
+      _country = country;
     });
   }
 
@@ -113,6 +131,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
             subtitle:
                 'Business: ${formatDistance(_monthBusinessDistance, widget.unit)} • Trips: ${_monthTrips.length}',
           ),
+
+          const SizedBox(height: 12),
+          SummaryCard(
+            title: 'Tax this month',
+            value: '\$${_monthTax.toStringAsFixed(2)}',
+            subtitle: _country == Country.usa ? 'USA rate' : 'Canada rate',
+          ),
+
           const SizedBox(height: 12),
           SummaryCard(
             title: 'This year',
@@ -120,6 +146,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
             subtitle:
                 'Business: ${formatDistance(_yearBusinessDistance, widget.unit)} • Trips: ${_yearTrips.length}',
           ),
+          const SizedBox(height: 12),
+          SummaryCard(
+            title: 'Tax this year',
+            value: '\$${_yearTax.toStringAsFixed(2)}',
+            subtitle: _country == Country.usa ? 'USA rate' : 'Canada rate',
+          ),
+
           const SizedBox(height: 16),
           Card(
             elevation: 0,
