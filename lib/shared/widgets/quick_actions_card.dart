@@ -3,10 +3,16 @@ import '../../core/localization/app_strings.dart';
 
 class QuickActionsCard extends StatelessWidget {
   final AppStrings strings;
+  final VoidCallback onStartTrip;
+  final VoidCallback onAddManually;
+  final VoidCallback onAddExpense;
 
   const QuickActionsCard({
     super.key,
     required this.strings,
+    required this.onStartTrip,
+    required this.onAddManually,
+    required this.onAddExpense,
   });
 
   @override
@@ -28,17 +34,17 @@ class QuickActionsCard extends StatelessWidget {
               runSpacing: 10,
               children: [
                 FilledButton.icon(
-                  onPressed: () {},
+                  onPressed: onStartTrip,
                   icon: const Icon(Icons.play_arrow),
                   label: Text(strings.startTrip),
                 ),
                 OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: onAddManually,
                   icon: const Icon(Icons.add),
                   label: Text(strings.addManually),
                 ),
                 OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: onAddExpense,
                   icon: const Icon(Icons.receipt_long),
                   label: Text(strings.addExpense),
                 ),

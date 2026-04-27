@@ -1,19 +1,13 @@
-import '../core/storage/settings_service.dart';
-import '../core/tax/tax_service.dart';
 import 'package:flutter/material.dart';
 import '../core/localization/app_strings.dart';
+import '../core/preferences/user_preferences.dart';
+import '../core/preferences/preferences_service.dart';
+import '../features/onboarding/onboarding_screen.dart';
 import 'navigation.dart';
 
 enum AppUnit { kilometers, miles }
 
-enum AppLanguage {
-  english,
-  spanish,
-  french,
-  russian,
-  ukrainian,
-  dari,
-}
+enum AppLanguage { english, spanish, french, russian, ukrainian, dari }
 
 class RouteMintApp extends StatefulWidget {
   const RouteMintApp({super.key});
@@ -23,59 +17,52 @@ class RouteMintApp extends StatefulWidget {
 }
 
 class _RouteMintAppState extends State<RouteMintApp> {
-  AppUnit _unit = AppUnit.kilometers;
-  AppLanguage _selectedLanguage = AppLanguage.english;
-  Country _country = Country.usa;
+  final _prefsService = PreferencesService();
 
-  final _settings = SettingsService();
+  AppLanguage _selectedLanguage = AppLanguage.english;
+
+  UserPreferences? _preferences; // null = still loading from storage
 
   @override
   void initState() {
     super.initState();
-    _loadSettings();
+    _loadPreferences();
   }
 
-  Future<void> _loadSettings() async {
-    final unit = await _settings.loadUnit();
-    final language = await _settings.loadLanguage();
-    final country = await _settings.loadCountry();
-
+  Future<void> _loadPreferences() async {
+    final prefs = await _prefsService.loadPreferences();
     setState(() {
-      _unit = unit;
-      _selectedLanguage = language;
-      _country = country;
+      _preferences = prefs;
+      _selectedLanguage = prefs.language;
     });
   }
 
-  Future<void> _changeUnit(AppUnit? newUnit) async {
-    if (newUnit == null) return;
+  // ─── Handlers ─────────────────────────────────────────────────────────────
 
-    setState(() {
-      _unit = newUnit;
-    });
-
-    await _settings.saveUnit(newUnit);
+  void _changeUnit(AppUnit? newUnit) {
+    if (newUnit == null || _preferences == null) return;
+    final updated = _preferences!.copyWith(unit: newUnit);
+    setState(() => _preferences = updated);
+    _prefsService.savePreferences(updated);
   }
 
-  Future<void> _changeLanguage(AppLanguage? newLanguage) async {
-    if (newLanguage == null) return;
-
+  void _changeLanguage(AppLanguage? newLanguage) {
+    if (newLanguage == null || _preferences == null) return;
+    final updated = _preferences!.copyWith(language: newLanguage);
     setState(() {
+      _preferences = updated;
       _selectedLanguage = newLanguage;
     });
-
-    await _settings.saveLanguage(newLanguage);
+    _prefsService.savePreferences(updated);
   }
 
-  Future<void> _changeCountry(Country? newCountry) async {
-    if (newCountry == null) return;
-
-    setState(() {
-      _country = newCountry;
-    });
-
-    await _settings.saveCountry(newCountry);
+  void _onOnboardingComplete(UserPreferences prefs) {
+    final updated = prefs.copyWith(language: _selectedLanguage);
+    setState(() => _preferences = updated);
+    _prefsService.savePreferences(updated);
   }
+
+  // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -89,15 +76,29 @@ class _RouteMintAppState extends State<RouteMintApp> {
         scaffoldBackgroundColor: const Color(0xFFF6F8F7),
         useMaterial3: true,
       ),
-      home: MainNavigationScreen(
-        unit: _unit,
-        selectedLanguage: _selectedLanguage,
-        country: _country,
-        onUnitChanged: _changeUnit,
-        onLanguageChanged: _changeLanguage,
-        onCountryChanged: _changeCountry,
+      home: _buildHome(strings),
+    );
+  }
+
+  Widget _buildHome(AppStrings strings) {
+    if (_preferences == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (!_preferences!.onboardingCompleted) {
+      return OnboardingScreen(
         strings: strings,
-      ),
+        onComplete: _onOnboardingComplete,
+      );
+    }
+
+    return MainNavigationScreen(
+      unit: _preferences!.unit,
+      preferences: _preferences!,
+      selectedLanguage: _selectedLanguage,
+      onUnitChanged: _changeUnit,
+      onLanguageChanged: _changeLanguage,
+      strings: strings,
     );
   }
 }

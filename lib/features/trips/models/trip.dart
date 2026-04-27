@@ -6,6 +6,10 @@ class Trip {
   final String category;
   final DateTime date;
   final String? platformName;
+  final double parkingExpense;
+  final double tollsExpense;
+  final String? businessPurpose;
+  final String? notes;
 
   const Trip({
     required this.id,
@@ -15,6 +19,10 @@ class Trip {
     required this.category,
     required this.date,
     this.platformName,
+    this.parkingExpense = 0,
+    this.tollsExpense = 0,
+    this.businessPurpose,
+    this.notes,
   });
 
   Map<String, dynamic> toJson() => {
@@ -25,6 +33,10 @@ class Trip {
         'category': category,
         'date': date.toIso8601String(),
         'platformName': platformName,
+        'parkingExpense': parkingExpense,
+        'tollsExpense': tollsExpense,
+        'businessPurpose': businessPurpose,
+        'notes': notes,
       };
 
   factory Trip.fromJson(Map<String, dynamic> json) => Trip(
@@ -35,6 +47,10 @@ class Trip {
         category: json['category'] as String,
         date: DateTime.parse(json['date'] as String),
         platformName: json['platformName'] as String?,
+        parkingExpense: (json['parkingExpense'] as num?)?.toDouble() ?? 0,
+        tollsExpense: (json['tollsExpense'] as num?)?.toDouble() ?? 0,
+        businessPurpose: json['businessPurpose'] as String?,
+        notes: json['notes'] as String?,
       );
 
   Trip copyWith({
@@ -45,6 +61,10 @@ class Trip {
     String? category,
     DateTime? date,
     Object? platformName = _sentinel,
+    double? parkingExpense,
+    double? tollsExpense,
+    Object? businessPurpose = _sentinel,
+    Object? notes = _sentinel,
   }) =>
       Trip(
         id: id ?? this.id,
@@ -56,6 +76,12 @@ class Trip {
         platformName: platformName == _sentinel
             ? this.platformName
             : platformName as String?,
+        parkingExpense: parkingExpense ?? this.parkingExpense,
+        tollsExpense: tollsExpense ?? this.tollsExpense,
+        businessPurpose: businessPurpose == _sentinel
+            ? this.businessPurpose
+            : businessPurpose as String?,
+        notes: notes == _sentinel ? this.notes : notes as String?,
       );
 
   @override

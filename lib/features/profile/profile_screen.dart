@@ -1,40 +1,38 @@
 import 'package:flutter/material.dart';
 import '../../core/localization/app_strings.dart';
-import '../../shared/utils/distance_utils.dart';
-import '../../app/app.dart';
+import '../../core/preferences/user_preferences.dart';
 import '../../core/tax/tax_service.dart';
+import '../../app/app.dart';
 import '../work_mode/work_mode_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   final AppStrings strings;
+  final UserPreferences preferences;
   final AppUnit selectedUnit;
   final AppLanguage selectedLanguage;
-  final Country selectedCountry;
-
   final ValueChanged<AppUnit?> onUnitChanged;
   final ValueChanged<AppLanguage?> onLanguageChanged;
-  final ValueChanged<Country?> onCountryChanged;
 
   const ProfileScreen({
     super.key,
     required this.strings,
+    required this.preferences,
     required this.selectedUnit,
     required this.selectedLanguage,
-    required this.selectedCountry,
     required this.onUnitChanged,
     required this.onLanguageChanged,
-    required this.onCountryChanged,
   });
 
   @override
   Widget build(BuildContext context) {
+    final s = strings;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(strings.profile),
-      ),
+      appBar: AppBar(title: Text(s.profile)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // ── User info ────────────────────────────────────────────────
           const ListTile(
             leading: CircleAvatar(child: Icon(Icons.person)),
             title: Text('March User'),
@@ -42,43 +40,57 @@ class ProfileScreen extends StatelessWidget {
           ),
           const Divider(),
 
+          // ── Country & currency (read-only from preferences) ───────────
+          ListTile(
+            leading: const Icon(Icons.flag_outlined),
+            title: Text(s.countryLabel),
+            subtitle: Text(
+              preferences.country == Country.usa ? s.unitedStates : s.canada,
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.attach_money),
+            title: Text(s.currencyLabel),
+            subtitle: Text(preferences.currencyCode),
+          ),
+          const Divider(),
+
+          // ── Vehicle ───────────────────────────────────────────────────
           ListTile(
             leading: const Icon(Icons.directions_car),
-            title: Text(strings.vehicle),
+            title: Text(s.vehicle),
             subtitle: const Text('Toyota Prius'),
           ),
-
           const SizedBox(height: 12),
 
-          // ─── Units ─────────────────────────────
+          // ── Distance unit ─────────────────────────────────────────────
           DropdownButtonFormField<AppUnit>(
-            value: selectedUnit,
+            initialValue: selectedUnit,
             decoration: InputDecoration(
-              labelText: strings.units,
+              labelText: s.units,
               border: const OutlineInputBorder(),
             ),
             items: [
               DropdownMenuItem(
                 value: AppUnit.kilometers,
-                child: Text(strings.kilometers),
+                child: Text(s.kilometers),
               ),
-              DropdownMenuItem(
-                value: AppUnit.miles,
-                child: Text(strings.miles),
-              ),
+              DropdownMenuItem(value: AppUnit.miles, child: Text(s.miles)),
             ],
             onChanged: onUnitChanged,
           ),
-
           const SizedBox(height: 12),
 
-          // ─── Language ─────────────────────────────
+          // ── Language ──────────────────────────────────────────────────
           DropdownButtonFormField<AppLanguage>(
-            value: selectedLanguage,
+            initialValue: selectedLanguage,
             decoration: InputDecoration(
-              labelText: strings.languageLabel,
+              labelText: s.languageLabel,
               border: const OutlineInputBorder(),
             ),
+            // Language names are in their own native script —
+            // a user who picked the wrong language needs their own
+            // language visible to switch back.
             items: const [
               DropdownMenuItem(
                 value: AppLanguage.english,
@@ -100,56 +112,19 @@ class ProfileScreen extends StatelessWidget {
                 value: AppLanguage.ukrainian,
                 child: Text('Українська'),
               ),
-              DropdownMenuItem(
-                value: AppLanguage.dari,
-                child: Text('Dari'),
-              ),
+              DropdownMenuItem(value: AppLanguage.dari, child: Text('Dari')),
             ],
             onChanged: onLanguageChanged,
           ),
-
           const SizedBox(height: 12),
-
-          // ─── Country (🔥 нове) ─────────────────────────────
-          DropdownButtonFormField<Country>(
-            value: selectedCountry,
-            decoration: const InputDecoration(
-              labelText: 'Country',
-              border: OutlineInputBorder(),
-            ),
-            items: const [
-              DropdownMenuItem(
-                value: Country.usa,
-                child: Text('USA'),
-              ),
-              DropdownMenuItem(
-                value: Country.canada,
-                child: Text('Canada'),
-              ),
-            ],
-            onChanged: onCountryChanged,
-          ),
-
-          const SizedBox(height: 12),
-
-          // ─── Rate preview ─────────────────────────────
-          ListTile(
-            leading: const Icon(Icons.attach_money),
-            title: Text(strings.reimbursementRate),
-            subtitle: Text(
-              selectedCountry == Country.usa
-                  ? '\$0.725 / ${unitLabel(selectedUnit)}'
-                  : '0.73 / km (first 5000) · 0.67 / km',
-            ),
-          ),
 
           const Divider(),
 
-          // ─── Work mode ─────────────────────────────
+          // ── Work Mode ─────────────────────────────────────────────────
           ListTile(
             leading: const Icon(Icons.work_outline),
-            title: Text(strings.workMode),
-            subtitle: Text(strings.workModeDescription),
+            title: Text(s.workMode),
+            subtitle: Text(s.autoClassifyTrips),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(
               context,

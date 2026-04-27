@@ -5,211 +5,194 @@ class AppStrings {
 
   const AppStrings(this.currentLanguage);
 
+  // ─── Navigation ───────────────────────────────────────────────────────────
+
   String get today => _value(
-        en: 'Today',
-        es: 'Hoy',
-        fr: "Aujourd'hui",
-        ru: 'Сегодня',
-        uk: 'Сьогодні',
-        fa: 'امروز',
+        en: 'Today',        es: 'Hoy',             fr: "Aujourd'hui",
+        ru: 'Сегодня',      uk: 'Сьогодні',        fa: 'امروز',
       );
 
   String get trips => _value(
-        en: 'Trips',
-        es: 'Viajes',
-        fr: 'Trajets',
-        ru: 'Поездки',
-        uk: 'Поїздки',
-        fa: 'سفرها',
+        en: 'Trips',        es: 'Viajes',           fr: 'Trajets',
+        ru: 'Поездки',      uk: 'Поїздки',          fa: 'سفرها',
       );
 
   String get add => _value(
-        en: 'Add',
-        es: 'Añadir',
-        fr: 'Ajouter',
-        ru: 'Добавить',
-        uk: 'Додати',
-        fa: 'افزودن',
+        en: 'Add',          es: 'Añadir',           fr: 'Ajouter',
+        ru: 'Добавить',     uk: 'Додати',           fa: 'افزودن',
       );
 
   String get reports => _value(
-        en: 'Reports',
-        es: 'Informes',
-        fr: 'Rapports',
-        ru: 'Отчёты',
-        uk: 'Звіти',
-        fa: 'گزارش‌ها',
+        en: 'Reports',      es: 'Informes',         fr: 'Rapports',
+        ru: 'Отчёты',       uk: 'Звіти',            fa: 'گزارش‌ها',
       );
 
   String get profile => _value(
-        en: 'Profile',
-        es: 'Perfil',
-        fr: 'Profil',
-        ru: 'Профиль',
-        uk: 'Профіль',
-        fa: 'پروفایل',
+        en: 'Profile',      es: 'Perfil',           fr: 'Profil',
+        ru: 'Профиль',      uk: 'Профіль',          fa: 'پروفایل',
       );
 
+  // ─── Today screen ─────────────────────────────────────────────────────────
+
   String get todayDistance => _value(
-        en: 'Today distance',
-        es: 'Distancia de hoy',
-        fr: 'Distance du jour',
-        ru: 'Дистанция за сегодня',
-        uk: 'Дистанція за сьогодні',
-        fa: 'مسافت امروز',
+        en: 'Today distance',       es: 'Distancia de hoy',
+        fr: 'Distance du jour',     ru: 'Дистанция за сегодня',
+        uk: 'Дистанція за сьогодні',fa: 'مسافت امروز',
       );
 
   String get tripsRecorded => _value(
-        en: '3 trips recorded',
-        es: '3 viajes registrados',
-        fr: '3 trajets enregistrés',
-        ru: '3 поездки записаны',
-        uk: 'Записано 3 поїздки',
-        fa: '۳ سفر ثبت شده',
+        en: 'Trips recorded',       es: 'Viajes registrados',
+        fr: 'Trajets enregistrés',  ru: 'Поездок записано',
+        uk: 'Поїздок записано',     fa: 'سفرهای ثبت شده',
       );
 
   String get businessTrips => _value(
-        en: 'Business trips',
-        es: 'Viajes de trabajo',
-        fr: 'Trajets professionnels',
-        ru: 'Рабочие поездки',
-        uk: 'Робочі поїздки',
-        fa: 'سفرهای کاری',
+        en: 'Business trips',       es: 'Viajes de trabajo',
+        fr: 'Trajets professionnels',ru: 'Рабочие поездки',
+        uk: 'Робочі поїздки',       fa: 'سفرهای کاری',
       );
 
   String get tripsNeedReview => _value(
-        en: '2 trips need review',
-        es: '2 viajes necesitan revisión',
-        fr: '2 trajets à vérifier',
-        ru: '2 поездки требуют проверки',
-        uk: '2 поїздки треба перевірити',
-        fa: '۲ سفر نیاز به بررسی دارند',
+        en: '2 trips need review',  es: '2 viajes necesitan revisión',
+        fr: '2 trajets à vérifier', ru: '2 поездки требуют проверки',
+        uk: '2 поїздки треба перевірити', fa: '۲ سفر نیاز به بررسی دارند',
       );
 
   String get quickActions => _value(
-        en: 'Quick actions',
-        es: 'Acciones rápidas',
-        fr: 'Actions rapides',
-        ru: 'Быстрые действия',
-        uk: 'Швидкі дії',
-        fa: 'اقدام‌های سریع',
+        en: 'Quick actions',        es: 'Acciones rápidas',
+        fr: 'Actions rapides',      ru: 'Быстрые действия',
+        uk: 'Швидкі дії',           fa: 'اقدام‌های سریع',
       );
 
   String get startTrip => _value(
-        en: 'Start trip',
-        es: 'Iniciar viaje',
-        fr: 'Démarrer',
-        ru: 'Начать поездку',
-        uk: 'Почати поїздку',
-        fa: 'شروع سفر',
+        en: 'Start trip',           es: 'Iniciar viaje',
+        fr: 'Démarrer',             ru: 'Начать поездку',
+        uk: 'Почати поїздку',       fa: 'شروع سفر',
       );
 
   String get addManually => _value(
-        en: 'Add manually',
-        es: 'Añadir manualmente',
-        fr: 'Ajouter manuellement',
-        ru: 'Добавить вручную',
-        uk: 'Додати вручну',
-        fa: 'افزودن دستی',
+        en: 'Add manually',         es: 'Añadir manualmente',
+        fr: 'Ajouter manuellement', ru: 'Добавить вручную',
+        uk: 'Додати вручну',        fa: 'افزودن دستی',
       );
 
   String get addExpense => _value(
-        en: 'Add expense',
-        es: 'Añadir gasto',
-        fr: 'Ajouter une dépense',
-        ru: 'Добавить расход',
-        uk: 'Додати витрату',
-        fa: 'افزودن هزینه',
+        en: 'Add expense',          es: 'Añadir gasto',
+        fr: 'Ajouter une dépense',  ru: 'Добавить расход',
+        uk: 'Додати витрату',       fa: 'افزودن هزینه',
       );
 
+  // ─── Add trip screen ──────────────────────────────────────────────────────
+
   String get addTrip => _value(
-        en: 'Add Trip',
-        es: 'Añadir viaje',
-        fr: 'Ajouter un trajet',
-        ru: 'Добавить поездку',
-        uk: 'Додати поїздку',
-        fa: 'افزودن سفر',
+        en: 'Add Trip',             es: 'Añadir viaje',
+        fr: 'Ajouter un trajet',    ru: 'Добавить поездку',
+        uk: 'Додати поїздку',       fa: 'افزودن سفر',
       );
 
   String get from => _value(
-        en: 'From',
-        es: 'Desde',
-        fr: 'De',
-        ru: 'Откуда',
-        uk: 'Звідки',
-        fa: 'از',
+        en: 'From',   es: 'Desde',  fr: 'De',
+        ru: 'Откуда', uk: 'Звідки', fa: 'از',
       );
 
   String get to => _value(
-        en: 'To',
-        es: 'Hasta',
-        fr: 'Vers',
-        ru: 'Куда',
-        uk: 'Куди',
-        fa: 'به',
+        en: 'To',   es: 'Hasta',  fr: 'Vers',
+        ru: 'Куда', uk: 'Куди',   fa: 'به',
       );
 
   String get distance => _value(
-        en: 'Distance',
-        es: 'Distancia',
-        fr: 'Distance',
-        ru: 'Дистанция',
-        uk: 'Дистанція',
-        fa: 'مسافت',
+        en: 'Distance',     es: 'Distancia',    fr: 'Distance',
+        ru: 'Дистанція',    uk: 'Дистанція',    fa: 'مسافت',
       );
 
   String get category => _value(
-        en: 'Category',
-        es: 'Categoría',
-        fr: 'Catégorie',
-        ru: 'Категория',
-        uk: 'Категорія',
-        fa: 'دسته‌بندی',
+        en: 'Category',     es: 'Categoría',    fr: 'Catégorie',
+        ru: 'Категория',    uk: 'Категорія',    fa: 'دسته‌بندی',
       );
 
   String get business => _value(
-        en: 'Business',
-        es: 'Trabajo',
-        fr: 'Professionnel',
-        ru: 'Рабочая',
-        uk: 'Робоча',
-        fa: 'کاری',
+        en: 'Business',     es: 'Trabajo',      fr: 'Professionnel',
+        ru: 'Рабочая',      uk: 'Робоча',       fa: 'کاری',
       );
 
   String get personal => _value(
-        en: 'Personal',
-        es: 'Personal',
-        fr: 'Personnel',
-        ru: 'Личная',
-        uk: 'Особиста',
-        fa: 'شخصی',
+        en: 'Personal',     es: 'Personal',     fr: 'Personnel',
+        ru: 'Личная',       uk: 'Особиста',     fa: 'شخصی',
       );
 
-  String get saveTrip => _value(
-        en: 'Save Trip',
-        es: 'Guardar viaje',
-        fr: 'Enregistrer',
-        ru: 'Сохранить поездку',
-        uk: 'Зберегти поїздку',
-        fa: 'ذخیره سفر',
+  String get saveTripButton => _value(
+        en: 'Save Trip',             es: 'Guardar viaje',
+        fr: 'Enregistrer le trajet', ru: 'Сохранить поездку',
+        uk: 'Зберегти поїздку',      fa: 'ذخیره سفر',
       );
+
+  String get tripSaved => _value(
+        en: 'Trip saved',            es: 'Viaje guardado',
+        fr: 'Trajet enregistré',     ru: 'Поездка сохранена',
+        uk: 'Поїздку збережено',     fa: 'سفر ذخیره شد',
+      );
+
+  String get saveTrip => tripSaved;
+
+  String get businessPurpose => _value(
+        en: 'Business purpose',     es: 'Propósito de negocio',
+        fr: 'Objet professionnel',  ru: 'Цель поездки',
+        uk: 'Мета поїздки',         fa: 'هدف تجاری',
+      );
+
+  String get notes => _value(
+        en: 'Notes',        es: 'Notas',        fr: 'Notes',
+        ru: 'Заметки',      uk: 'Нотатки',      fa: 'یادداشت‌ها',
+      );
+
+  // ─── Reports screen ───────────────────────────────────────────────────────
 
   String get thisMonth => _value(
-        en: 'This month',
-        es: 'Este mes',
-        fr: 'Ce mois-ci',
-        ru: 'Этот месяц',
-        uk: 'Цього місяця',
-        fa: 'این ماه',
+        en: 'This month',   es: 'Este mes',     fr: 'Ce mois-ci',
+        ru: 'Этот месяц',   uk: 'Цього місяця', fa: 'این ماه',
+      );
+
+  String get lastMonth => _value(
+        en: 'Last month',   es: 'Mes pasado',   fr: 'Mois dernier',
+        ru: 'Прошлый месяц', uk: 'Минулий місяць', fa: 'ماه گذشته',
+      );
+
+  String get customRange => _value(
+        en: 'Custom',               es: 'Personalizado',
+        fr: 'Personnalisé',         ru: 'Свой период',
+        uk: 'Власний',              fa: 'سفارشی',
+      );
+
+  String get reportPeriod => _value(
+        en: 'Report period',        es: 'Período del informe',
+        fr: 'Période du rapport',   ru: 'Период отчёта',
+        uk: 'Період звіту',         fa: 'دوره گزارش',
+      );
+
+  String get selectDateRange => _value(
+        en: 'Select date range',    es: 'Seleccionar período',
+        fr: 'Sélectionner la période', ru: 'Выбрать период',
+        uk: 'Вибрати діапазон дат', fa: 'انتخاب بازه تاریخ',
+      );
+
+  String get periodLabel => _value(
+        en: 'Period',   es: 'Período', fr: 'Période',
+        ru: 'Период',   uk: 'Період',  fa: 'دوره',
+      );
+
+  String get fromDate => _value(
+        en: 'From',     es: 'Desde',    fr: 'Du',
+        ru: 'С',        uk: 'З',        fa: 'از تاریخ',
+      );
+
+  String get toDate => _value(
+        en: 'To',       es: 'Hasta',    fr: 'Au',
+        ru: 'По',       uk: 'По',       fa: 'تا تاریخ',
       );
 
   String get expenses => _value(
-        en: 'Expenses',
-        es: 'Gastos',
-        fr: 'Dépenses',
-        ru: 'Расходы',
-        uk: 'Витрати',
-        fa: 'هزینه‌ها',
+        en: 'Expenses',     es: 'Gastos',       fr: 'Dépenses',
+        ru: 'Расходы',      uk: 'Витрати',      fa: 'هزینه‌ها',
       );
 
   String get fuelParkingTolls => _value(
@@ -221,243 +204,447 @@ class AppStrings {
         fa: 'سوخت، پارکینگ، عوارض',
       );
 
+  String get exportReport => _value(
+        en: 'Export Report',            es: 'Exportar informe',
+        fr: 'Exporter le rapport',      ru: 'Экспорт отчёта',
+        uk: 'Експорт звіту',            fa: 'خروجی گزارش',
+      );
+
+  String get exportSimplePdf => _value(
+        en: 'Export Simple PDF',        es: 'Exportar PDF simple',
+        fr: 'Exporter PDF simple',      ru: 'Экспорт простого PDF',
+        uk: 'Експорт простого PDF',     fa: 'خروجی PDF ساده',
+      );
+
+  String get exportDetailedPdf => _value(
+        en: 'Export Detailed PDF',      es: 'Exportar PDF detallado',
+        fr: 'Exporter PDF détaillé',    ru: 'Экспорт подробного PDF',
+        uk: 'Експорт детального PDF',   fa: 'خروجی PDF مفصل',
+      );
+
+  String get accountantFriendlyReport => _value(
+        en: 'Accountant-friendly mileage and expense report.',
+        es: 'Informe de kilometraje y gastos para contadores.',
+        fr: 'Rapport de kilométrage et de dépenses pour comptables.',
+        ru: 'Отчёт о пробеге и расходах для бухгалтера.',
+        uk: 'Звіт про пробіг і витрати для бухгалтера.',
+        fa: 'گزارش کیلومتراژ و هزینه برای حسابدار.',
+      );
+
+  String get exporting => _value(
+        en: 'Exporting…',      es: 'Exportando…',
+        fr: 'Exportation…',    ru: 'Экспорт…',
+        uk: 'Експортування…',  fa: 'در حال خروجی…',
+      );
+
+  String get exportFailed => _value(
+        en: 'Export failed',        es: 'Error al exportar',
+        fr: "Échec de l'export",    ru: 'Ошибка экспорта',
+        uk: 'Помилка експорту',     fa: 'خروجی ناموفق',
+      );
+
+  // ─── Profile screen ───────────────────────────────────────────────────────
+
   String get vehicle => _value(
-        en: 'Vehicle',
-        es: 'Vehículo',
-        fr: 'Véhicule',
-        ru: 'Автомобиль',
-        uk: 'Авто',
-        fa: 'وسیله نقلیه',
+        en: 'Vehicle',      es: 'Vehículo',     fr: 'Véhicule',
+        ru: 'Автомобиль',   uk: 'Авто',         fa: 'وسیله نقلیه',
       );
 
   String get units => _value(
-        en: 'Units',
-        es: 'Unidades',
-        fr: 'Unités',
-        ru: 'Единицы',
-        uk: 'Одиниці',
-        fa: 'واحدها',
+        en: 'Units',        es: 'Unidades',     fr: 'Unités',
+        ru: 'Единицы',      uk: 'Одиниці',      fa: 'واحدها',
       );
 
   String get kilometers => _value(
-        en: 'Kilometers',
-        es: 'Kilómetros',
-        fr: 'Kilomètres',
-        ru: 'Километры',
-        uk: 'Кілометри',
-        fa: 'کیلومتر',
+        en: 'Kilometers',   es: 'Kilómetros',   fr: 'Kilomètres',
+        ru: 'Километры',    uk: 'Кілометри',    fa: 'کیلومتر',
       );
 
   String get miles => _value(
-        en: 'Miles',
-        es: 'Millas',
-        fr: 'Miles',
-        ru: 'Мили',
-        uk: 'Милі',
-        fa: 'مایل',
+        en: 'Miles',        es: 'Millas',       fr: 'Miles',
+        ru: 'Мили',         uk: 'Милі',         fa: 'مایل',
       );
 
   String get languageLabel => _value(
-        en: 'Language',
-        es: 'Idioma',
-        fr: 'Langue',
-        ru: 'Язык',
-        uk: 'Мова',
-        fa: 'زبان',
+        en: 'Language',     es: 'Idioma',       fr: 'Langue',
+        ru: 'Язык',         uk: 'Мова',         fa: 'زبان',
       );
 
   String get reimbursementRate => _value(
-        en: 'Reimbursement rate',
-        es: 'Tarifa de reembolso',
-        fr: 'Taux de remboursement',
-        ru: 'Ставка компенсации',
-        uk: 'Ставка компенсації',
-        fa: 'نرخ بازپرداخت',
+        en: 'Reimbursement rate',       es: 'Tarifa de reembolso',
+        fr: 'Taux de remboursement',    ru: 'Ставка компенсации',
+        uk: 'Ставка компенсації',       fa: 'نرخ بازپرداخت',
+      );
+
+  String get currencyLabel => _value(
+        en: 'Currency',     es: 'Moneda',       fr: 'Devise',
+        ru: 'Валюта',       uk: 'Валюта',       fa: 'ارز',
+      );
+
+  String get autoClassifyTrips => _value(
+        en: 'Auto-classify trips by shift',
+        es: 'Clasificar viajes automáticamente',
+        fr: 'Classer les trajets automatiquement',
+        ru: 'Авто-классификация поездок по смене',
+        uk: 'Авто-класифікація поїздок за зміною',
+        fa: 'طبقه‌بندی خودکار سفرها بر اساس شیفت',
+      );
+
+  // ─── Work Mode screen ─────────────────────────────────────────────────────
+
+  String get workMode => _value(
+        en: 'Work Mode',            es: 'Modo trabajo',
+        fr: 'Mode travail',         ru: 'Рабочий режим',
+        uk: 'Робочий режим',        fa: 'حالت کاری',
+      );
+
+  String get enableWorkMode => _value(
+        en: 'Enable Work Mode',     es: 'Activar modo trabajo',
+        fr: 'Activer mode travail', ru: 'Включить рабочий режим',
+        uk: 'Увімкнути робочий режим', fa: 'فعال کردن حالت کاری',
+      );
+
+  String get tripsDuringShiftsAutoClassified => _value(
+        en: 'Trips during shifts are auto-classified',
+        es: 'Los viajes durante los turnos se clasifican automáticamente',
+        fr: 'Les trajets pendant les quarts sont classés automatiquement',
+        ru: 'Поездки во время смен классифицируются автоматически',
+        uk: 'Поїздки під час змін класифікуються автоматично',
+        fa: 'سفرها در طول شیفت به صورت خودکار طبقه‌بندی می‌شوند',
+      );
+
+  String get allTripsClassifiedManually => _value(
+        en: 'All trips will be classified manually',
+        es: 'Todos los viajes se clasificarán manualmente',
+        fr: 'Tous les trajets seront classés manuellement',
+        ru: 'Все поездки будут классифицированы вручную',
+        uk: 'Усі поїздки будуть класифіковані вручну',
+        fa: 'همه سفرها به صورت دستی طبقه‌بندی می‌شوند',
       );
 
   String get workShifts => _value(
-        en: 'Work Shifts',
-        es: 'Turnos de trabajo',
-        fr: 'Créneaux de travail',
-        ru: 'Рабочие смены',
-        uk: 'Робочі зміни',
-        fa: 'شیفت‌های کاری',
+        en: 'Work Shifts',          es: 'Turnos de trabajo',
+        fr: 'Quarts de travail',    ru: 'Рабочие смены',
+        uk: 'Робочі зміни',         fa: 'شیفت‌های کاری',
       );
 
-  String get addShift => _value(
-        en: 'Add Shift',
-        es: 'Añadir turno',
-        fr: 'Ajouter un créneau',
-        ru: 'Добавить смену',
-        uk: 'Додати зміну',
-        fa: 'افزودن شیفت',
+  /// Used in the counter label: "3 configured"
+  String get configured => _value(
+        en: 'configured',       es: 'configurados',
+        fr: 'configurés',       ru: 'настроено',
+        uk: 'налаштовано',      fa: 'پیکربندی شده',
       );
 
   String get noShiftsConfigured => _value(
         en: 'No shifts configured',
         es: 'No hay turnos configurados',
-        fr: 'Aucun créneau configuré',
-        ru: 'Смены не настроены',
-        uk: 'Зміни не налаштовані',
-        fa: 'هیچ شیفتی تنظیم نشده',
+        fr: 'Aucun quart configuré',
+        ru: 'Нет настроенных смен',
+        uk: 'Немає налаштованих змін',
+        fa: 'هیچ شیفتی پیکربندی نشده',
       );
 
   String get addShiftToEnableAutoClassification => _value(
         en: 'Add a shift to enable auto-classification',
         es: 'Añade un turno para activar la clasificación automática',
-        fr: 'Ajoutez un créneau pour activer la classification automatique',
-        ru: 'Добавьте смену, чтобы включить автоклассификацию',
-        uk: 'Додайте зміну, щоб увімкнути автоматичну класифікацію',
-        fa: 'برای فعال‌سازی دسته‌بندی خودکار یک شیفت اضافه کنید',
+        fr: 'Ajoutez un quart pour activer la classification automatique',
+        ru: 'Добавьте смену для включения авто-классификации',
+        uk: 'Додайте зміну для увімкнення авто-класифікації',
+        fa: 'یک شیفت اضافه کنید تا طبقه‌بندی خودکار فعال شود',
       );
 
-  String get enableWorkMode => _value(
-        en: 'Enable Work Mode',
-        es: 'Activar modo de trabajo',
-        fr: 'Activer le mode de travail',
-        ru: 'Включить рабочий режим',
-        uk: 'Увімкнути робочий режим',
-        fa: 'فعال‌سازی حالت کاری',
+  String get removeShift => _value(
+        en: 'Remove shift',         es: 'Eliminar turno',
+        fr: 'Supprimer le quart',   ru: 'Удалить смену',
+        uk: 'Видалити зміну',       fa: 'حذف شیفت',
       );
 
-  String get workModeEnabledDescription => _value(
-        en: 'Trips during shifts are auto-classified',
-        es: 'Los viajes durante los turnos se clasifican automáticamente',
-        fr: 'Les trajets pendant les créneaux sont classés automatiquement',
-        ru: 'Поездки во время смен классифицируются автоматически',
-        uk: 'Поїздки під час змін класифікуються автоматично',
-        fa: 'سفرها در زمان شیفت به‌صورت خودکار دسته‌بندی می‌شوند',
+  String get addShift => _value(
+        en: 'Add Shift',            es: 'Añadir turno',
+        fr: 'Ajouter un quart',     ru: 'Добавить смену',
+        uk: 'Додати зміну',         fa: 'افزودن شیفت',
       );
 
-  String get workModeDisabledDescription => _value(
-        en: 'All trips will be classified manually',
-        es: 'Todos los viajes se clasificarán manualmente',
-        fr: 'Tous les trajets seront classés manuellement',
-        ru: 'Все поездки будут классифицироваться вручную',
-        uk: 'Усі поїздки класифікуватимуться вручну',
-        fa: 'همه سفرها به‌صورت دستی دسته‌بندی می‌شوند',
+  String get addWorkShift => _value(
+        en: 'Add Work Shift',       es: 'Añadir turno de trabajo',
+        fr: 'Ajouter un quart de travail', ru: 'Добавить рабочую смену',
+        uk: 'Додати робочу зміну',  fa: 'افزودن شیفت کاری',
       );
 
   String get platform => _value(
-        en: 'Platform',
-        es: 'Plataforma',
-        fr: 'Plateforme',
-        ru: 'Платформа',
-        uk: 'Платформа',
-        fa: 'پلتفرم',
-      );
-
-  String get shiftHours => _value(
-        en: 'Shift hours',
-        es: 'Horas del turno',
-        fr: 'Heures du créneau',
-        ru: 'Часы смены',
-        uk: 'Години зміни',
-        fa: 'ساعات شیفت',
-      );
-
-  String get start => _value(
-        en: 'Start',
-        es: 'Inicio',
-        fr: 'Début',
-        ru: 'Начало',
-        uk: 'Початок',
-        fa: 'شروع',
-      );
-
-  String get end => _value(
-        en: 'End',
-        es: 'Fin',
-        fr: 'Fin',
-        ru: 'Конец',
-        uk: 'Кінець',
-        fa: 'پایان',
-      );
-
-  String get saveShift => _value(
-        en: 'Save Shift',
-        es: 'Guardar turno',
-        fr: 'Enregistrer le créneau',
-        ru: 'Сохранить смену',
-        uk: 'Зберегти зміну',
-        fa: 'ذخیره شیفت',
-      );
-
-  String get customPlatform => _value(
-        en: 'Custom platform',
-        es: 'Plataforma personalizada',
-        fr: 'Plateforme personnalisée',
-        ru: 'Своя платформа',
-        uk: 'Власна платформа',
-        fa: 'پلتفرم سفارشی',
+        en: 'Platform',     es: 'Plataforma',   fr: 'Plateforme',
+        ru: 'Платформа',    uk: 'Платформа',    fa: 'پلتفرم',
       );
 
   String get chooseFromPresets => _value(
-        en: 'Choose from presets',
-        es: 'Elegir de la lista',
-        fr: 'Choisir parmi les options',
-        ru: 'Выбрать из списка',
-        uk: 'Вибрати зі списку',
-        fa: 'انتخاب از فهرست',
+        en: '← Choose from presets',
+        es: '← Elegir de opciones',
+        fr: '← Choisir parmi les options',
+        ru: '← Выбрать из вариантов',
+        uk: '← Обрати з варіантів',
+        fa: '← انتخاب از پیش‌تنظیمات',
       );
 
-  String get enterPlatformName => _value(
-        en: 'Enter platform name',
-        es: 'Introduce el nombre de la plataforma',
-        fr: 'Entrez le nom de la plateforme',
-        ru: 'Введите название платформы',
-        uk: 'Введіть назву платформи',
-        fa: 'نام پلتفرم را وارد کنید',
+  String get customPlatform => _value(
+        en: '+ Custom platform',        es: '+ Plataforma personalizada',
+        fr: '+ Plateforme personnalisée',ru: '+ Своя платформа',
+        uk: '+ Власна платформа',        fa: '+ پلتفرم سفارشی',
       );
 
-  String get sameStartEndTimeError => _value(
-        en: 'Start and end time cannot be the same',
-        es: 'La hora de inicio y fin no pueden ser iguales',
-        fr: 'L’heure de début et de fin ne peuvent pas être identiques',
-        ru: 'Время начала и конца не может совпадать',
-        uk: 'Час початку і завершення не може збігатися',
-        fa: 'زمان شروع و پایان نمی‌تواند یکسان باشد',
+  String get shiftHours => _value(
+        en: 'Shift hours',          es: 'Horas de turno',
+        fr: 'Heures de quart',      ru: 'Часы смены',
+        uk: 'Години зміни',         fa: 'ساعات شیفت',
       );
+
+  String get start => _value(
+        en: 'Start',    es: 'Inicio',   fr: 'Début',
+        ru: 'Начало',   uk: 'Початок',  fa: 'شروع',
+      );
+
+  String get end => _value(
+        en: 'End',      es: 'Fin',      fr: 'Fin',
+        ru: 'Конец',    uk: 'Кінець',   fa: 'پایان',
+      );
+
+  String get expensesOptional => _value(
+        en: 'Expenses (optional)',       es: 'Gastos (opcional)',
+        fr: 'Dépenses (facultatif)',     ru: 'Расходы (необязательно)',
+        uk: 'Витрати (необов\'язково)',  fa: 'هزینه‌ها (اختیاری)',
+      );
+
+  String get saveShift => _value(
+        en: 'Save Shift',           es: 'Guardar turno',
+        fr: 'Enregistrer le quart', ru: 'Сохранить смену',
+        uk: 'Зберегти зміну',       fa: 'ذخیره شیفت',
+      );
+
+  String get workModeActiveTripBusiness => _value(
+        en: 'Work Mode is active. This trip will be saved as Business.',
+        es: 'Modo trabajo activo. Este viaje se guardará como Trabajo.',
+        fr: 'Mode travail actif. Ce trajet sera enregistré comme Professionnel.',
+        ru: 'Рабочий режим активен. Поездка будет сохранена как Рабочая.',
+        uk: 'Робочий режим активний. Поїздка буде збережена як Робоча.',
+        fa: 'حالت کاری فعال است. این سفر به عنوان کاری ذخیره خواهد شد.',
+      );
+
+  String get workModeOverridesCategory => _value(
+        en: 'Work Mode overrides your category selection.',
+        es: 'El modo trabajo reemplaza tu selección de categoría.',
+        fr: 'Le mode travail remplace votre sélection de catégorie.',
+        ru: 'Рабочий режим заменяет выбранную категорию.',
+        uk: 'Робочий режим замінює обрану категорію.',
+        fa: 'حالت کاری انتخاب دسته‌بندی شما را نادیده می‌گیرد.',
+      );
+
+  // ─── Shared / common ──────────────────────────────────────────────────────
+
+  String get fuel => _value(
+        en: 'Fuel',         es: 'Combustible',  fr: 'Carburant',
+        ru: 'Топливо',      uk: 'Пальне',       fa: 'سوخت',
+      );
+
+  String get parking => _value(
+        en: 'Parking',      es: 'Estacionamiento', fr: 'Stationnement',
+        ru: 'Парковка',     uk: 'Паркування',      fa: 'پارکینگ',
+      );
+
+  String get tolls => _value(
+        en: 'Tolls',                es: 'Peajes',
+        fr: 'Péages',               ru: 'Платные дороги',
+        uk: 'Платні дороги',        fa: 'عوارض',
+      );
+
+  String get totalExpenses => _value(
+        en: 'Total expenses',       es: 'Gastos totales',
+        fr: 'Dépenses totales',     ru: 'Итого расходов',
+        uk: 'Загальні витрати',     fa: 'مجموع هزینه‌ها',
+      );
+
+  String get optional => _value(
+        en: 'optional',         es: 'opcional',
+        fr: 'facultatif',       ru: 'необязательно',
+        uk: "необов'язково",    fa: 'اختیاری',
+      );
+
+
+  // ─── Onboarding ───────────────────────────────────────────────────────────
+
+  String get welcomeToRouteMint => _value(
+        en: 'Welcome to Route Mint',
+        es: 'Bienvenido a Route Mint',
+        fr: 'Bienvenue sur Route Mint',
+        ru: 'Добро пожаловать в Route Mint',
+        uk: 'Ласкаво просимо до Route Mint',
+        fa: 'به Route Mint خوش آمدید',
+      );
+
+  String get chooseYourCountry => _value(
+        en: 'Choose your country',
+        es: 'Elige tu país',
+        fr: 'Choisissez votre pays',
+        ru: 'Выберите страну',
+        uk: 'Оберіть країну',
+        fa: 'کشور خود را انتخاب کنید',
+      );
+
+  String get unitedStates => _value(
+        en: 'United States',
+        es: 'Estados Unidos',
+        fr: 'États-Unis',
+        ru: 'США',
+        uk: 'США',
+        fa: 'ایالات متحده',
+      );
+
+  String get canada => _value(
+        en: 'Canada',
+        es: 'Canadá',
+        fr: 'Canada',
+        ru: 'Канада',
+        uk: 'Канада',
+        fa: 'کانادا',
+      );
+
+  String get chooseDistanceUnit => _value(
+        en: 'Choose distance unit',
+        es: 'Elige la unidad de distancia',
+        fr: "Choisissez l'unité de distance",
+        ru: 'Выберите единицу расстояния',
+        uk: 'Оберіть одиницю відстані',
+        fa: 'واحد مسافت را انتخاب کنید',
+      );
+
+  String get addYourFirstShift => _value(
+        en: 'Add your first shift',
+        es: 'Añade tu primer turno',
+        fr: 'Ajoutez votre premier quart',
+        ru: 'Добавьте первую смену',
+        uk: 'Додайте першу зміну',
+        fa: 'اولین شیفت خود را اضافه کنید',
+      );
+
+  String get addShiftDescription => _value(
+        en: 'Set up your work schedule to auto-classify trips.',
+        es: 'Configura tu horario de trabajo para clasificar viajes automáticamente.',
+        fr: 'Configurez votre horaire pour classer les trajets automatiquement.',
+        ru: 'Настройте расписание для автоматической классификации поездок.',
+        uk: 'Налаштуйте розклад для автоматичної класифікації поїздок.',
+        fa: 'برنامه کاری خود را تنظیم کنید تا سفرها به‌طور خودکار طبقه‌بندی شوند.',
+      );
+
+  String get skipForNow => _value(
+        en: 'Skip for now',
+        es: 'Omitir por ahora',
+        fr: "Ignorer pour l'instant",
+        ru: 'Пропустить',
+        uk: 'Пропустити',
+        fa: 'فعلاً رد کنید',
+      );
+
+  String get next => _value(
+        en: 'Next',
+        es: 'Siguiente',
+        fr: 'Suivant',
+        ru: 'Далее',
+        uk: 'Далі',
+        fa: 'بعدی',
+      );
+
+  String get getStarted => _value(
+        en: 'Get Started',
+        es: 'Comenzar',
+        fr: 'Commencer',
+        ru: 'Начать',
+        uk: 'Розпочати',
+        fa: 'شروع کنید',
+      );
+
+  String get countryLabel => _value(
+        en: 'Country',
+        es: 'País',
+        fr: 'Pays',
+        ru: 'Страна',
+        uk: 'Країна',
+        fa: 'کشور',
+      );
+
+  String get usdCurrency => _value(
+        en: 'USD – US Dollar',
+        es: 'USD – Dólar estadounidense',
+        fr: 'USD – Dollar américain',
+        ru: 'USD – Доллар США',
+        uk: 'USD – Долар США',
+        fa: 'USD – دلار آمریکا',
+      );
+
+  String get recommendedByCountry => _value(
+        en: 'Recommended based on your country. You can change this anytime.',
+        es: 'Recomendado según tu país. Puedes cambiarlo en cualquier momento.',
+        fr: 'Recommandé selon votre pays. Vous pouvez le modifier à tout moment.',
+        ru: 'Рекомендуется для вашей страны. Вы можете изменить это в любое время.',
+        uk: 'Рекомендовано для вашої країни. Ви можете змінити це будь-коли.',
+        fa: 'بر اساس کشور شما توصیه می‌شود. می‌توانید آن را هر زمان تغییر دهید.',
+      );
+
+  String get cadCurrency => _value(
+        en: 'CAD – Canadian Dollar',
+        es: 'CAD – Dólar canadiense',
+        fr: 'CAD – Dollar canadien',
+        ru: 'CAD – Канадский доллар',
+        uk: 'CAD – Канадський долар',
+        fa: 'CAD – دلار کانادا',
+      );
+
+  String get usaRate => _value(
+        en: 'USA rate',       es: 'Tasa EE.UU.',
+        fr: 'Taux USA',       ru: 'Ставка США',
+        uk: 'Ставка США',     fa: 'نرخ آمریکا',
+      );
+
+  String get canadaRate => _value(
+        en: 'Canada rate',    es: 'Tasa Canadá',
+        fr: 'Taux Canada',    ru: 'Ставка Канады',
+        uk: 'Ставка Канади',  fa: 'نرخ کانادا',
+      );
+
+  String get tripsLabel => _value(
+        en: 'trips',          es: 'viajes',
+        fr: 'trajets',        ru: 'поездок',
+        uk: 'поїздок',        fa: 'سفر',
+      );
+
+  String get taxSavingsToday => _value(
+        en: 'Tax savings today',             es: 'Ahorro fiscal hoy',
+        fr: "Économies fiscales aujourd'hui", ru: 'Налоговая экономия сегодня',
+        uk: 'Податкова економія сьогодні',   fa: 'صرفه‌جویی مالیاتی امروز',
+      );
+
+  String get errorLoadingTrips => _value(
+        en: 'Error loading trips',           es: 'Error al cargar viajes',
+        fr: 'Erreur de chargement',          ru: 'Ошибка загрузки поездок',
+        uk: 'Помилка завантаження поїздок',  fa: 'خطا در بارگذاری سفرها',
+      );
+
+  String get noTripsYet => _value(
+        en: 'No trips yet',                  es: 'Sin viajes aún',
+        fr: "Aucun trajet pour l'instant",   ru: 'Поездок пока нет',
+        uk: 'Поїздок ще немає',              fa: 'هنوز سفری وجود ندارد',
+      );
+
+  // ─── Internal ─────────────────────────────────────────────────────────────
 
   String _value({
-    required String en,
-    required String es,
-    required String fr,
-    required String ru,
-    required String uk,
-    required String fa,
+    required String en, required String es, required String fr,
+    required String ru, required String uk, required String fa,
   }) {
     switch (currentLanguage) {
-      case AppLanguage.english:
-        return en;
-      case AppLanguage.spanish:
-        return es;
-      case AppLanguage.french:
-        return fr;
-      case AppLanguage.russian:
-        return ru;
-      case AppLanguage.ukrainian:
-        return uk;
-      case AppLanguage.dari:
-        return fa;
+      case AppLanguage.english:   return en;
+      case AppLanguage.spanish:   return es;
+      case AppLanguage.french:    return fr;
+      case AppLanguage.russian:   return ru;
+      case AppLanguage.ukrainian: return uk;
+      case AppLanguage.dari:      return fa;
     }
   }
-
-  String get workMode => _value(
-    en: 'Work Mode',
-    es: 'Modo de trabajo',
-    fr: 'Mode de travail',
-    ru: 'Рабочий режим',
-    uk: 'Робочий режим',
-    fa: 'حالت کاری',
-  );
-
-  String get workModeDescription => _value(
-    en: 'Auto-classify trips by shift',
-    es: 'Clasificación automática por turno',
-    fr: 'Classification automatique par horaire',
-    ru: 'Авто-классификация поездок по сменам',
-    uk: 'Автоматична класифікація поїздок за змінами',
-    fa: 'دسته‌بندی خودکار سفرها بر اساس شیفت',
-  );
 }

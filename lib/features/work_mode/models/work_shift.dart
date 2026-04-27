@@ -6,6 +6,9 @@ class WorkShift {
   final int startMinute;
   final int endHour;
   final int endMinute;
+  final double fuelExpense;
+  final double parkingExpense;
+  final double tollsExpense;
 
   const WorkShift({
     required this.id,
@@ -15,10 +18,15 @@ class WorkShift {
     required this.startMinute,
     required this.endHour,
     required this.endMinute,
+    this.fuelExpense = 0,
+    this.parkingExpense = 0,
+    this.tollsExpense = 0,
   });
 
-  factory WorkShift.createDefault() => WorkShift(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+  double get totalExpenses => fuelExpense + parkingExpense + tollsExpense;
+
+  factory WorkShift.createDefault() => const WorkShift(
+        id: 'default',
         platformName: 'Uber',
         isCustomPlatform: false,
         startHour: 9,
@@ -35,6 +43,9 @@ class WorkShift {
         'startMinute': startMinute,
         'endHour': endHour,
         'endMinute': endMinute,
+        'fuelExpense': fuelExpense,
+        'parkingExpense': parkingExpense,
+        'tollsExpense': tollsExpense,
       };
 
   factory WorkShift.fromJson(Map<String, dynamic> json) => WorkShift(
@@ -45,6 +56,9 @@ class WorkShift {
         startMinute: json['startMinute'] as int,
         endHour: json['endHour'] as int,
         endMinute: json['endMinute'] as int,
+        fuelExpense: (json['fuelExpense'] as num? ?? 0).toDouble(),
+        parkingExpense: (json['parkingExpense'] as num? ?? 0).toDouble(),
+        tollsExpense: (json['tollsExpense'] as num? ?? 0).toDouble(),
       );
 
   WorkShift copyWith({
@@ -55,6 +69,9 @@ class WorkShift {
     int? startMinute,
     int? endHour,
     int? endMinute,
+    double? fuelExpense,
+    double? parkingExpense,
+    double? tollsExpense,
   }) =>
       WorkShift(
         id: id ?? this.id,
@@ -64,6 +81,9 @@ class WorkShift {
         startMinute: startMinute ?? this.startMinute,
         endHour: endHour ?? this.endHour,
         endMinute: endMinute ?? this.endMinute,
+        fuelExpense: fuelExpense ?? this.fuelExpense,
+        parkingExpense: parkingExpense ?? this.parkingExpense,
+        tollsExpense: tollsExpense ?? this.tollsExpense,
       );
 
   @override
@@ -71,7 +91,8 @@ class WorkShift {
       'WorkShift(id: $id, platformName: $platformName, '
       'isCustomPlatform: $isCustomPlatform, '
       'start: $startHour:${startMinute.toString().padLeft(2, '0')}, '
-      'end: $endHour:${endMinute.toString().padLeft(2, '0')})';
+      'end: $endHour:${endMinute.toString().padLeft(2, '0')}, '
+      'totalExpenses: $totalExpenses)';
 
   @override
   bool operator ==(Object other) =>

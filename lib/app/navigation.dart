@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/localization/app_strings.dart';
-import '../core/tax/tax_service.dart';
+import '../core/preferences/user_preferences.dart';
 import '../features/today/today_screen.dart';
 import '../features/trips/trips_screen.dart';
 import '../features/add_trip/add_trip_screen.dart';
@@ -10,23 +10,19 @@ import 'app.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final AppUnit unit;
+  final UserPreferences preferences;
   final AppLanguage selectedLanguage;
-  final Country country;
-
   final ValueChanged<AppUnit?> onUnitChanged;
   final ValueChanged<AppLanguage?> onLanguageChanged;
-  final ValueChanged<Country?> onCountryChanged;
-
   final AppStrings strings;
 
   const MainNavigationScreen({
     super.key,
     required this.unit,
+    required this.preferences,
     required this.selectedLanguage,
-    required this.country,
     required this.onUnitChanged,
     required this.onLanguageChanged,
-    required this.onCountryChanged,
     required this.strings,
   });
 
@@ -37,23 +33,41 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
 
+  void _selectTab(int index) {
+    setState(() => _selectedIndex = index);
+  }
+
   @override
   Widget build(BuildContext context) {
     final strings = widget.strings;
 
     final pages = [
-      TodayScreen(strings: strings, unit: widget.unit),
+      TodayScreen(
+        strings: strings,
+        unit: widget.unit,
+        preferences: widget.preferences,
+        onStartTrip: () => _selectTab(2),
+        onAddManually: () => _selectTab(2),
+        onAddExpense: () => _selectTab(2),
+      ),
       TripsScreen(strings: strings, unit: widget.unit),
-      AddTripScreen(strings: strings, unit: widget.unit),
-      ReportsScreen(strings: strings, unit: widget.unit),
+      AddTripScreen(
+        strings: strings,
+        unit: widget.unit,
+        preferences: widget.preferences,
+      ),
+      ReportsScreen(
+        strings: strings,
+        unit: widget.unit,
+        preferences: widget.preferences,
+      ),
       ProfileScreen(
         strings: strings,
+        preferences: widget.preferences,
         selectedUnit: widget.unit,
         selectedLanguage: widget.selectedLanguage,
-        selectedCountry: widget.country,
         onUnitChanged: widget.onUnitChanged,
         onLanguageChanged: widget.onLanguageChanged,
-        onCountryChanged: widget.onCountryChanged,
       ),
     ];
 
@@ -62,9 +76,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+          _selectTab(index);
         },
         destinations: [
           NavigationDestination(

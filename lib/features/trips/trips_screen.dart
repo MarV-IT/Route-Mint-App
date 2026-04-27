@@ -70,7 +70,7 @@ class _TripsScreenState extends State<TripsScreen> {
 
           if (snapshot.hasError) {
             return Center(
-              child: Text('Error loading trips'),
+              child: Text(widget.strings.errorLoadingTrips),
             );
           }
 
@@ -78,7 +78,7 @@ class _TripsScreenState extends State<TripsScreen> {
 
           if (trips.isEmpty) {
             return Center(
-              child: Text('No trips yet'),
+              child: Text(widget.strings.noTripsYet),
             );
           }
 
@@ -90,7 +90,7 @@ class _TripsScreenState extends State<TripsScreen> {
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: sortedTrips.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final trip = sortedTrips[index];
 
