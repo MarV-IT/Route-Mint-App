@@ -35,6 +35,11 @@ class PdfReportLabels {
   static const totalTrips = 'Total Trips';
   static const taxDeduction = 'Tax Deduction';
 
+  // ─── Report identity ──────────────────────────────────────────────────────
+  static const driver = 'Driver';
+  static const business = 'Business';
+  static const vehicle = 'Vehicle';
+
   // ─── Expenses ─────────────────────────────────────────────────────────────
   static const fuel = 'Fuel';
   static const parking = 'Parking';

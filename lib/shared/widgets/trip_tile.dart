@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class TripTile extends StatelessWidget {
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   const TripTile({
     super.key,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   @override
@@ -21,6 +23,7 @@ class TripTile extends StatelessWidget {
         title: Text(title),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
       ),
     );
   }

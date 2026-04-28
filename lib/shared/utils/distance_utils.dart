@@ -14,10 +14,13 @@ String formatDistance(double kmValue, AppUnit unit) {
 }
 
 /// Converts a user-entered [distance] in [storedUnit] to kilometres.
-///
-/// Used by AddTripScreen before persisting a new Trip so that
-/// Trip.distance is always stored in km regardless of the user's display unit.
 double toKilometers(double distance, AppUnit storedUnit) {
   if (storedUnit == AppUnit.kilometers) return distance;
   return distance / 0.621371; // miles → km
+}
+
+/// Converts a stored km value to the user's display unit.
+double fromKilometers(double km, AppUnit unit) {
+  if (unit == AppUnit.kilometers) return km;
+  return km * 0.621371; // km → miles
 }

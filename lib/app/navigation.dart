@@ -14,6 +14,7 @@ class MainNavigationScreen extends StatefulWidget {
   final AppLanguage selectedLanguage;
   final ValueChanged<AppUnit?> onUnitChanged;
   final ValueChanged<AppLanguage?> onLanguageChanged;
+  final ValueChanged<UserPreferences> onPreferencesChanged;
   final AppStrings strings;
 
   const MainNavigationScreen({
@@ -23,6 +24,7 @@ class MainNavigationScreen extends StatefulWidget {
     required this.selectedLanguage,
     required this.onUnitChanged,
     required this.onLanguageChanged,
+    required this.onPreferencesChanged,
     required this.strings,
   });
 
@@ -50,7 +52,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         onAddManually: () => _selectTab(2),
         onAddExpense: () => _selectTab(2),
       ),
-      TripsScreen(strings: strings, unit: widget.unit),
+      TripsScreen(
+        strings: strings,
+        unit: widget.unit,
+        currencyCode: widget.preferences.currencyCode,
+      ),
       AddTripScreen(
         strings: strings,
         unit: widget.unit,
@@ -68,6 +74,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         selectedLanguage: widget.selectedLanguage,
         onUnitChanged: widget.onUnitChanged,
         onLanguageChanged: widget.onLanguageChanged,
+        onPreferencesChanged: widget.onPreferencesChanged,
       ),
     ];
 

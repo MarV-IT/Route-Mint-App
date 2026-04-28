@@ -37,6 +37,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
   final _purposeController = TextEditingController();
   final _notesController = TextEditingController();
   String? _selectedCategory;
+  bool _isSaving = false;
 
   WorkShift? _activeShift;
 
@@ -100,76 +101,94 @@ class _AddTripScreenState extends State<AddTripScreen> {
   }
 
   Future<void> _handleSave() async {
+    if (_isSaving) return;
+
     final from = _fromController.text.trim();
     final to = _toController.text.trim();
-    final distance = double.tryParse(_distanceController.text.trim());
     final category = _selectedCategory;
 
-    if (from.isEmpty || to.isEmpty || distance == null || category == null) {
+    if (from.isEmpty || to.isEmpty || category == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.strings.fillRequiredFields)),
+      );
       return;
     }
 
-    // Reload work settings at save time for accuracy.
-    final workSettings = await _workModeService.loadSettings();
-    final matchedShift = _matchingShift(workSettings);
-
-    final resolvedCategory = matchedShift != null ? 'business' : category;
-    final resolvedPlatform = matchedShift?.platformName;
-
-    final distanceKm = toKilometers(distance, widget.unit);
-    final parking = _parseExpense(_parkingController.text);
-    final tolls = _parseExpense(_tollsController.text);
-
-    final purposeText = _purposeController.text.trim();
-    String? resolvedPurpose;
-    if (purposeText.isNotEmpty) {
-      resolvedPurpose = purposeText;
-    } else if (resolvedCategory == 'business') {
-      resolvedPurpose = resolvedPlatform != null
-          ? '$resolvedPlatform business trip'
-          : 'Business trip';
+    final distance = double.tryParse(_distanceController.text.trim());
+    if (distance == null || distance <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.strings.distanceMustBePositive)),
+      );
+      return;
     }
 
-    final resolvedNotes = _notesController.text.trim().isEmpty
-        ? null
-        : _notesController.text.trim();
+    setState(() => _isSaving = true);
+    try {
+      // Reload work settings at save time for accuracy.
+      final workSettings = await _workModeService.loadSettings();
+      final matchedShift = _matchingShift(workSettings);
 
-    final now = DateTime.now();
-    final trip = Trip(
-      id: now.millisecondsSinceEpoch.toString(),
-      from: from,
-      to: to,
-      distance: distanceKm,
-      category: resolvedCategory,
-      date: now,
-      platformName: resolvedPlatform,
-      parkingExpense: parking,
-      tollsExpense: tolls,
-      businessPurpose: resolvedPurpose,
-      notes: resolvedNotes,
-    );
+      final resolvedCategory = matchedShift != null ? 'business' : category;
+      final resolvedPlatform = matchedShift?.platformName;
 
-    await _tripService.addTrip(trip);
+      final distanceKm = toKilometers(distance, widget.unit);
+      final parking = _parseExpense(_parkingController.text);
+      final tolls = _parseExpense(_tollsController.text);
 
-    _fromController.clear();
-    _toController.clear();
-    _distanceController.clear();
-    _parkingController.clear();
-    _tollsController.clear();
-    _purposeController.clear();
-    _notesController.clear();
-    setState(() {
-      _selectedCategory = null;
-      _activeShift = matchedShift; // keep in sync
-    });
+      final purposeText = _purposeController.text.trim();
+      String? resolvedPurpose;
+      if (purposeText.isNotEmpty) {
+        resolvedPurpose = purposeText;
+      } else if (resolvedCategory == 'business') {
+        resolvedPurpose = resolvedPlatform != null
+            ? '$resolvedPlatform business trip'
+            : 'Business trip';
+      }
 
-    if (!mounted) return;
+      final resolvedNotes = _notesController.text.trim().isEmpty
+          ? null
+          : _notesController.text.trim();
 
-    final label = resolvedPlatform != null
-        ? '${widget.strings.tripSaved} · $resolvedPlatform'
-        : widget.strings.tripSaved;
+      final now = DateTime.now();
+      final trip = Trip(
+        id: now.millisecondsSinceEpoch.toString(),
+        from: from,
+        to: to,
+        distance: distanceKm,
+        category: resolvedCategory,
+        date: now,
+        platformName: resolvedPlatform,
+        parkingExpense: parking,
+        tollsExpense: tolls,
+        businessPurpose: resolvedPurpose,
+        notes: resolvedNotes,
+        detectionMode: TripDetectionMode.manual,
+        reviewStatus: TripReviewStatus.reviewed,
+        startTime: now,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(label)));
+      await _tripService.addTrip(trip);
+
+      if (!mounted) return;
+      _fromController.clear();
+      _toController.clear();
+      _distanceController.clear();
+      _parkingController.clear();
+      _tollsController.clear();
+      _purposeController.clear();
+      _notesController.clear();
+      setState(() {
+        _selectedCategory = null;
+        _activeShift = matchedShift;
+      });
+
+      final label = resolvedPlatform != null
+          ? '${widget.strings.tripSaved} · $resolvedPlatform'
+          : widget.strings.tripSaved;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(label)));
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
@@ -330,7 +349,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
           SizedBox(
             height: 52,
             child: ElevatedButton(
-              onPressed: _handleSave,
+              onPressed: _isSaving ? null : _handleSave,
               child: Text(widget.strings.saveTripButton),
             ),
           ),

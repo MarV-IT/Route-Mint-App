@@ -56,6 +56,14 @@ class _RouteMintAppState extends State<RouteMintApp> {
     _prefsService.savePreferences(updated);
   }
 
+  void _changePreferences(UserPreferences updated) {
+    setState(() {
+      _preferences = updated;
+      _selectedLanguage = updated.language;
+    });
+    _prefsService.savePreferences(updated);
+  }
+
   void _onOnboardingComplete(UserPreferences prefs) {
     final updated = prefs.copyWith(language: _selectedLanguage);
     setState(() => _preferences = updated);
@@ -98,6 +106,7 @@ class _RouteMintAppState extends State<RouteMintApp> {
       selectedLanguage: _selectedLanguage,
       onUnitChanged: _changeUnit,
       onLanguageChanged: _changeLanguage,
+      onPreferencesChanged: _changePreferences,
       strings: strings,
     );
   }

@@ -134,6 +134,45 @@ class AppStrings {
 
   String get saveTrip => tripSaved;
 
+  String get editTrip => _value(
+        en: 'Edit Trip',              es: 'Editar viaje',
+        fr: 'Modifier le trajet',     ru: 'Изменить поездку',
+        uk: 'Редагувати поїздку',     fa: 'ویرایش سفر',
+      );
+
+  String get updateTrip => _value(
+        en: 'Update Trip',            es: 'Actualizar viaje',
+        fr: 'Mettre à jour le trajet',ru: 'Обновить поездку',
+        uk: 'Оновити поїздку',        fa: 'بروزرسانی سفر',
+      );
+
+  String get tripUpdated => _value(
+        en: 'Trip updated',           es: 'Viaje actualizado',
+        fr: 'Trajet mis à jour',      ru: 'Поездка обновлена',
+        uk: 'Поїздку оновлено',       fa: 'سفر بروز شد',
+      );
+
+  String get deleteTrip => _value(
+        en: 'Delete trip',            es: 'Eliminar viaje',
+        fr: 'Supprimer le trajet',    ru: 'Удалить поездку',
+        uk: 'Видалити поїздку',       fa: 'حذف سفر',
+      );
+
+  String get confirmDelete => _value(
+        en: 'Delete this trip?',      es: '¿Eliminar este viaje?',
+        fr: 'Supprimer ce trajet?',   ru: 'Удалить эту поездку?',
+        uk: 'Видалити цю поїздку?',   fa: 'این سفر حذف شود؟',
+      );
+
+  String get deleteConfirmMessage => _value(
+        en: 'This trip will be permanently deleted.',
+        es: 'Este viaje será eliminado permanentemente.',
+        fr: 'Ce trajet sera supprimé définitivement.',
+        ru: 'Эта поездка будет удалена безвозвратно.',
+        uk: 'Цю поїздку буде видалено назавжди.',
+        fa: 'این سفر به طور دائمی حذف خواهد شد.',
+      );
+
   String get businessPurpose => _value(
         en: 'Business purpose',     es: 'Propósito de negocio',
         fr: 'Objet professionnel',  ru: 'Цель поездки',
@@ -243,11 +282,111 @@ class AppStrings {
         uk: 'Помилка експорту',     fa: 'خروجی ناموفق',
       );
 
+  String get exportCsv => _value(
+        en: 'Export CSV',           es: 'Exportar CSV',
+        fr: 'Exporter CSV',         ru: 'Экспорт CSV',
+        uk: 'Експорт CSV',          fa: 'خروجی CSV',
+      );
+
+  String get csvExportFailed => _value(
+        en: 'CSV export failed',        es: 'Error al exportar CSV',
+        fr: "Échec de l'export CSV",    ru: 'Ошибка экспорта CSV',
+        uk: 'Помилка експорту CSV',     fa: 'خروجی CSV ناموفق',
+      );
+
+  // ─── Backup / restore ─────────────────────────────────────────────────────
+
+  String get dataBackup => _value(
+        en: 'Data & Backup',            es: 'Datos y copia de seguridad',
+        fr: 'Données et sauvegarde',    ru: 'Данные и резервная копия',
+        uk: 'Дані та резервна копія',   fa: 'داده‌ها و پشتیبان',
+      );
+
+  String get exportBackup => _value(
+        en: 'Export Backup',            es: 'Exportar copia de seguridad',
+        fr: 'Exporter la sauvegarde',   ru: 'Экспорт резервной копии',
+        uk: 'Експорт резервної копії',  fa: 'خروجی پشتیبان',
+      );
+
+  String get importBackup => _value(
+        en: 'Import Backup',            es: 'Importar copia de seguridad',
+        fr: 'Importer la sauvegarde',   ru: 'Импорт резервной копии',
+        uk: 'Імпорт резервної копії',   fa: 'وارد کردن پشتیبان',
+      );
+
+  String get backupExported => _value(
+        en: 'Backup ready to share',            es: 'Copia lista para compartir',
+        fr: 'Sauvegarde prête à partager',      ru: 'Резервная копия готова',
+        uk: 'Резервна копія готова до надсилання', fa: 'پشتیبان آماده اشتراک',
+      );
+
+  String get backupExportFailed => _value(
+        en: 'Backup export failed',         es: 'Error al exportar copia',
+        fr: 'Échec de l\'export sauvegarde',ru: 'Ошибка экспорта копии',
+        uk: 'Помилка експорту копії',       fa: 'خروجی پشتیبان ناموفق',
+      );
+
+  String get backupImportConfirmTitle => _value(
+        en: 'Import backup?',               es: '¿Importar copia de seguridad?',
+        fr: 'Importer la sauvegarde?',      ru: 'Импортировать резервную копию?',
+        uk: 'Імпортувати резервну копію?',  fa: 'وارد کردن پشتیبان؟',
+      );
+
+  String get backupImportConfirmMessage => _value(
+        en: 'Importing a backup will replace all your current trips, preferences, and work mode settings.',
+        es: 'Importar una copia reemplazará todos tus viajes, preferencias y configuración de modo trabajo.',
+        fr: 'Importer une sauvegarde remplacera tous vos trajets, préférences et paramètres de travail.',
+        ru: 'Импорт резервной копии заменит все поездки, настройки и параметры рабочего режима.',
+        uk: 'Імпорт резервної копії замінить усі поїздки, налаштування та параметри робочого режиму.',
+        fa: 'وارد کردن پشتیبان، تمام سفرها، تنظیمات و حالت کاری فعلی شما را جایگزین می‌کند.',
+      );
+
+  String get backupImported => _value(
+        en: 'Backup restored successfully', es: 'Copia restaurada correctamente',
+        fr: 'Sauvegarde restaurée',         ru: 'Резервная копия восстановлена',
+        uk: 'Резервну копію відновлено',    fa: 'پشتیبان با موفقیت بازیابی شد',
+      );
+
+  String get backupImportFailed => _value(
+        en: 'Backup import failed',         es: 'Error al importar copia',
+        fr: 'Échec de l\'import sauvegarde',ru: 'Ошибка импорта копии',
+        uk: 'Помилка імпорту копії',        fa: 'وارد کردن پشتیبان ناموفق',
+      );
+
   // ─── Profile screen ───────────────────────────────────────────────────────
+
+  String get driverName => _value(
+        en: 'Driver name',          es: 'Nombre del conductor',
+        fr: 'Nom du conducteur',    ru: 'Имя водителя',
+        uk: "Ім'я водія",           fa: 'نام راننده',
+      );
+
+  String get businessName => _value(
+        en: 'Business name',        es: 'Nombre del negocio',
+        fr: "Nom de l'entreprise",  ru: 'Название компании',
+        uk: 'Назва компанії',       fa: 'نام کسب‌وکار',
+      );
 
   String get vehicle => _value(
         en: 'Vehicle',      es: 'Vehículo',     fr: 'Véhicule',
         ru: 'Автомобиль',   uk: 'Авто',         fa: 'وسیله نقلیه',
+      );
+
+  String get editProfileInfo => _value(
+        en: 'Report identity',              es: 'Identidad del informe',
+        fr: 'Identité du rapport',          ru: 'Данные отчёта',
+        uk: 'Дані звіту',                   fa: 'هویت گزارش',
+      );
+
+  String get save => _value(
+        en: 'Save',     es: 'Guardar',  fr: 'Enregistrer',
+        ru: 'Сохранить',uk: 'Зберегти', fa: 'ذخیره',
+      );
+
+  String get profileSaved => _value(
+        en: 'Profile saved',            es: 'Perfil guardado',
+        fr: 'Profil enregistré',        ru: 'Профиль сохранён',
+        uk: 'Профіль збережено',        fa: 'پروفایل ذخیره شد',
       );
 
   String get units => _value(
@@ -428,6 +567,59 @@ class AppStrings {
         fa: 'حالت کاری فعال است. این سفر به عنوان کاری ذخیره خواهد شد.',
       );
 
+  // ─── Automation / Auto Trip Detection ────────────────────────────────────
+
+  String get automation => _value(
+        en: 'Automation',           es: 'Automatización',
+        fr: 'Automatisation',       ru: 'Автоматизация',
+        uk: 'Автоматизація',        fa: 'اتوماسیون',
+      );
+
+  String get autoTripDetection => _value(
+        en: 'Auto Trip Detection',          es: 'Detección automática de viajes',
+        fr: 'Détection automatique',        ru: 'Авто-определение поездок',
+        uk: 'Авто-виявлення поїздок',       fa: 'تشخیص خودکار سفر',
+      );
+
+  String get autoTripDetectionDescription => _value(
+        en: 'Route Mint can detect potential trips and ask you to review them.',
+        es: 'Route Mint puede detectar viajes potenciales y pedirte que los revises.',
+        fr: 'Route Mint peut détecter des trajets potentiels et vous demander de les examiner.',
+        ru: 'Route Mint может обнаруживать возможные поездки и предлагать вам их проверить.',
+        uk: 'Route Mint може виявляти можливі поїздки та пропонувати вам їх перевірити.',
+        fa: 'Route Mint می‌تواند سفرهای احتمالی را شناسایی کرده و از شما بخواهد آن‌ها را بررسی کنید.',
+      );
+
+  String get needsReview => _value(
+        en: 'Needs review',         es: 'Requiere revisión',
+        fr: 'À vérifier',          ru: 'Требует проверки',
+        uk: 'Потребує перевірки',   fa: 'نیاز به بررسی',
+      );
+
+  String get reviewed => _value(
+        en: 'Reviewed',             es: 'Revisado',
+        fr: 'Vérifié',             ru: 'Проверено',
+        uk: 'Перевірено',          fa: 'بررسی شده',
+      );
+
+  String get detectionMode => _value(
+        en: 'Detection mode',       es: 'Modo de detección',
+        fr: 'Mode de détection',    ru: 'Режим определения',
+        uk: 'Режим виявлення',      fa: 'حالت تشخیص',
+      );
+
+  String get manual => _value(
+        en: 'Manual',               es: 'Manual',
+        fr: 'Manuel',               ru: 'Вручную',
+        uk: 'Вручну',               fa: 'دستی',
+      );
+
+  String get automatic => _value(
+        en: 'Automatic',            es: 'Automático',
+        fr: 'Automatique',          ru: 'Автоматически',
+        uk: 'Автоматично',          fa: 'خودکار',
+      );
+
   String get workModeOverridesCategory => _value(
         en: 'Work Mode overrides your category selection.',
         es: 'El modo trabajo reemplaza tu selección de categoría.',
@@ -465,6 +657,56 @@ class AppStrings {
         en: 'optional',         es: 'opcional',
         fr: 'facultatif',       ru: 'необязательно',
         uk: "необов'язково",    fa: 'اختیاری',
+      );
+
+  String get fillRequiredFields => _value(
+        en: 'Please fill in all required fields',
+        es: 'Por favor completa todos los campos requeridos',
+        fr: 'Veuillez remplir tous les champs obligatoires',
+        ru: 'Пожалуйста, заполните все обязательные поля',
+        uk: "Будь ласка, заповніть усі обов'язкові поля",
+        fa: 'لطفاً تمام فیلدهای الزامی را پر کنید',
+      );
+
+  String get distanceMustBePositive => _value(
+        en: 'Distance must be greater than 0',
+        es: 'La distancia debe ser mayor que 0',
+        fr: 'La distance doit être supérieure à 0',
+        ru: 'Расстояние должно быть больше 0',
+        uk: 'Відстань має бути більше 0',
+        fa: 'مسافت باید بیشتر از ۰ باشد',
+      );
+
+  String get cancel => _value(
+        en: 'Cancel',   es: 'Cancelar', fr: 'Annuler',
+        ru: 'Отмена',   uk: 'Скасувати',fa: 'لغو',
+      );
+
+  String get delete => _value(
+        en: 'Delete',   es: 'Eliminar', fr: 'Supprimer',
+        ru: 'Удалить',  uk: 'Видалити', fa: 'حذف',
+      );
+
+  String get all => _value(
+        en: 'All',      es: 'Todos',    fr: 'Tout',
+        ru: 'Все',      uk: 'Усі',      fa: 'همه',
+      );
+
+  String get edit => _value(
+        en: 'Edit',     es: 'Editar',   fr: 'Modifier',
+        ru: 'Изменить', uk: 'Редагувати',fa: 'ویرایش',
+      );
+
+  String get noTripsFound => _value(
+        en: 'No trips found',               es: 'No se encontraron viajes',
+        fr: 'Aucun trajet trouvé',          ru: 'Поездок не найдено',
+        uk: 'Поїздок не знайдено',          fa: 'سفری یافت نشد',
+      );
+
+  String get tryChangingFilters => _value(
+        en: 'Try changing the filters',     es: 'Intenta cambiar los filtros',
+        fr: 'Essayez de modifier les filtres', ru: 'Попробуйте изменить фильтры',
+        uk: 'Спробуйте змінити фільтри',    fa: 'فیلترها را تغییر دهید',
       );
 
 

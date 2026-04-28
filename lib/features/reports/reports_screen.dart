@@ -10,6 +10,7 @@ import '../../app/app.dart';
 import '../trips/models/trip.dart';
 import '../trips/services/trip_service.dart';
 import '../work_mode/services/work_mode_service.dart';
+import '../../core/export/csv_export_service.dart';
 
 enum ReportPeriodType { thisMonth, lastMonth, custom }
 
@@ -34,6 +35,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   final _workModeService = WorkModeService();
   final _pdfService = ReportPdfService();
   final _taxService = TaxService();
+  final _csvService = CsvExportService();
 
   // ─── All trips (raw, unfiltered) ─────────────────────────────────────────
   List<Trip> _allTrips = [];
@@ -59,6 +61,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
   bool _isLoading = true;
   bool _isExportingSimple = false;
   bool _isExportingDetailed = false;
+  bool _isExportingCsv = false;
+
+  bool get _isExportingAny =>
+      _isExportingSimple || _isExportingDetailed || _isExportingCsv;
 
   String get _currencyCode => widget.preferences.currencyCode;
 
@@ -202,6 +208,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
         reportType: type,
         startDate: range.start,
         endDate: range.end,
+        driverName: widget.preferences.driverName,
+        businessName: widget.preferences.businessName,
+        vehicleName: widget.preferences.vehicleName,
       );
     } catch (e) {
       if (!mounted) return;
@@ -218,6 +227,27 @@ class _ReportsScreenState extends State<ReportsScreen> {
           }
         });
       }
+    }
+  }
+
+  Future<void> _handleCsvExport() async {
+    setState(() => _isExportingCsv = true);
+    try {
+      final range = _currentReportRange();
+      await _csvService.exportTrips(
+        trips: _reportTrips,
+        unit: widget.unit,
+        currencyCode: _currencyCode,
+        startDate: range.start,
+        endDate: range.end,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${widget.strings.csvExportFailed}: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isExportingCsv = false);
     }
   }
 
@@ -375,7 +405,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   SizedBox(
                     height: 52,
                     child: FilledButton.icon(
-                      onPressed: (_isExportingSimple || _isExportingDetailed)
+                      onPressed: _isExportingAny
                           ? null
                           : () => _handleExport(PdfReportType.simple),
                       icon: _isExportingSimple
@@ -396,7 +426,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   SizedBox(
                     height: 52,
                     child: OutlinedButton.icon(
-                      onPressed: (_isExportingSimple || _isExportingDetailed)
+                      onPressed: _isExportingAny
                           ? null
                           : () => _handleExport(PdfReportType.detailed),
                       icon: _isExportingDetailed
@@ -412,6 +442,29 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       label: Text(_isExportingDetailed
                           ? s.exporting
                           : s.exportDetailedPdf),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  SizedBox(
+                    height: 52,
+                    child: OutlinedButton.icon(
+                      onPressed: _isExportingAny
+                          ? null
+                          : _handleCsvExport,
+                      icon: _isExportingCsv
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            )
+                          : const Icon(Icons.table_chart_outlined),
+                      label: Text(
+                          _isExportingCsv ? s.exporting : s.exportCsv),
                     ),
                   ),
                 ],

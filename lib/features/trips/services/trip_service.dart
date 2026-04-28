@@ -10,10 +10,25 @@ class TripService {
     final jsonString = prefs.getString(_tripsKey);
     if (jsonString == null) return [];
 
-    final List<dynamic> jsonList = jsonDecode(jsonString);
-    return jsonList
-        .map((item) => Trip.fromJson(item as Map<String, dynamic>))
-        .toList();
+    try {
+      final decoded = jsonDecode(jsonString);
+      if (decoded is! List<dynamic>) return [];
+
+      final trips = <Trip>[];
+      for (final item in decoded) {
+        if (item is! Map<String, dynamic>) continue;
+
+        try {
+          trips.add(Trip.fromJson(item));
+        } catch (_) {
+          // Skip malformed saved entries without discarding the valid trips.
+        }
+      }
+
+      return trips;
+    } catch (_) {
+      return [];
+    }
   }
 
   Future<void> saveTrips(List<Trip> trips) async {
@@ -28,6 +43,21 @@ class TripService {
     trips.removeWhere((t) => t.id == trip.id);
     trips.add(trip);
 
+    await saveTrips(trips);
+  }
+
+  Future<void> updateTrip(Trip updatedTrip) async {
+    final trips = await loadTrips();
+    final index = trips.indexWhere((t) => t.id == updatedTrip.id);
+    if (index != -1) {
+      trips[index] = updatedTrip;
+      await saveTrips(trips);
+    }
+  }
+
+  Future<void> deleteTrip(String id) async {
+    final trips = await loadTrips();
+    trips.removeWhere((t) => t.id == id);
     await saveTrips(trips);
   }
 }

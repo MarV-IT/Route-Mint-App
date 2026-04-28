@@ -6,20 +6,22 @@ class WorkModeService {
   static const String _key = 'work_mode_settings';
 
   Future<WorkModeSettings> loadSettings() async {
-  final prefs = await SharedPreferences.getInstance();
-  final jsonString = prefs.getString(_key);
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_key);
 
-  if (jsonString == null) {
-    return WorkModeSettings.defaults();
-  }
+    if (jsonString == null) {
+      return WorkModeSettings.defaults();
+    }
 
-  try {
-    final json = jsonDecode(jsonString) as Map<String, dynamic>;
-    return WorkModeSettings.fromJson(json);
-  } catch (e) {
-    return WorkModeSettings.defaults();
+    try {
+      final decoded = jsonDecode(jsonString);
+      if (decoded is! Map<String, dynamic>) return WorkModeSettings.defaults();
+
+      return WorkModeSettings.fromJson(decoded);
+    } catch (_) {
+      return WorkModeSettings.defaults();
+    }
   }
-}
 
   Future<void> saveSettings(WorkModeSettings settings) async {
     final prefs = await SharedPreferences.getInstance();

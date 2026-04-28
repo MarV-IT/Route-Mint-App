@@ -47,6 +47,9 @@ class ReportPdfService {
     PdfReportType reportType = PdfReportType.simple,
     DateTime? startDate,
     DateTime? endDate,
+    String? driverName,
+    String? businessName,
+    String? vehicleName,
   }) async {
     final now = DateTime.now();
     final start = startDate ?? DateTime(now.year, now.month, 1);
@@ -91,6 +94,9 @@ class ReportPdfService {
           tax: tax,
           country: country,
           unit: unit,
+          driverName: driverName,
+          businessName: businessName,
+          vehicleName: vehicleName,
         );
         break;
       case PdfReportType.detailed:
@@ -109,6 +115,9 @@ class ReportPdfService {
           totalParking: totalParking,
           totalTolls: totalTolls,
           totalExpenses: totalExpenses,
+          driverName: driverName,
+          businessName: businessName,
+          vehicleName: vehicleName,
         );
         break;
     }
@@ -138,7 +147,15 @@ class ReportPdfService {
     required double tax,
     required Country country,
     required AppUnit unit,
+    String? driverName,
+    String? businessName,
+    String? vehicleName,
   }) {
+    final identityPairs = _identityPairs(
+        driverName: driverName,
+        businessName: businessName,
+        vehicleName: vehicleName);
+
     doc.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
@@ -158,6 +175,12 @@ class ReportPdfService {
             _metaPair(PdfReportLabels.currency, currencyCode),
             _metaPair(PdfReportLabels.distanceUnit, unitStr.toUpperCase()),
           ]),
+
+          // ── Identity block ─────────────────────────────────────────────
+          if (identityPairs.isNotEmpty) ...[
+            pw.SizedBox(height: 8),
+            _metaRow(identityPairs),
+          ],
 
           pw.SizedBox(height: 24),
 
@@ -282,7 +305,15 @@ class ReportPdfService {
     required double totalParking,
     required double totalTolls,
     required double totalExpenses,
+    String? driverName,
+    String? businessName,
+    String? vehicleName,
   }) {
+    final identityPairs = _identityPairs(
+        driverName: driverName,
+        businessName: businessName,
+        vehicleName: vehicleName);
+
     doc.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
@@ -316,6 +347,12 @@ class ReportPdfService {
               PdfReportLabels.formatLongDate(now),
             ),
           ]),
+
+          // ── Identity block ─────────────────────────────────────────────
+          if (identityPairs.isNotEmpty) ...[
+            pw.SizedBox(height: 8),
+            _metaRow(identityPairs),
+          ],
 
           pw.SizedBox(height: 28),
 
@@ -893,6 +930,26 @@ class ReportPdfService {
         ),
       ),
     );
+  }
+
+  // ─── Identity pairs ───────────────────────────────────────────────────────
+
+  List<pw.Widget> _identityPairs({
+    String? driverName,
+    String? businessName,
+    String? vehicleName,
+  }) {
+    final pairs = <pw.Widget>[];
+    if (driverName != null && driverName.isNotEmpty) {
+      pairs.add(_metaPair(PdfReportLabels.driver, driverName));
+    }
+    if (businessName != null && businessName.isNotEmpty) {
+      pairs.add(_metaPair(PdfReportLabels.business, businessName));
+    }
+    if (vehicleName != null && vehicleName.isNotEmpty) {
+      pairs.add(_metaPair(PdfReportLabels.vehicle, vehicleName));
+    }
+    return pairs;
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
