@@ -620,6 +620,116 @@ class AppStrings {
         uk: 'Автоматично',          fa: 'خودکار',
       );
 
+  // ─── Foreground Auto Tracking ─────────────────────────────────────────────
+
+  String get foregroundTracking => _value(
+        en: 'Foreground Auto Tracking',
+        es: 'Seguimiento automático',
+        fr: 'Suivi automatique',
+        ru: 'Авто-отслеживание',
+        uk: 'Авто-відстеження',
+        fa: 'ردیابی خودکار',
+      );
+
+  String get startTracking => _value(
+        en: 'Start Tracking',
+        es: 'Iniciar seguimiento',
+        fr: 'Démarrer le suivi',
+        ru: 'Начать отслеживание',
+        uk: 'Почати відстеження',
+        fa: 'شروع ردیابی',
+      );
+
+  String get stopTracking => _value(
+        en: 'Stop Tracking',
+        es: 'Detener seguimiento',
+        fr: 'Arrêter le suivi',
+        ru: 'Остановить',
+        uk: 'Зупинити',
+        fa: 'توقف ردیابی',
+      );
+
+  String get trackingKeepAppOpen => _value(
+        en: 'Tracking… keep the app open',
+        es: 'Rastreando… mantén la app abierta',
+        fr: "Suivi… gardez l'app ouverte",
+        ru: 'Отслеживание… держите приложение открытым',
+        uk: 'Відстеження… тримайте додаток відкритим',
+        fa: 'در حال ردیابی… برنامه را باز نگه دارید',
+      );
+
+  String get notTracking => _value(
+        en: 'Not tracking',
+        es: 'Sin rastreo',
+        fr: 'Pas de suivi',
+        ru: 'Не отслеживается',
+        uk: 'Не відстежується',
+        fa: 'بدون ردیابی',
+      );
+
+  String get locationPermissionRequired => _value(
+        en: 'Location permission required',
+        es: 'Se requiere permiso de ubicación',
+        fr: 'Permission de localisation requise',
+        ru: 'Требуется разрешение на геолокацию',
+        uk: 'Потрібен дозвіл на геолокацію',
+        fa: 'مجوز موقعیت مکانی لازم است',
+      );
+
+  String get locationServicesDisabled => _value(
+        en: 'Location services disabled',
+        es: 'Servicios de ubicación desactivados',
+        fr: 'Services de localisation désactivés',
+        ru: 'Службы геолокации отключены',
+        uk: 'Служби геолокації вимкнено',
+        fa: 'سرویس‌های موقعیت‌یابی غیرفعال است',
+      );
+
+  String get notEnoughMovementDetected => _value(
+        en: 'Not enough movement detected',
+        es: 'Movimiento insuficiente detectado',
+        fr: 'Mouvement insuffisant détecté',
+        ru: 'Недостаточно движения',
+        uk: 'Недостатньо руху',
+        fa: 'حرکت کافی شناسایی نشد',
+      );
+
+  String get detectedTripSavedForReview => _value(
+        en: 'Detected trip saved for review',
+        es: 'Viaje detectado guardado para revisión',
+        fr: 'Trajet détecté enregistré pour vérification',
+        ru: 'Обнаруженная поездка сохранена для проверки',
+        uk: 'Виявлену поїздку збережено для перевірки',
+        fa: 'سفر شناسایی شده برای بررسی ذخیره شد',
+      );
+
+  String get enableAutoDetectionFirst => _value(
+        en: 'Enable Auto Trip Detection in Profile first',
+        es: 'Activa la detección automática en Perfil primero',
+        fr: "Activez la détection automatique dans Profil d'abord",
+        ru: 'Сначала включите Авто-определение поездок в Профиле',
+        uk: 'Спочатку увімкніть Авто-виявлення поїздок у Профілі',
+        fa: 'ابتدا تشخیص خودکار سفر را در پروفایل فعال کنید',
+      );
+
+  String get detectedStart => _value(
+        en: 'Detected start',
+        es: 'Inicio detectado',
+        fr: 'Départ détecté',
+        ru: 'Определённое начало',
+        uk: 'Виявлений старт',
+        fa: 'شروع شناسایی شده',
+      );
+
+  String get detectedEnd => _value(
+        en: 'Detected end',
+        es: 'Fin detectado',
+        fr: 'Arrivée détectée',
+        ru: 'Определённый конец',
+        uk: 'Виявлений кінець',
+        fa: 'پایان شناسایی شده',
+      );
+
   String get workModeOverridesCategory => _value(
         en: 'Work Mode overrides your category selection.',
         es: 'El modo trabajo reemplaza tu selección de categoría.',

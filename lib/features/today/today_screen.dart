@@ -9,6 +9,7 @@ import '../../shared/widgets/summary_card.dart';
 import '../../app/app.dart';
 import '../trips/models/trip.dart';
 import '../trips/services/trip_service.dart';
+import 'foreground_tracking_card.dart';
 
 class TodayScreen extends StatefulWidget {
   final AppStrings strings;
@@ -130,6 +131,12 @@ class _TodayScreenState extends State<TodayScreen> {
             onStartTrip: widget.onStartTrip,
             onAddManually: widget.onAddManually,
             onAddExpense: widget.onAddExpense,
+          ),
+          const SizedBox(height: 12),
+          ForegroundTrackingCard(
+            strings: widget.strings,
+            preferences: widget.preferences,
+            onTripSaved: _loadTrips,
           ),
         ],
       ),

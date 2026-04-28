@@ -18,6 +18,10 @@ class Trip {
   final TripReviewStatus reviewStatus;
   final DateTime? startTime;
   final DateTime? endTime;
+  final double? startLatitude;
+  final double? startLongitude;
+  final double? endLatitude;
+  final double? endLongitude;
 
   const Trip({
     required this.id,
@@ -35,6 +39,10 @@ class Trip {
     this.reviewStatus = TripReviewStatus.reviewed,
     this.startTime,
     this.endTime,
+    this.startLatitude,
+    this.startLongitude,
+    this.endLatitude,
+    this.endLongitude,
   });
 
   Map<String, dynamic> toJson() => {
@@ -53,6 +61,10 @@ class Trip {
     'reviewStatus': reviewStatus.name,
     'startTime': startTime?.toIso8601String(),
     'endTime': endTime?.toIso8601String(),
+    'startLatitude': startLatitude,
+    'startLongitude': startLongitude,
+    'endLatitude': endLatitude,
+    'endLongitude': endLongitude,
   };
 
   factory Trip.fromJson(Map<String, dynamic> json) {
@@ -83,6 +95,10 @@ class Trip {
       endTime: json['endTime'] is String
           ? DateTime.tryParse(json['endTime'] as String)
           : null,
+      startLatitude: _doubleOrNull(json['startLatitude']),
+      startLongitude: _doubleOrNull(json['startLongitude']),
+      endLatitude: _doubleOrNull(json['endLatitude']),
+      endLongitude: _doubleOrNull(json['endLongitude']),
     );
   }
 
@@ -102,6 +118,10 @@ class Trip {
     TripReviewStatus? reviewStatus,
     Object? startTime = _sentinel,
     Object? endTime = _sentinel,
+    Object? startLatitude = _sentinel,
+    Object? startLongitude = _sentinel,
+    Object? endLatitude = _sentinel,
+    Object? endLongitude = _sentinel,
   }) => Trip(
     id: id ?? this.id,
     from: from ?? this.from,
@@ -122,6 +142,18 @@ class Trip {
     reviewStatus: reviewStatus ?? this.reviewStatus,
     startTime: startTime == _sentinel ? this.startTime : startTime as DateTime?,
     endTime: endTime == _sentinel ? this.endTime : endTime as DateTime?,
+    startLatitude: startLatitude == _sentinel
+        ? this.startLatitude
+        : startLatitude as double?,
+    startLongitude: startLongitude == _sentinel
+        ? this.startLongitude
+        : startLongitude as double?,
+    endLatitude: endLatitude == _sentinel
+        ? this.endLatitude
+        : endLatitude as double?,
+    endLongitude: endLongitude == _sentinel
+        ? this.endLongitude
+        : endLongitude as double?,
   );
 
   @override
@@ -145,3 +177,5 @@ const Object _sentinel = Object();
 String? _stringOrNull(Object? value) => value is String ? value : null;
 
 double _doubleOrDefault(Object? value) => value is num ? value.toDouble() : 0;
+
+double? _doubleOrNull(Object? value) => value is num ? value.toDouble() : null;

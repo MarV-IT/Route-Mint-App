@@ -209,7 +209,7 @@ class _EditTripScreenState extends State<EditTripScreen> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _selectedCategory,
+            initialValue: _selectedCategory,
             items: [
               DropdownMenuItem(value: 'business', child: Text(s.business)),
               DropdownMenuItem(value: 'personal', child: Text(s.personal)),
