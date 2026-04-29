@@ -2,12 +2,16 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../core/auth/auth_service.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/preferences/preferences_service.dart';
 import '../../core/preferences/user_preferences.dart';
 import '../../core/tax/tax_service.dart';
 import '../../core/backup/backup_service.dart';
+import '../../core/backup/cloud_backup_service.dart';
 import '../../app/app.dart';
+import '../auth/auth_screen.dart';
 import '../work_mode/work_mode_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -40,9 +44,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late final TextEditingController _vehicleController;
 
   final _backupService = BackupService();
+  final _cloudBackupService = CloudBackupService();
   final _prefsService = PreferencesService();
   bool _isExportingBackup = false;
   bool _isImportingBackup = false;
+  bool _isUploadingCloud = false;
+  bool _isRestoringCloud = false;
+  int _cloudRefreshKey = 0;
 
   @override
   void initState() {
@@ -149,6 +157,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _handleCloudUpload() async {
+    setState(() => _isUploadingCloud = true);
+    try {
+      await _cloudBackupService.uploadBackupForCurrentUser();
+      if (!mounted) return;
+      setState(() => _cloudRefreshKey++);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.strings.cloudBackupUploaded)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${widget.strings.cloudBackupFailed}: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isUploadingCloud = false);
+    }
+  }
+
+  Future<void> _handleCloudRestore() async {
+    final hasBackup = await _cloudBackupService.hasCloudBackup();
+    if (!mounted) return;
+
+    if (!hasBackup) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.strings.noCloudBackupFound)),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(widget.strings.cloudRestoreConfirmTitle),
+        content: Text(widget.strings.cloudRestoreConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(widget.strings.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(widget.strings.restoreFromCloud),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isRestoringCloud = true);
+    try {
+      await _cloudBackupService.restoreBackupForCurrentUser();
+      final restoredPrefs = await _prefsService.loadPreferences();
+      if (!mounted) return;
+      widget.onPreferencesChanged(restoredPrefs);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.strings.cloudBackupRestored)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${widget.strings.cloudRestoreFailed}: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isRestoringCloud = false);
+    }
+  }
+
+  String _formatDateTime(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inDays == 0) {
+      final h = dt.hour.toString().padLeft(2, '0');
+      final m = dt.minute.toString().padLeft(2, '0');
+      return '$h:$m';
+    }
+    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = widget.strings;
@@ -158,6 +245,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // ── Account ───────────────────────────────────────────────────
+          Text(
+            s.account,
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          StreamBuilder<User?>(
+            stream: AuthService().authStateChanges(),
+            builder: (context, snapshot) {
+              final user = snapshot.data;
+              if (user != null) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.person_outline),
+                      title: Text(user.email ?? user.uid),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.logout),
+                      title: Text(s.signOut),
+                      onTap: () async {
+                        await AuthService().signOut();
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(s.signedOut)),
+                        );
+                      },
+                    ),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.person_outline),
+                    title: Text(s.guestMode),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.login),
+                    title: Text(s.signIn),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AuthScreen(
+                          strings: s,
+                          onContinueAsGuest: () => Navigator.pop(context),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          const Divider(),
+
           // ── Report identity (editable) ─────────────────────────────────
           Text(
             s.editProfileInfo,
@@ -337,6 +490,83 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onTap: (_isExportingBackup || _isImportingBackup)
                 ? null
                 : _handleImportBackup,
+          ),
+          const Divider(),
+
+          // ── Cloud Backup ───────────────────────────────────────────────
+          Text(
+            s.cloudBackup,
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          StreamBuilder<User?>(
+            stream: AuthService().authStateChanges(),
+            builder: (context, snapshot) {
+              final user = snapshot.data;
+              if (user == null) {
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.cloud_off_outlined),
+                  title: Text(
+                    s.signInToUseCloudBackup,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).disabledColor,
+                        ),
+                  ),
+                );
+              }
+              final busy = _isUploadingCloud || _isRestoringCloud;
+              return Column(
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.cloud_upload_outlined),
+                    title: Text(s.backupToCloud),
+                    trailing: _isUploadingCloud
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.chevron_right),
+                    onTap: busy ? null : _handleCloudUpload,
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.cloud_download_outlined),
+                    title: Text(s.restoreFromCloud),
+                    trailing: _isRestoringCloud
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.chevron_right),
+                    onTap: busy ? null : _handleCloudRestore,
+                  ),
+                  FutureBuilder<DateTime?>(
+                    key: ValueKey(_cloudRefreshKey),
+                    future: _cloudBackupService.getLastCloudBackupTime(),
+                    builder: (context, snap) {
+                      final dt = snap.data;
+                      if (dt == null) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4, bottom: 8),
+                        child: Text(
+                          '${s.lastCloudBackup}: ${_formatDateTime(dt)}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),

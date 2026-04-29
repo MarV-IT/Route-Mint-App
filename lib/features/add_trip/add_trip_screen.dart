@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/preferences/user_preferences.dart';
 import '../../shared/utils/distance_utils.dart';
+import '../../shared/widgets/address_autocomplete_field.dart';
 import '../../app/app.dart';
 import '../trips/models/trip.dart';
 import '../trips/services/trip_service.dart';
 import '../work_mode/models/work_shift.dart';
 import '../work_mode/models/work_mode_settings.dart';
 import '../work_mode/services/work_mode_service.dart';
+
+const _kOtherPlatform = 'Other';
+const List<String> _kDefaultPlatforms = [
+  'Uber', 'Lyft', 'DoorDash', 'Instacart', 'Spark Driver', 'Amazon Flex',
+];
 
 class AddTripScreen extends StatefulWidget {
   final AppStrings strings;
@@ -36,7 +42,11 @@ class _AddTripScreenState extends State<AddTripScreen> {
   final _tollsController = TextEditingController();
   final _purposeController = TextEditingController();
   final _notesController = TextEditingController();
+  final _customPlatformController = TextEditingController();
+
   String? _selectedCategory;
+  String? _selectedPlatform;
+  List<String> _platformOptions = _kDefaultPlatforms;
   bool _isSaving = false;
 
   WorkShift? _activeShift;
@@ -56,17 +66,19 @@ class _AddTripScreenState extends State<AddTripScreen> {
     _tollsController.dispose();
     _purposeController.dispose();
     _notesController.dispose();
+    _customPlatformController.dispose();
     super.dispose();
   }
 
   Future<void> _loadWorkSettings() async {
     final settings = await _workModeService.loadSettings();
     if (!mounted) return;
-    setState(() => _activeShift = _matchingShift(settings));
+    setState(() {
+      _activeShift = _matchingShift(settings);
+      _platformOptions = _buildPlatformOptions(settings);
+    });
   }
 
-  /// Returns the matching WorkShift if Work Mode is enabled and the
-  /// current time falls within any configured shift; otherwise null.
   WorkShift? _matchingShift(WorkModeSettings settings) {
     if (!settings.isEnabled) return null;
 
@@ -88,16 +100,40 @@ class _AddTripScreenState extends State<AddTripScreen> {
     return null;
   }
 
+  List<String> _buildPlatformOptions(WorkModeSettings settings) {
+    final result = <String>[];
+    for (final shift in settings.shifts) {
+      if (!result.contains(shift.platformName)) {
+        result.add(shift.platformName);
+      }
+    }
+    for (final preset in _kDefaultPlatforms) {
+      if (!result.contains(preset)) {
+        result.add(preset);
+      }
+    }
+    return result;
+  }
+
   double _parseExpense(String text) {
     final value = double.tryParse(text.trim()) ?? 0;
     return value < 0 ? 0 : value;
   }
 
   String _purposeHint() {
-    final platform = _activeShift?.platformName;
+    final platform = _activeShift?.platformName ?? _resolvedManualPlatform();
     if (platform != null) return '$platform business trip';
     if (_selectedCategory == 'business') return 'Business trip';
     return '';
+  }
+
+  String? _resolvedManualPlatform() {
+    if (_selectedPlatform == null) return null;
+    if (_selectedPlatform == _kOtherPlatform) {
+      final custom = _customPlatformController.text.trim();
+      return custom.isNotEmpty ? custom : null;
+    }
+    return _selectedPlatform;
   }
 
   Future<void> _handleSave() async {
@@ -129,7 +165,9 @@ class _AddTripScreenState extends State<AddTripScreen> {
       final matchedShift = _matchingShift(workSettings);
 
       final resolvedCategory = matchedShift != null ? 'business' : category;
-      final resolvedPlatform = matchedShift?.platformName;
+      final resolvedPlatform = matchedShift != null
+          ? matchedShift.platformName
+          : (resolvedCategory == 'business' ? _resolvedManualPlatform() : null);
 
       final distanceKm = toKilometers(distance, widget.unit);
       final parking = _parseExpense(_parkingController.text);
@@ -177,8 +215,10 @@ class _AddTripScreenState extends State<AddTripScreen> {
       _tollsController.clear();
       _purposeController.clear();
       _notesController.clear();
+      _customPlatformController.clear();
       setState(() {
         _selectedCategory = null;
+        _selectedPlatform = null;
         _activeShift = matchedShift;
       });
 
@@ -193,34 +233,33 @@ class _AddTripScreenState extends State<AddTripScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = widget.strings;
     final cs = Theme.of(context).colorScheme;
+    final showPlatformSelector =
+        _selectedCategory == 'business' && _activeShift == null;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.strings.addTrip)),
+      appBar: AppBar(title: Text(s.addTrip)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          TextField(
+          AddressAutocompleteField(
             controller: _fromController,
-            decoration: InputDecoration(
-              labelText: widget.strings.from,
-              border: const OutlineInputBorder(),
-            ),
+            labelText: s.from,
+            strings: s,
           ),
           const SizedBox(height: 12),
-          TextField(
+          AddressAutocompleteField(
             controller: _toController,
-            decoration: InputDecoration(
-              labelText: widget.strings.to,
-              border: const OutlineInputBorder(),
-            ),
+            labelText: s.to,
+            strings: s,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _distanceController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: widget.strings.distance,
+              labelText: s.distance,
               border: const OutlineInputBorder(),
               suffixText: unitLabel(widget.unit),
             ),
@@ -243,7 +282,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${widget.strings.workModeActiveTripBusiness}'
+                          '${s.workModeActiveTripBusiness}'
                           ' · ${_activeShift!.platformName}',
                           style: TextStyle(
                             color: cs.onPrimaryContainer,
@@ -253,7 +292,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          widget.strings.workModeOverridesCategory,
+                          s.workModeOverridesCategory,
                           style: TextStyle(
                             color: cs.onPrimaryContainer.withValues(alpha: 0.8),
                             fontSize: 12,
@@ -270,26 +309,60 @@ class _AddTripScreenState extends State<AddTripScreen> {
           DropdownButtonFormField<String>(
             initialValue: _selectedCategory,
             items: [
-              DropdownMenuItem(
-                value: 'business',
-                child: Text(widget.strings.business),
-              ),
-              DropdownMenuItem(
-                value: 'personal',
-                child: Text(widget.strings.personal),
-              ),
+              DropdownMenuItem(value: 'business', child: Text(s.business)),
+              DropdownMenuItem(value: 'personal', child: Text(s.personal)),
             ],
-            onChanged: (value) => setState(() => _selectedCategory = value),
+            onChanged: (value) => setState(() {
+              _selectedCategory = value;
+              if (value != 'business') {
+                _selectedPlatform = null;
+                _customPlatformController.clear();
+              }
+            }),
             decoration: InputDecoration(
-              labelText: widget.strings.category,
+              labelText: s.category,
               border: const OutlineInputBorder(),
             ),
           ),
+          if (showPlatformSelector) ...[
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _selectedPlatform,
+              hint: Text(s.selectPlatform),
+              items: [
+                ..._platformOptions.map(
+                  (p) => DropdownMenuItem(value: p, child: Text(p)),
+                ),
+                DropdownMenuItem(
+                  value: _kOtherPlatform,
+                  child: Text(s.otherPlatform),
+                ),
+              ],
+              onChanged: (value) => setState(() {
+                _selectedPlatform = value;
+                if (value != _kOtherPlatform) {
+                  _customPlatformController.clear();
+                }
+              }),
+              decoration: InputDecoration(
+                labelText: s.platform,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            if (_selectedPlatform == _kOtherPlatform) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _customPlatformController,
+                decoration: InputDecoration(
+                  labelText: s.customPlatformName,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ],
           const SizedBox(height: 20),
-
-          // ── Optional trip expenses ─────────────────────────────────────
           Text(
-            widget.strings.expensesOptional,
+            s.expensesOptional,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -304,7 +377,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
                     decimal: true,
                   ),
                   decoration: InputDecoration(
-                    labelText: widget.strings.parking,
+                    labelText: s.parking,
                     border: const OutlineInputBorder(),
                     prefixText: '${widget.preferences.currencyCode} ',
                   ),
@@ -318,7 +391,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
                     decimal: true,
                   ),
                   decoration: InputDecoration(
-                    labelText: widget.strings.tolls,
+                    labelText: s.tolls,
                     border: const OutlineInputBorder(),
                     prefixText: '${widget.preferences.currencyCode} ',
                   ),
@@ -330,7 +403,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
           TextField(
             controller: _purposeController,
             decoration: InputDecoration(
-              labelText: widget.strings.businessPurpose,
+              labelText: s.businessPurpose,
               hintText: _purposeHint(),
               border: const OutlineInputBorder(),
             ),
@@ -340,7 +413,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
             controller: _notesController,
             maxLines: 3,
             decoration: InputDecoration(
-              labelText: widget.strings.notes,
+              labelText: s.notes,
               border: const OutlineInputBorder(),
               alignLabelWithHint: true,
             ),
@@ -350,7 +423,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
             height: 52,
             child: ElevatedButton(
               onPressed: _isSaving ? null : _handleSave,
-              child: Text(widget.strings.saveTripButton),
+              child: Text(s.saveTripButton),
             ),
           ),
         ],

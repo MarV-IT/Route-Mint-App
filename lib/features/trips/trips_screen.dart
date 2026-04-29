@@ -338,6 +338,17 @@ class _TripsScreenState extends State<TripsScreen> {
                 ],
               ),
 
+              if (trip.reviewStatus == TripReviewStatus.needsReview) ...[
+                const SizedBox(height: 4),
+                Text(
+                  s.tapToReview,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: cs.secondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+              ],
+
               // ── Expenses ──────────────────────────────────────────────
               if (hasExpenses) ...[
                 const SizedBox(height: 6),

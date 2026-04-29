@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/location/geolocator_tracking_provider.dart';
 import '../../core/location/location_permission_service.dart';
+import '../../core/location/reverse_geocoding_service.dart';
 import '../../core/preferences/user_preferences.dart';
 import '../../features/trips/models/trip.dart';
 import '../../features/trips/services/trip_service.dart';
@@ -28,8 +29,10 @@ class ForegroundTrackingCard extends StatefulWidget {
 class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
   final _permissionService = LocationPermissionService();
   final _tripService = TripService();
+  final _geocodingService = ReverseGeocodingService();
 
   bool _isTracking = false;
+  bool _isResolvingAddresses = false;
   String? _errorMessage;
 
   @override
@@ -80,15 +83,30 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
       return;
     }
 
-    setState(() => _errorMessage = null);
+    setState(() {
+      _errorMessage = null;
+      _isResolvingAddresses = true;
+    });
 
     final start = result.points.first;
     final end = result.points.last;
 
+    final addresses = await Future.wait([
+      _geocodingService.reverseGeocode(start.latitude, start.longitude),
+      _geocodingService.reverseGeocode(end.latitude, end.longitude),
+    ]);
+
+    if (!mounted) return;
+
+    setState(() => _isResolvingAddresses = false);
+
+    final from = addresses[0] ?? widget.strings.detectedStart;
+    final to = addresses[1] ?? widget.strings.detectedEnd;
+
     final trip = Trip(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      from: widget.strings.detectedStart,
-      to: widget.strings.detectedEnd,
+      from: from,
+      to: to,
       distance: result.distanceKm,
       category: 'personal',
       date: result.startedAt,
@@ -100,6 +118,15 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
       startLongitude: start.longitude,
       endLatitude: end.latitude,
       endLongitude: end.longitude,
+      routePoints: result.points
+          .map(
+            (p) => TripRoutePoint(
+              latitude: p.latitude,
+              longitude: p.longitude,
+              timestamp: p.timestamp,
+            ),
+          )
+          .toList(growable: false),
     );
 
     await _tripService.addTrip(trip);
@@ -126,6 +153,10 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
         ),
       _ when _isTracking => (
           strings.trackingKeepAppOpen,
+          colorScheme.primary,
+        ),
+      _ when _isResolvingAddresses => (
+          strings.resolvingAddresses,
           colorScheme.primary,
         ),
       _ when _errorMessage != null => (

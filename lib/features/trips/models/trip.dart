@@ -2,6 +2,33 @@ enum TripDetectionMode { manual, automatic }
 
 enum TripReviewStatus { reviewed, needsReview }
 
+class TripRoutePoint {
+  const TripRoutePoint({
+    required this.latitude,
+    required this.longitude,
+    this.timestamp,
+  });
+
+  final double latitude;
+  final double longitude;
+  final DateTime? timestamp;
+
+  Map<String, dynamic> toJson() => {
+    'latitude': latitude,
+    'longitude': longitude,
+    if (timestamp != null) 'timestamp': timestamp!.toIso8601String(),
+  };
+
+  factory TripRoutePoint.fromJson(Map<String, dynamic> json) =>
+      TripRoutePoint(
+        latitude: (json['latitude'] as num).toDouble(),
+        longitude: (json['longitude'] as num).toDouble(),
+        timestamp: json['timestamp'] is String
+            ? DateTime.tryParse(json['timestamp'] as String)
+            : null,
+      );
+}
+
 class Trip {
   final String id;
   final String from;
@@ -22,6 +49,7 @@ class Trip {
   final double? startLongitude;
   final double? endLatitude;
   final double? endLongitude;
+  final List<TripRoutePoint> routePoints;
 
   const Trip({
     required this.id,
@@ -43,6 +71,7 @@ class Trip {
     this.startLongitude,
     this.endLatitude,
     this.endLongitude,
+    this.routePoints = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -65,6 +94,7 @@ class Trip {
     'startLongitude': startLongitude,
     'endLatitude': endLatitude,
     'endLongitude': endLongitude,
+    'routePoints': routePoints.map((p) => p.toJson()).toList(),
   };
 
   factory Trip.fromJson(Map<String, dynamic> json) {
@@ -99,6 +129,7 @@ class Trip {
       startLongitude: _doubleOrNull(json['startLongitude']),
       endLatitude: _doubleOrNull(json['endLatitude']),
       endLongitude: _doubleOrNull(json['endLongitude']),
+      routePoints: _parseRoutePoints(json['routePoints']),
     );
   }
 
@@ -122,6 +153,7 @@ class Trip {
     Object? startLongitude = _sentinel,
     Object? endLatitude = _sentinel,
     Object? endLongitude = _sentinel,
+    List<TripRoutePoint>? routePoints,
   }) => Trip(
     id: id ?? this.id,
     from: from ?? this.from,
@@ -154,6 +186,7 @@ class Trip {
     endLongitude: endLongitude == _sentinel
         ? this.endLongitude
         : endLongitude as double?,
+    routePoints: routePoints ?? this.routePoints,
   );
 
   @override
@@ -179,3 +212,11 @@ String? _stringOrNull(Object? value) => value is String ? value : null;
 double _doubleOrDefault(Object? value) => value is num ? value.toDouble() : 0;
 
 double? _doubleOrNull(Object? value) => value is num ? value.toDouble() : null;
+
+List<TripRoutePoint> _parseRoutePoints(Object? value) {
+  if (value is! List) return const [];
+  return value
+      .whereType<Map<String, dynamic>>()
+      .map(TripRoutePoint.fromJson)
+      .toList(growable: false);
+}

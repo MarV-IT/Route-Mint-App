@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/localization/app_strings.dart';
 import '../core/preferences/user_preferences.dart';
 import '../core/preferences/preferences_service.dart';
+import '../features/auth/auth_gate.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import 'navigation.dart';
 
@@ -100,14 +101,17 @@ class _RouteMintAppState extends State<RouteMintApp> {
       );
     }
 
-    return MainNavigationScreen(
-      unit: _preferences!.unit,
-      preferences: _preferences!,
-      selectedLanguage: _selectedLanguage,
-      onUnitChanged: _changeUnit,
-      onLanguageChanged: _changeLanguage,
-      onPreferencesChanged: _changePreferences,
+    return AuthGate(
       strings: strings,
+      child: MainNavigationScreen(
+        unit: _preferences!.unit,
+        preferences: _preferences!,
+        selectedLanguage: _selectedLanguage,
+        onUnitChanged: _changeUnit,
+        onLanguageChanged: _changeLanguage,
+        onPreferencesChanged: _changePreferences,
+        strings: strings,
+      ),
     );
   }
 }

@@ -13,7 +13,7 @@ final ForegroundTripTrackingService appTrackingService =
 Stream<TrackingPoint> _geolocatorStream() {
   const settings = LocationSettings(
     accuracy: LocationAccuracy.high,
-    distanceFilter: 0,
+    distanceFilter: 15,
   );
   return Geolocator.getPositionStream(locationSettings: settings).map(
     (pos) => TrackingPoint(

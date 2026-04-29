@@ -712,6 +712,15 @@ class AppStrings {
         fa: 'ابتدا تشخیص خودکار سفر را در پروفایل فعال کنید',
       );
 
+  String get resolvingAddresses => _value(
+        en: 'Resolving addresses…',
+        es: 'Resolviendo direcciones…',
+        fr: 'Résolution des adresses…',
+        ru: 'Определение адресов…',
+        uk: 'Визначення адрес…',
+        fa: 'در حال یافتن آدرس‌ها…',
+      );
+
   String get detectedStart => _value(
         en: 'Detected start',
         es: 'Inicio detectado',
@@ -728,6 +737,51 @@ class AppStrings {
         ru: 'Определённый конец',
         uk: 'Виявлений кінець',
         fa: 'پایان شناسایی شده',
+      );
+
+  String get detectedRoute => _value(
+        en: 'Detected route',
+        es: 'Ruta detectada',
+        fr: 'Trajet détecté',
+        ru: 'Обнаруженный маршрут',
+        uk: 'Виявлений маршрут',
+        fa: 'مسیر شناسایی شده',
+      );
+
+  String get detectedTripNeedsReview => _value(
+        en: 'This detected trip needs review',
+        es: 'Este viaje detectado requiere revisión',
+        fr: 'Ce trajet détecté nécessite une vérification',
+        ru: 'Эта обнаруженная поездка требует проверки',
+        uk: 'Ця виявлена поїздка потребує перевірки',
+        fa: 'این سفر شناسایی شده نیاز به بررسی دارد',
+      );
+
+  String get confirmDetailsAndMarkReviewed => _value(
+        en: 'Confirm the details and mark it reviewed.',
+        es: 'Confirma los detalles y márcalo como revisado.',
+        fr: 'Confirmez les détails et marquez-le comme vérifié.',
+        ru: 'Проверьте данные и пометьте как проверено.',
+        uk: 'Підтвердьте деталі та позначте як перевірено.',
+        fa: 'جزئیات را تأیید کرده و آن را بررسی شده علامت بزنید.',
+      );
+
+  String get saveAndMarkReviewed => _value(
+        en: 'Save & Mark Reviewed',
+        es: 'Guardar y marcar revisado',
+        fr: 'Enregistrer et marquer vérifié',
+        ru: 'Сохранить и отметить проверенным',
+        uk: 'Зберегти та позначити перевіреним',
+        fa: 'ذخیره و علامت‌گذاری بررسی شده',
+      );
+
+  String get tapToReview => _value(
+        en: 'Tap to review',
+        es: 'Toca para revisar',
+        fr: 'Appuyez pour vérifier',
+        ru: 'Нажмите для проверки',
+        uk: 'Натисніть для перевірки',
+        fa: 'برای بررسی ضربه بزنید',
       );
 
   String get workModeOverridesCategory => _value(
@@ -982,6 +1036,290 @@ class AppStrings {
         en: 'No trips yet',                  es: 'Sin viajes aún',
         fr: "Aucun trajet pour l'instant",   ru: 'Поездок пока нет',
         uk: 'Поїздок ще немає',              fa: 'هنوز سفری وجود ندارد',
+      );
+
+  // ─── Address search ───────────────────────────────────────────────────────
+
+  String get searchingAddress => _value(
+        en: 'Searching…',
+        es: 'Buscando…',
+        fr: 'Recherche…',
+        ru: 'Поиск…',
+        uk: 'Пошук…',
+        fa: 'در حال جستجو…',
+      );
+
+  String get noAddressSuggestions => _value(
+        en: 'No suggestions found',
+        es: 'No se encontraron sugerencias',
+        fr: 'Aucune suggestion trouvée',
+        ru: 'Нет подсказок',
+        uk: 'Підказок не знайдено',
+        fa: 'هیچ پیشنهادی یافت نشد',
+      );
+
+  String get addressSearchUnavailable => _value(
+        en: 'Address search unavailable',
+        es: 'Búsqueda de dirección no disponible',
+        fr: 'Recherche d\'adresse indisponible',
+        ru: 'Поиск адреса недоступен',
+        uk: 'Пошук адреси недоступний',
+        fa: 'جستجوی آدرس در دسترس نیست',
+      );
+
+  String get selectPlatform => _value(
+        en: 'Select platform',         es: 'Seleccionar plataforma',
+        fr: 'Choisir une plateforme',  ru: 'Выбрать платформу',
+        uk: 'Обрати платформу',        fa: 'انتخاب پلتفرم',
+      );
+
+  String get otherPlatform => _value(
+        en: 'Other',        es: 'Otro',         fr: 'Autre',
+        ru: 'Другое',       uk: 'Інше',         fa: 'سایر',
+      );
+
+  String get customPlatformName => _value(
+        en: 'Platform name',        es: 'Nombre de plataforma',
+        fr: 'Nom de la plateforme', ru: 'Название платформы',
+        uk: 'Назва платформи',      fa: 'نام پلتفرم',
+      );
+
+  // ─── Auth ─────────────────────────────────────────────────────────────────
+
+  String get account => _value(
+        en: 'Account',          es: 'Cuenta',               fr: 'Compte',
+        ru: 'Аккаунт',          uk: 'Акаунт',               fa: 'حساب',
+      );
+
+  String get signIn => _value(
+        en: 'Sign In',          es: 'Iniciar sesión',        fr: 'Se connecter',
+        ru: 'Войти',            uk: 'Увійти',               fa: 'ورود',
+      );
+
+  String get signUp => _value(
+        en: 'Sign Up',          es: 'Registrarse',           fr: "S'inscrire",
+        ru: 'Регистрация',      uk: 'Реєстрація',           fa: 'ثبت‌نام',
+      );
+
+  String get signOut => _value(
+        en: 'Sign Out',         es: 'Cerrar sesión',         fr: 'Se déconnecter',
+        ru: 'Выйти',            uk: 'Вийти',                fa: 'خروج',
+      );
+
+  String get email => _value(
+        en: 'Email',            es: 'Correo electrónico',    fr: 'E-mail',
+        ru: 'Эл. почта',        uk: 'Ел. пошта',            fa: 'ایمیل',
+      );
+
+  String get password => _value(
+        en: 'Password',         es: 'Contraseña',            fr: 'Mot de passe',
+        ru: 'Пароль',           uk: 'Пароль',               fa: 'رمز عبور',
+      );
+
+  String get confirmPassword => _value(
+        en: 'Confirm password',
+        es: 'Confirmar contraseña',
+        fr: 'Confirmer le mot de passe',
+        ru: 'Подтвердите пароль',
+        uk: 'Підтвердьте пароль',
+        fa: 'تأیید رمز عبور',
+      );
+
+  String get forgotPassword => _value(
+        en: 'Forgot password?',
+        es: '¿Olvidaste tu contraseña?',
+        fr: 'Mot de passe oublié?',
+        ru: 'Забыли пароль?',
+        uk: 'Забули пароль?',
+        fa: 'رمز عبور را فراموش کردید؟',
+      );
+
+  String get continueWithoutAccount => _value(
+        en: 'Continue without account',
+        es: 'Continuar sin cuenta',
+        fr: 'Continuer sans compte',
+        ru: 'Продолжить без аккаунта',
+        uk: 'Продовжити без акаунту',
+        fa: 'ادامه بدون حساب',
+      );
+
+  String get guestMode => _value(
+        en: 'Guest mode',       es: 'Modo invitado',         fr: 'Mode invité',
+        ru: 'Гостевой режим',   uk: 'Гостьовий режим',      fa: 'حالت مهمان',
+      );
+
+  String get createAccount => _value(
+        en: 'Create account',   es: 'Crear cuenta',          fr: 'Créer un compte',
+        ru: 'Создать аккаунт',  uk: 'Створити акаунт',      fa: 'ایجاد حساب',
+      );
+
+  String get alreadyHaveAccount => _value(
+        en: 'Already have an account?',
+        es: '¿Ya tienes una cuenta?',
+        fr: 'Vous avez déjà un compte?',
+        ru: 'Уже есть аккаунт?',
+        uk: 'Вже маєте акаунт?',
+        fa: 'قبلاً حساب دارید؟',
+      );
+
+  String get dontHaveAccount => _value(
+        en: "Don't have an account?",
+        es: '¿No tienes una cuenta?',
+        fr: 'Pas encore de compte?',
+        ru: 'Нет аккаунта?',
+        uk: 'Немає акаунту?',
+        fa: 'حساب ندارید؟',
+      );
+
+  String get passwordResetSent => _value(
+        en: 'Password reset email sent',
+        es: 'Correo de restablecimiento enviado',
+        fr: 'E-mail de réinitialisation envoyé',
+        ru: 'Письмо для сброса пароля отправлено',
+        uk: 'Лист для скидання пароля надіслано',
+        fa: 'ایمیل بازنشانی رمز ارسال شد',
+      );
+
+  String get passwordsDoNotMatch => _value(
+        en: 'Passwords do not match',
+        es: 'Las contraseñas no coinciden',
+        fr: 'Les mots de passe ne correspondent pas',
+        ru: 'Пароли не совпадают',
+        uk: 'Паролі не збігаються',
+        fa: 'رمزهای عبور مطابقت ندارند',
+      );
+
+  String get passwordTooShort => _value(
+        en: 'Password must be at least 6 characters',
+        es: 'La contraseña debe tener al menos 6 caracteres',
+        fr: 'Le mot de passe doit contenir au moins 6 caractères',
+        ru: 'Пароль должен содержать не менее 6 символов',
+        uk: 'Пароль має містити щонайменше 6 символів',
+        fa: 'رمز عبور باید حداقل ۶ کاراکتر باشد',
+      );
+
+  String get authFailed => _value(
+        en: 'Sign in failed. Please try again.',
+        es: 'Error al iniciar sesión. Inténtalo de nuevo.',
+        fr: 'Échec de la connexion. Veuillez réessayer.',
+        ru: 'Ошибка входа. Попробуйте снова.',
+        uk: 'Помилка входу. Спробуйте ще раз.',
+        fa: 'ورود ناموفق بود. دوباره تلاش کنید.',
+      );
+
+  String get signedOut => _value(
+        en: 'Signed out',       es: 'Sesión cerrada',        fr: 'Déconnecté',
+        ru: 'Выход выполнен',   uk: 'Вийшли з системи',     fa: 'از سیستم خارج شدید',
+      );
+
+  // ─── Cloud backup ─────────────────────────────────────────────────────────
+
+  String get cloudBackup => _value(
+        en: 'Cloud Backup',
+        es: 'Copia en la nube',
+        fr: 'Sauvegarde cloud',
+        ru: 'Облачная копия',
+        uk: 'Хмарна резервна копія',
+        fa: 'پشتیبان ابری',
+      );
+
+  String get backupToCloud => _value(
+        en: 'Back up to cloud',
+        es: 'Hacer copia en la nube',
+        fr: 'Sauvegarder dans le cloud',
+        ru: 'Создать облачную копию',
+        uk: 'Зберегти в хмарі',
+        fa: 'پشتیبان‌گیری در ابر',
+      );
+
+  String get restoreFromCloud => _value(
+        en: 'Restore from cloud',
+        es: 'Restaurar desde la nube',
+        fr: 'Restaurer depuis le cloud',
+        ru: 'Восстановить из облака',
+        uk: 'Відновити з хмари',
+        fa: 'بازیابی از ابر',
+      );
+
+  String get lastCloudBackup => _value(
+        en: 'Last cloud backup',
+        es: 'Última copia en la nube',
+        fr: 'Dernière sauvegarde cloud',
+        ru: 'Последняя облачная копия',
+        uk: 'Остання хмарна копія',
+        fa: 'آخرین پشتیبان ابری',
+      );
+
+  String get signInToUseCloudBackup => _value(
+        en: 'Sign in to use cloud backup',
+        es: 'Inicia sesión para usar la copia en la nube',
+        fr: 'Connectez-vous pour utiliser la sauvegarde cloud',
+        ru: 'Войдите для использования облачного резервного копирования',
+        uk: 'Увійдіть, щоб використовувати хмарну резервну копію',
+        fa: 'برای استفاده از پشتیبان ابری وارد شوید',
+      );
+
+  String get cloudBackupUploaded => _value(
+        en: 'Backed up to cloud',
+        es: 'Copia guardada en la nube',
+        fr: 'Sauvegardé dans le cloud',
+        ru: 'Резервная копия сохранена в облаке',
+        uk: 'Резервну копію збережено в хмарі',
+        fa: 'پشتیبان در ابر ذخیره شد',
+      );
+
+  String get cloudBackupRestored => _value(
+        en: 'Cloud backup restored',
+        es: 'Copia en la nube restaurada',
+        fr: 'Sauvegarde cloud restaurée',
+        ru: 'Облачная резервная копия восстановлена',
+        uk: 'Хмарну резервну копію відновлено',
+        fa: 'پشتیبان ابری بازیابی شد',
+      );
+
+  String get cloudBackupFailed => _value(
+        en: 'Cloud backup failed',
+        es: 'Error al hacer copia en la nube',
+        fr: 'Échec de la sauvegarde cloud',
+        ru: 'Ошибка облачного резервного копирования',
+        uk: 'Помилка хмарного резервного копіювання',
+        fa: 'پشتیبان‌گیری ابری ناموفق بود',
+      );
+
+  String get cloudRestoreFailed => _value(
+        en: 'Cloud restore failed',
+        es: 'Error al restaurar desde la nube',
+        fr: 'Échec de la restauration cloud',
+        ru: 'Ошибка восстановления из облака',
+        uk: 'Помилка відновлення з хмари',
+        fa: 'بازیابی از ابر ناموفق بود',
+      );
+
+  String get cloudRestoreConfirmTitle => _value(
+        en: 'Restore from cloud?',
+        es: '¿Restaurar desde la nube?',
+        fr: 'Restaurer depuis le cloud?',
+        ru: 'Восстановить из облака?',
+        uk: 'Відновити з хмари?',
+        fa: 'از ابر بازیابی شود؟',
+      );
+
+  String get cloudRestoreConfirmMessage => _value(
+        en: 'Restoring from cloud will replace all your current trips, preferences, and work mode settings.',
+        es: 'Restaurar desde la nube reemplazará todos tus viajes, preferencias y configuración de modo trabajo.',
+        fr: 'La restauration depuis le cloud remplacera tous vos trajets, préférences et paramètres de travail.',
+        ru: 'Восстановление из облака заменит все поездки, настройки и параметры рабочего режима.',
+        uk: 'Відновлення з хмари замінить усі поїздки, налаштування та параметри робочого режиму.',
+        fa: 'بازیابی از ابر، تمام سفرها، تنظیمات و حالت کاری فعلی شما را جایگزین می‌کند.',
+      );
+
+  String get noCloudBackupFound => _value(
+        en: 'No cloud backup found',
+        es: 'No se encontró copia en la nube',
+        fr: 'Aucune sauvegarde cloud trouvée',
+        ru: 'Облачная резервная копия не найдена',
+        uk: 'Хмарна резервна копія не знайдена',
+        fa: 'پشتیبان ابری یافت نشد',
       );
 
   // ─── Internal ─────────────────────────────────────────────────────────────
