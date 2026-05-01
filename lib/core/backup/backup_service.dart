@@ -11,7 +11,9 @@ import '../../features/work_mode/models/work_mode_settings.dart';
 import '../../features/work_mode/services/work_mode_service.dart';
 
 class BackupService {
-  static const _appName = 'Route Mint';
+  static const _appName = 'MarV Route';
+  // Legacy name accepted on import for backward compatibility.
+  static const _appNameLegacy = 'Route Mint';
   static const _backupVersion = 1;
 
   final _prefsService = PreferencesService();
@@ -45,7 +47,7 @@ class BackupService {
 
     await Printing.sharePdf(
       bytes: bytes,
-      filename: 'route_mint_backup_$slug.json',
+      filename: 'marv_route_backup_$slug.json',
     );
   }
 
@@ -96,8 +98,10 @@ class BackupService {
     }
 
     final appName = decoded['appName'];
-    if (appName is String && appName != _appName) {
-      throw const FormatException('Not a Route Mint backup file');
+    if (appName is String &&
+        appName != _appName &&
+        appName != _appNameLegacy) {
+      throw const FormatException('Not a MarV Route backup file');
     }
 
     final version = decoded['backupVersion'];

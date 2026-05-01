@@ -13,6 +13,7 @@ class UserPreferences {
   final String? businessName;
   final String? vehicleName;
   final bool autoTripDetectionEnabled;
+  final AppThemeMode themeMode;
 
   const UserPreferences({
     required this.country,
@@ -24,6 +25,7 @@ class UserPreferences {
     this.businessName,
     this.vehicleName,
     this.autoTripDetectionEnabled = false,
+    this.themeMode = AppThemeMode.system,
   });
 
   /// Default preferences before onboarding is completed.
@@ -59,6 +61,7 @@ class UserPreferences {
     'businessName': businessName,
     'vehicleName': vehicleName,
     'autoTripDetectionEnabled': autoTripDetectionEnabled,
+    'themeMode': themeMode.name,
   };
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -87,6 +90,10 @@ class UserPreferences {
         autoTripDetectionEnabled: json['autoTripDetectionEnabled'] is bool
             ? json['autoTripDetectionEnabled'] as bool
             : false,
+        themeMode: AppThemeMode.values.firstWhere(
+          (t) => t.name == json['themeMode'],
+          orElse: () => AppThemeMode.system,
+        ),
       );
 
   UserPreferences copyWith({
@@ -99,6 +106,7 @@ class UserPreferences {
     Object? businessName = _sentinel,
     Object? vehicleName = _sentinel,
     bool? autoTripDetectionEnabled,
+    AppThemeMode? themeMode,
   }) => UserPreferences(
     country: country ?? this.country,
     currencyCode: currencyCode ?? this.currencyCode,
@@ -116,6 +124,7 @@ class UserPreferences {
         : vehicleName as String?,
     autoTripDetectionEnabled:
         autoTripDetectionEnabled ?? this.autoTripDetectionEnabled,
+    themeMode: themeMode ?? this.themeMode,
   );
 
   @override

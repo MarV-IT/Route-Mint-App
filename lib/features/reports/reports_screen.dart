@@ -215,7 +215,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.strings.exportFailed}: $e')),
+        SnackBar(content: Text(widget.strings.exportFailed)),
       );
     } finally {
       if (mounted) {
@@ -244,7 +244,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.strings.csvExportFailed}: $e')),
+        SnackBar(content: Text(widget.strings.csvExportFailed)),
       );
     } finally {
       if (mounted) setState(() => _isExportingCsv = false);

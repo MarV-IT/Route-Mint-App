@@ -125,7 +125,7 @@ class ReportPdfService {
     final typeSlug = reportType == PdfReportType.simple ? 'simple' : 'detailed';
     await Printing.layoutPdf(
       onLayout: (_) async => doc.save(),
-      name: 'route_mint_${typeSlug}_$monthYearSlug.pdf',
+      name: 'marv_route_${typeSlug}_$monthYearSlug.pdf',
     );
   }
 

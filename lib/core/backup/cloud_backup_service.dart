@@ -15,7 +15,7 @@ import '../../features/work_mode/models/work_mode_settings.dart';
 import '../../features/work_mode/services/work_mode_service.dart';
 
 class CloudBackupService {
-  static const _appName = 'Route Mint';
+  static const _appName = 'MarV Route';
   static const _backupVersion = 1;
 
   final _prefsService = PreferencesService();

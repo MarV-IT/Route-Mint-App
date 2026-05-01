@@ -10,6 +10,8 @@ enum AppUnit { kilometers, miles }
 
 enum AppLanguage { english, spanish, french, russian, ukrainian, dari }
 
+enum AppThemeMode { system, light, dark }
+
 class RouteMintApp extends StatefulWidget {
   const RouteMintApp({super.key});
 
@@ -77,12 +79,31 @@ class _RouteMintAppState extends State<RouteMintApp> {
   Widget build(BuildContext context) {
     final strings = AppStrings(_selectedLanguage);
 
+    const seed = Color(0xFF52D6FD);
+
+    final themeMode = switch (_preferences?.themeMode ?? AppThemeMode.system) {
+      AppThemeMode.system => ThemeMode.system,
+      AppThemeMode.light  => ThemeMode.light,
+      AppThemeMode.dark   => ThemeMode.dark,
+    };
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Route Mint',
+      title: 'MarV Route',
+      themeMode: themeMode,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-        scaffoldBackgroundColor: const Color(0xFFF6F8F7),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: seed,
+          brightness: Brightness.light,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF0FBFD),
+        useMaterial3: true,
+      ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: seed,
+          brightness: Brightness.dark,
+        ),
         useMaterial3: true,
       ),
       home: _buildHome(strings),

@@ -143,7 +143,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   Icon(Icons.route, size: 56, color: cs.primary),
                   const SizedBox(height: 8),
                   Text(
-                    'Route Mint',
+                    'MarV Route',
                     textAlign: TextAlign.center,
                     style: Theme.of(context)
                         .textTheme

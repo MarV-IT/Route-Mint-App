@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/localization/app_strings.dart';
+import '../core/location/geolocator_tracking_provider.dart';
 import '../core/preferences/user_preferences.dart';
 import '../features/today/today_screen.dart';
 import '../features/trips/trips_screen.dart';
@@ -79,7 +80,22 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ];
 
     return Scaffold(
-      body: pages[_selectedIndex],
+      body: Column(
+        children: [
+          Expanded(child: pages[_selectedIndex]),
+          // Show a persistent banner on every tab except Today (index 0),
+          // where the tracking card already shows status.
+          ValueListenableBuilder<bool>(
+            valueListenable: appTrackingService.isTrackingNotifier,
+            builder: (context, isTracking, _) {
+              if (!isTracking || _selectedIndex == 0) {
+                return const SizedBox.shrink();
+              }
+              return _ActiveTrackingBanner(strings: strings);
+            },
+          ),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
@@ -112,6 +128,56 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             label: strings.profile,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ActiveTrackingBanner extends StatelessWidget {
+  const _ActiveTrackingBanner({required this.strings});
+
+  final AppStrings strings;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ColoredBox(
+      color: colorScheme.primaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            Icon(
+              Icons.gps_fixed,
+              size: 16,
+              color: colorScheme.onPrimaryContainer,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    strings.trackingActiveTitle,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  Text(
+                    strings.trackingActiveMessage,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

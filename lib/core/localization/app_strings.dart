@@ -409,6 +409,27 @@ class AppStrings {
         ru: 'Язык',         uk: 'Мова',         fa: 'زبان',
       );
 
+  String get appearance => _value(
+        en: 'Appearance',           es: 'Apariencia',
+        fr: 'Apparence',            ru: 'Внешний вид',
+        uk: 'Зовнішній вигляд',     fa: 'ظاهر',
+      );
+
+  String get systemTheme => _value(
+        en: 'System',       es: 'Sistema',      fr: 'Système',
+        ru: 'Системная',    uk: 'Системна',     fa: 'سیستم',
+      );
+
+  String get lightTheme => _value(
+        en: 'Light',        es: 'Claro',        fr: 'Clair',
+        ru: 'Светлая',      uk: 'Світла',       fa: 'روشن',
+      );
+
+  String get darkTheme => _value(
+        en: 'Dark',         es: 'Oscuro',       fr: 'Sombre',
+        ru: 'Тёмная',       uk: 'Темна',        fa: 'تاریک',
+      );
+
   String get reimbursementRate => _value(
         en: 'Reimbursement rate',       es: 'Tarifa de reembolso',
         fr: 'Taux de remboursement',    ru: 'Ставка компенсации',
@@ -582,12 +603,12 @@ class AppStrings {
       );
 
   String get autoTripDetectionDescription => _value(
-        en: 'Route Mint can detect potential trips and ask you to review them.',
-        es: 'Route Mint puede detectar viajes potenciales y pedirte que los revises.',
-        fr: 'Route Mint peut détecter des trajets potentiels et vous demander de les examiner.',
-        ru: 'Route Mint может обнаруживать возможные поездки и предлагать вам их проверить.',
-        uk: 'Route Mint може виявляти можливі поїздки та пропонувати вам їх перевірити.',
-        fa: 'Route Mint می‌تواند سفرهای احتمالی را شناسایی کرده و از شما بخواهد آن‌ها را بررسی کنید.',
+        en: 'MarV Route can detect potential trips and ask you to review them.',
+        es: 'MarV Route puede detectar viajes potenciales y pedirte que los revises.',
+        fr: 'MarV Route peut détecter des trajets potentiels et vous demander de les examiner.',
+        ru: 'MarV Route может обнаруживать возможные поездки и предлагать вам их проверить.',
+        uk: 'MarV Route може виявляти можливі поїздки та пропонувати вам їх перевірити.',
+        fa: 'MarV Route می‌تواند سفرهای احتمالی را شناسایی کرده و از شما بخواهد آن‌ها را بررسی کنید.',
       );
 
   String get needsReview => _value(
@@ -667,6 +688,60 @@ class AppStrings {
         fa: 'بدون ردیابی',
       );
 
+  String get trackingActiveTitle => _value(
+        en: 'Tracking is active',
+        es: 'Rastreo activo',
+        fr: 'Suivi actif',
+        ru: 'Отслеживание активно',
+        uk: 'Відстеження активне',
+        fa: 'ردیابی فعال است',
+      );
+
+  String get trackingActiveMessage => _value(
+        en: 'Stop tracking when your trip ends. Tracking continues while screen is off.',
+        es: 'Detén el rastreo cuando tu viaje termine. El rastreo continúa con la pantalla apagada.',
+        fr: "Arrêtez le suivi quand votre trajet se termine. Le suivi continue écran éteint.",
+        ru: 'Остановите отслеживание, когда поездка закончится. Отслеживание продолжается при выключенном экране.',
+        uk: 'Зупиніть відстеження, коли поїздка закінчиться. Відстеження триває при вимкненому екрані.',
+        fa: 'وقتی سفر تمام شد، ردیابی را متوقف کنید. ردیابی با خاموشی صفحه ادامه می‌یابد.',
+      );
+
+  String get trackingContinuesScreenOff => _value(
+        en: 'Tracking continues while your screen is off. A notification will be shown.',
+        es: 'El rastreo continúa con la pantalla apagada. Se mostrará una notificación.',
+        fr: "Le suivi continue écran éteint. Une notification sera affichée.",
+        ru: 'Отслеживание продолжается при выключенном экране. Будет показано уведомление.',
+        uk: 'Відстеження триває при вимкненому екрані. Буде показано сповіщення.',
+        fa: 'ردیابی با خاموشی صفحه ادامه می‌یابد. یک اعلان نمایش داده خواهد شد.',
+      );
+
+  String get trackingNotificationTitle => _value(
+        en: 'MarV Route is tracking your trip',
+        es: 'MarV Route está rastreando tu viaje',
+        fr: 'MarV Route suit votre trajet',
+        ru: 'MarV Route отслеживает вашу поездку',
+        uk: 'MarV Route відстежує вашу поїздку',
+        fa: 'MarV Route در حال ردیابی سفر شما است',
+      );
+
+  String get trackingNotificationText => _value(
+        en: 'Tracking continues while your screen is off.',
+        es: 'El rastreo continúa con la pantalla apagada.',
+        fr: 'Le suivi continue écran éteint.',
+        ru: 'Отслеживание продолжается при выключенном экране.',
+        uk: 'Відстеження триває при вимкненому екрані.',
+        fa: 'ردیابی با خاموشی صفحه ادامه می‌یابد.',
+      );
+
+  String get foregroundOnlyTracking => _value(
+        en: 'Foreground only — tracking stops when the app is closed.',
+        es: 'Solo en primer plano — el rastreo se detiene al cerrar la app.',
+        fr: "Premier plan uniquement — le suivi s'arrête à la fermeture de l'app.",
+        ru: 'Только на переднем плане — отслеживание останавливается при закрытии приложения.',
+        uk: 'Лише на передньому плані — відстеження зупиняється при закритті додатку.',
+        fa: 'فقط در پیش‌زمینه — ردیابی با بستن برنامه متوقف می‌شود.',
+      );
+
   String get locationPermissionRequired => _value(
         en: 'Location permission required',
         es: 'Se requiere permiso de ubicación',
@@ -701,6 +776,15 @@ class AppStrings {
         ru: 'Обнаруженная поездка сохранена для проверки',
         uk: 'Виявлену поїздку збережено для перевірки',
         fa: 'سفر شناسایی شده برای بررسی ذخیره شد',
+      );
+
+  String get trackingError => _value(
+        en: 'Tracking error. Please try again.',
+        es: 'Error de rastreo. Por favor, inténtalo de nuevo.',
+        fr: 'Erreur de suivi. Veuillez réessayer.',
+        ru: 'Ошибка отслеживания. Повторите попытку.',
+        uk: 'Помилка відстеження. Спробуйте ще раз.',
+        fa: 'خطا در ردیابی. لطفاً دوباره امتحان کنید.',
       );
 
   String get enableAutoDetectionFirst => _value(
@@ -877,12 +961,12 @@ class AppStrings {
   // ─── Onboarding ───────────────────────────────────────────────────────────
 
   String get welcomeToRouteMint => _value(
-        en: 'Welcome to Route Mint',
-        es: 'Bienvenido a Route Mint',
-        fr: 'Bienvenue sur Route Mint',
-        ru: 'Добро пожаловать в Route Mint',
-        uk: 'Ласкаво просимо до Route Mint',
-        fa: 'به Route Mint خوش آمدید',
+        en: 'Welcome to MarV Route',
+        es: 'Bienvenido a MarV Route',
+        fr: 'Bienvenue sur MarV Route',
+        ru: 'Добро пожаловать в MarV Route',
+        uk: 'Ласкаво просимо до MarV Route',
+        fa: 'به MarV Route خوش آمدید',
       );
 
   String get chooseYourCountry => _value(
@@ -1268,6 +1352,24 @@ class AppStrings {
         fa: 'پشتیبان در ابر ذخیره شد',
       );
 
+  String get cloudBackupExplanation => _value(
+        en: 'Cloud backup saves your trips and settings to your account.',
+        es: 'La copia en la nube guarda tus viajes y ajustes en tu cuenta.',
+        fr: 'La sauvegarde cloud enregistre vos trajets et réglages sur votre compte.',
+        ru: 'Облачная копия сохраняет ваши поездки и настройки в аккаунте.',
+        uk: 'Хмарна копія зберігає ваші поїздки та налаштування в акаунті.',
+        fa: 'پشتیبان ابری سفرها و تنظیمات شما را در حساب‌تان ذخیره می‌کند.',
+      );
+
+  String get cloudRestoreExplanation => _value(
+        en: 'Restore replaces local data on this device.',
+        es: 'Restaurar reemplaza los datos locales en este dispositivo.',
+        fr: 'La restauration remplace les données locales sur cet appareil.',
+        ru: 'Восстановление заменяет локальные данные на этом устройстве.',
+        uk: 'Відновлення замінює локальні дані на цьому пристрої.',
+        fa: 'بازیابی داده‌های محلی این دستگاه را جایگزین می‌کند.',
+      );
+
   String get cloudBackupRestored => _value(
         en: 'Cloud backup restored',
         es: 'Copia en la nube restaurada',
@@ -1320,6 +1422,53 @@ class AppStrings {
         ru: 'Облачная резервная копия не найдена',
         uk: 'Хмарна резервна копія не знайдена',
         fa: 'پشتیبان ابری یافت نشد',
+      );
+
+  // ─── Privacy & Data ───────────────────────────────────────────────────────
+
+  String get privacyAndData => _value(
+        en: 'Privacy & Data',
+        es: 'Privacidad y datos',
+        fr: 'Confidentialité et données',
+        ru: 'Конфиденциальность и данные',
+        uk: 'Конфіденційність і дані',
+        fa: 'حریم خصوصی و داده‌ها',
+      );
+
+  String get tripsStoredLocally => _value(
+        en: 'Trips are stored locally on this device.',
+        es: 'Los viajes se almacenan localmente en este dispositivo.',
+        fr: 'Les trajets sont stockés localement sur cet appareil.',
+        ru: 'Поездки хранятся локально на этом устройстве.',
+        uk: 'Поїздки зберігаються локально на цьому пристрої.',
+        fa: 'سفرها به صورت محلی در این دستگاه ذخیره می‌شوند.',
+      );
+
+  String get cloudBackupOptional => _value(
+        en: 'Cloud backup is optional and only available when signed in.',
+        es: 'La copia en la nube es opcional y solo está disponible al iniciar sesión.',
+        fr: 'La sauvegarde cloud est facultative et disponible uniquement une fois connecté.',
+        ru: 'Облачное резервное копирование необязательно и доступно только при входе в аккаунт.',
+        uk: 'Хмарне резервне копіювання необов\'язкове і доступне лише після входу в акаунт.',
+        fa: 'پشتیبان ابری اختیاری است و فقط پس از ورود در دسترس است.',
+      );
+
+  String get locationUsageExplanation => _value(
+        en: 'Location is used only for trip tracking and address suggestions.',
+        es: 'La ubicación se usa solo para el seguimiento de viajes y sugerencias de dirección.',
+        fr: "La localisation est utilisée uniquement pour le suivi des trajets et les suggestions d'adresse.",
+        ru: 'Геолокация используется только для отслеживания поездок и подсказок адресов.',
+        uk: 'Геолокація використовується лише для відстеження поїздок та підказок адрес.',
+        fa: 'موقعیت مکانی فقط برای ردیابی سفر و پیشنهاد آدرس استفاده می‌شود.',
+      );
+
+  String get foregroundTrackingExplanation => _value(
+        en: 'Tracking continues while the screen is off. A notification is shown during active tracking.',
+        es: 'El rastreo continúa con la pantalla apagada. Se muestra una notificación durante el rastreo activo.',
+        fr: "Le suivi continue écran éteint. Une notification est affichée pendant le suivi actif.",
+        ru: 'Отслеживание продолжается при выключенном экране. Во время отслеживания отображается уведомление.',
+        uk: 'Відстеження триває при вимкненому екрані. Під час активного відстеження відображається сповіщення.',
+        fa: 'ردیابی با خاموشی صفحه ادامه می‌یابد. در طول ردیابی فعال یک اعلان نمایش داده می‌شود.',
       );
 
   // ─── Internal ─────────────────────────────────────────────────────────────

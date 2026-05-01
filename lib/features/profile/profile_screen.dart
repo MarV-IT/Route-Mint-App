@@ -99,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.strings.backupExportFailed}: $e')),
+        SnackBar(content: Text(widget.strings.backupExportFailed)),
       );
     } finally {
       if (mounted) setState(() => _isExportingBackup = false);
@@ -150,7 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.strings.backupImportFailed}: $e')),
+        SnackBar(content: Text(widget.strings.backupImportFailed)),
       );
     } finally {
       if (mounted) setState(() => _isImportingBackup = false);
@@ -169,7 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.strings.cloudBackupFailed}: $e')),
+        SnackBar(content: Text(widget.strings.cloudBackupFailed)),
       );
     } finally {
       if (mounted) setState(() => _isUploadingCloud = false);
@@ -218,7 +218,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.strings.cloudRestoreFailed}: $e')),
+        SnackBar(content: Text(widget.strings.cloudRestoreFailed)),
       );
     } finally {
       if (mounted) setState(() => _isRestoringCloud = false);
@@ -414,6 +414,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 12),
 
+          // ── Appearance ─────────────────────────────────────────────────
+          DropdownButtonFormField<AppThemeMode>(
+            initialValue: widget.preferences.themeMode,
+            decoration: InputDecoration(
+              labelText: s.appearance,
+              border: const OutlineInputBorder(),
+            ),
+            items: [
+              DropdownMenuItem(
+                value: AppThemeMode.system,
+                child: Text(s.systemTheme),
+              ),
+              DropdownMenuItem(
+                value: AppThemeMode.light,
+                child: Text(s.lightTheme),
+              ),
+              DropdownMenuItem(
+                value: AppThemeMode.dark,
+                child: Text(s.darkTheme),
+              ),
+            ],
+            onChanged: (value) {
+              if (value == null) return;
+              widget.onPreferencesChanged(
+                widget.preferences.copyWith(themeMode: value),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+
           const Divider(),
 
           // ── Work Mode ──────────────────────────────────────────────────
@@ -451,6 +481,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
               widget.onPreferencesChanged(updated);
             },
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+            child: Text(
+              s.foregroundOnlyTracking,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
           ),
           const Divider(),
 
@@ -520,7 +559,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
               final busy = _isUploadingCloud || _isRestoringCloud;
               return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      '${s.cloudBackupExplanation} ${s.cloudRestoreExplanation}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                    ),
+                  ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.cloud_upload_outlined),
@@ -568,6 +617,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
           ),
+          const Divider(),
+
+          // ── Privacy & Data ─────────────────────────────────────────────
+          Text(
+            s.privacyAndData,
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            leading: const Icon(Icons.smartphone_outlined),
+            title: Text(s.tripsStoredLocally),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            leading: const Icon(Icons.cloud_outlined),
+            title: Text(s.cloudBackupOptional),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            leading: const Icon(Icons.location_on_outlined),
+            title: Text(s.locationUsageExplanation),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            leading: const Icon(Icons.radar_outlined),
+            title: Text(s.foregroundTrackingExplanation),
+          ),
+          const SizedBox(height: 16),
         ],
       ),
     );
