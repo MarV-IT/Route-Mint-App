@@ -54,7 +54,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   // TODO: WorkShift fuel/parking/tolls are not date-filtered until shift log dates are added.
   double _totalFuel = 0;
   double _totalParking = 0; // shift parking + trip parking for selected period
-  double _totalTolls = 0;   // shift tolls + trip tolls for selected period
+  double _totalTolls = 0; // shift tolls + trip tolls for selected period
   double _shiftParking = 0; // shift-only, reused across period changes
   double _shiftTolls = 0;
 
@@ -67,6 +67,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
       _isExportingSimple || _isExportingDetailed || _isExportingCsv;
 
   String get _currencyCode => widget.preferences.currencyCode;
+  bool get _hasTripsNeedingReview => _reportTrips.any(
+    (trip) => trip.reviewStatus == TripReviewStatus.needsReview,
+  );
 
   @override
   void initState() {
@@ -98,7 +101,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
               _customEndDate!.year,
               _customEndDate!.month,
               _customEndDate!.day,
-              23, 59, 59,
+              23,
+              59,
+              59,
             ),
           );
         }
@@ -130,8 +135,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
       _totalFuel = shifts.fold(0.0, (s, sh) => s + sh.fuelExpense);
       _shiftParking = shifts.fold(0.0, (s, sh) => s + sh.parkingExpense);
       _shiftTolls = shifts.fold(0.0, (s, sh) => s + sh.tollsExpense);
-      _totalParking = _shiftParking +
-          reportTrips.fold(0.0, (s, t) => s + t.parkingExpense);
+      _totalParking =
+          _shiftParking + reportTrips.fold(0.0, (s, t) => s + t.parkingExpense);
       _totalTolls =
           _shiftTolls + reportTrips.fold(0.0, (s, t) => s + t.tollsExpense);
       _isLoading = false;
@@ -139,8 +144,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   List<Trip> _filterTrips(DateTimeRange range) => _allTrips
-      .where(
-          (t) => !t.date.isBefore(range.start) && !t.date.isAfter(range.end))
+      .where((t) => !t.date.isBefore(range.start) && !t.date.isAfter(range.end))
       .toList();
 
   void _computeTotals() {
@@ -151,8 +155,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
       _businessDistance = reportTrips
           .where((t) => t.category == 'business')
           .fold(0.0, (s, t) => s + t.distance);
-      _totalParking = _shiftParking +
-          reportTrips.fold(0.0, (s, t) => s + t.parkingExpense);
+      _totalParking =
+          _shiftParking + reportTrips.fold(0.0, (s, t) => s + t.parkingExpense);
       _totalTolls =
           _shiftTolls + reportTrips.fold(0.0, (s, t) => s + t.tollsExpense);
     });
@@ -181,6 +185,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
   // ─── Export ───────────────────────────────────────────────────────────────
 
   Future<void> _handleExport(PdfReportType type) async {
+    if (_hasTripsNeedingReview) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.strings.reviewDetectedTripsBeforeExport)),
+      );
+      return;
+    }
+
     final isSimple = type == PdfReportType.simple;
     setState(() {
       if (isSimple) {
@@ -214,9 +225,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.strings.exportFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(widget.strings.exportFailed)));
     } finally {
       if (mounted) {
         setState(() {
@@ -231,6 +242,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Future<void> _handleCsvExport() async {
+    if (_hasTripsNeedingReview) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.strings.reviewDetectedTripsBeforeExport)),
+      );
+      return;
+    }
+
     setState(() => _isExportingCsv = true);
     try {
       final range = _currentReportRange();
@@ -243,9 +261,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.strings.csvExportFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(widget.strings.csvExportFailed)));
     } finally {
       if (mounted) setState(() => _isExportingCsv = false);
     }
@@ -300,10 +318,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   // ── Report period selector ─────────────────────────────
                   Text(
                     s.reportPeriod,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   SegmentedButton<ReportPeriodType>(
@@ -367,19 +384,68 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(s.expenses,
-                                style: Theme.of(context).textTheme.titleSmall),
+                            Text(
+                              s.expenses,
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
                             const SizedBox(height: 12),
                             _expenseRow(s.fuel, _totalFuel),
                             _expenseRow(s.parking, _totalParking),
                             _expenseRow(s.tolls, _totalTolls),
                             const Divider(height: 16),
-                            _expenseRow(s.totalExpenses, totalExpenses,
-                                bold: true),
+                            _expenseRow(
+                              s.totalExpenses,
+                              totalExpenses,
+                              bold: true,
+                            ),
                           ],
                         ),
                       ),
                     ),
+
+                  const SizedBox(height: 12),
+                  Card(
+                    elevation: 0,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            s.taxReportTemplates,
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          _templateTile(
+                            icon: Icons.speed_outlined,
+                            title: s.mileageSummary,
+                            subtitle: s.businessMileage(
+                              formatDistance(_businessDistance, widget.unit),
+                            ),
+                            onTap: _isExportingAny
+                                ? null
+                                : () => _handleExport(PdfReportType.simple),
+                          ),
+                          _templateTile(
+                            icon: Icons.donut_small_outlined,
+                            title: s.platformBreakdownReport,
+                            subtitle: s.platformCount(
+                              _buildPlatformBreakdown(_reportTrips).length,
+                            ),
+                            onTap: _isExportingAny
+                                ? null
+                                : () => _handleExport(PdfReportType.detailed),
+                          ),
+                          _templateTile(
+                            icon: Icons.table_chart_outlined,
+                            title: s.rawTripLog,
+                            subtitle: s.tripsAsCsv(_reportTrips.length),
+                            onTap: _isExportingAny ? null : _handleCsvExport,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
 
                   const SizedBox(height: 28),
                   const Divider(),
@@ -388,18 +454,34 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   // ── Export section ─────────────────────────────────────
                   Text(
                     s.exportReport,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     s.accountantFriendlyReport,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
+                  if (_hasTripsNeedingReview) ...[
+                    const SizedBox(height: 12),
+                    Card(
+                      elevation: 0,
+                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      child: ListTile(
+                        leading: Icon(
+                          Icons.rate_review_outlined,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSecondaryContainer,
+                        ),
+                        title: Text(s.needsReview),
+                        subtitle: Text(s.reviewDetectedTripsBeforeExport),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
 
                   SizedBox(
@@ -413,11 +495,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Icon(Icons.picture_as_pdf_outlined),
                       label: Text(
-                          _isExportingSimple ? s.exporting : s.exportSimplePdf),
+                        _isExportingSimple ? s.exporting : s.exportSimplePdf,
+                      ),
                     ),
                   ),
 
@@ -439,9 +524,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               ),
                             )
                           : const Icon(Icons.description_outlined),
-                      label: Text(_isExportingDetailed
-                          ? s.exporting
-                          : s.exportDetailedPdf),
+                      label: Text(
+                        _isExportingDetailed
+                            ? s.exporting
+                            : s.exportDetailedPdf,
+                      ),
                     ),
                   ),
 
@@ -450,9 +537,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   SizedBox(
                     height: 52,
                     child: OutlinedButton.icon(
-                      onPressed: _isExportingAny
-                          ? null
-                          : _handleCsvExport,
+                      onPressed: _isExportingAny ? null : _handleCsvExport,
                       icon: _isExportingCsv
                           ? SizedBox(
                               width: 18,
@@ -463,8 +548,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               ),
                             )
                           : const Icon(Icons.table_chart_outlined),
-                      label: Text(
-                          _isExportingCsv ? s.exporting : s.exportCsv),
+                      label: Text(_isExportingCsv ? s.exporting : s.exportCsv),
                     ),
                   ),
                 ],
@@ -479,16 +563,36 @@ class _ReportsScreenState extends State<ReportsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: TextStyle(
-                  fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
           Text(
             formatCurrency(amount, _currencyCode),
             style: TextStyle(
-                fontWeight: bold ? FontWeight.bold : FontWeight.normal),
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _templateTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback? onTap,
+  }) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
     );
   }
 }

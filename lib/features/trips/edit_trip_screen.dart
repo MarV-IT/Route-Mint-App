@@ -6,12 +6,27 @@ import '../../shared/widgets/trip_map_preview.dart';
 import '../../app/app.dart';
 import '../trips/models/trip.dart';
 import '../trips/services/trip_service.dart';
+import '../work_mode/models/work_shift.dart';
 import '../work_mode/models/work_mode_settings.dart';
 import '../work_mode/services/work_mode_service.dart';
+import 'trip_insights.dart';
 
 const _kOtherPlatform = 'Other';
 const List<String> _kDefaultPlatforms = [
-  'Uber', 'Lyft', 'DoorDash', 'Instacart', 'Spark Driver', 'Amazon Flex',
+  'Uber',
+  'Lyft',
+  'DoorDash',
+  'Instacart',
+  'Spark Driver',
+  'Amazon Flex',
+];
+List<String> _purposeTemplates(AppStrings s) => [
+  s.purposeDelivery,
+  s.purposeClientVisit,
+  s.purposeSupplies,
+  s.purposeAirport,
+  s.purposeMaintenance,
+  s.purposeOther,
 ];
 
 class EditTripScreen extends StatefulWidget {
@@ -19,6 +34,7 @@ class EditTripScreen extends StatefulWidget {
   final AppStrings strings;
   final AppUnit unit;
   final String currencyCode;
+  final Future<void> Function() onPreferencesRefresh;
 
   const EditTripScreen({
     super.key,
@@ -26,6 +42,7 @@ class EditTripScreen extends StatefulWidget {
     required this.strings,
     required this.unit,
     required this.currencyCode,
+    required this.onPreferencesRefresh,
   });
 
   @override
@@ -59,9 +76,11 @@ class _EditTripScreenState extends State<EditTripScreen> {
     final displayDist = fromKilometers(t.distance, widget.unit);
     _distanceController = TextEditingController(text: _fmtNum(displayDist));
     _parkingController = TextEditingController(
-        text: t.parkingExpense > 0 ? _fmtNum(t.parkingExpense) : '');
+      text: t.parkingExpense > 0 ? _fmtNum(t.parkingExpense) : '',
+    );
     _tollsController = TextEditingController(
-        text: t.tollsExpense > 0 ? _fmtNum(t.tollsExpense) : '');
+      text: t.tollsExpense > 0 ? _fmtNum(t.tollsExpense) : '',
+    );
     _purposeController = TextEditingController(text: t.businessPurpose ?? '');
     _notesController = TextEditingController(text: t.notes ?? '');
     _customPlatformController = TextEditingController();
@@ -86,10 +105,34 @@ class _EditTripScreenState extends State<EditTripScreen> {
     final settings = await _workModeService.loadSettings();
     if (!mounted) return;
     final merged = _buildPlatformOptions(settings);
+    final matchedShift = _autoMatchedShift(settings);
     setState(() {
       _platformOptions = merged;
+      if (matchedShift != null) {
+        _selectedCategory = 'business';
+        _selectedPlatform = matchedShift.platformName;
+        _customPlatformController.clear();
+      } else if (_selectedCategory != 'business' &&
+          widget.trip.reviewStatus == TripReviewStatus.needsReview) {
+        final suggestion = platformSuggestionFor(widget.trip);
+        if (suggestion != null) {
+          _selectedCategory = 'business';
+          _selectedPlatform = suggestion;
+          _customPlatformController.clear();
+        }
+      }
       _initPlatformSelection(merged);
     });
+  }
+
+  String _platformKey(String platform) => platform.trim().toLowerCase();
+
+  WorkShift? _autoMatchedShift(WorkModeSettings settings) {
+    if (widget.trip.reviewStatus != TripReviewStatus.needsReview) return null;
+    if (widget.trip.detectionMode != TripDetectionMode.automatic) return null;
+
+    final tripTime = widget.trip.startTime ?? widget.trip.date;
+    return _workModeService.matchingShiftAt(settings, tripTime);
   }
 
   List<String> _buildPlatformOptions(WorkModeSettings settings) {
@@ -110,8 +153,11 @@ class _EditTripScreenState extends State<EditTripScreen> {
   void _initPlatformSelection(List<String> options) {
     final existing = widget.trip.platformName;
     if (existing == null || existing.isEmpty) return;
-    if (options.contains(existing)) {
-      _selectedPlatform = existing;
+    final existingOption = options.where(
+      (option) => _platformKey(option) == _platformKey(existing),
+    );
+    if (existingOption.isNotEmpty) {
+      _selectedPlatform = existingOption.first;
     } else {
       _selectedPlatform = _kOtherPlatform;
       _customPlatformController.text = existing;
@@ -124,6 +170,150 @@ class _EditTripScreenState extends State<EditTripScreen> {
   double _parseExpense(String text) {
     final value = double.tryParse(text.trim()) ?? 0;
     return value < 0 ? 0 : value;
+  }
+
+  String _formatSeconds(int seconds) {
+    final duration = Duration(seconds: seconds);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final secs = duration.inSeconds.remainder(60);
+    if (hours > 0) {
+      return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
+    }
+    if (minutes > 0) {
+      return '${minutes}m ${secs.toString().padLeft(2, '0')}s';
+    }
+    return '${secs}s';
+  }
+
+  String _trackingQualityLabel(TripTrackingDiagnostics diagnostics) {
+    final s = widget.strings;
+    if (diagnostics.maxGapSeconds > 90) {
+      return s.trackingQualityGap;
+    }
+    if (diagnostics.averageAccuracyMeters <= 50 &&
+        diagnostics.maxGapSeconds <= 30) {
+      return s.trackingQualityGood;
+    }
+    if (diagnostics.averageAccuracyMeters <= 100) {
+      return s.trackingQualityFair;
+    }
+    return s.trackingQualityPoor;
+  }
+
+  Widget _trackingQualityCard(TripTrackingDiagnostics diagnostics) {
+    final s = widget.strings;
+    final cs = Theme.of(context).colorScheme;
+    final isPoor = diagnostics.averageAccuracyMeters > 100;
+    final hasGpsGap = diagnostics.maxGapSeconds > 90;
+    final needsAttention = isPoor || hasGpsGap;
+    final color = needsAttention ? cs.error : cs.primary;
+
+    Widget metric(String label, String value) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: 2),
+        Text(value, style: Theme.of(context).textTheme.bodyMedium),
+      ],
+    );
+
+    return Card(
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  needsAttention
+                      ? Icons.warning_amber_outlined
+                      : Icons.gps_fixed,
+                  color: color,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    s.trackingQuality,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _trackingQualityLabel(diagnostics),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: color),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 24,
+              runSpacing: 12,
+              children: [
+                metric(s.rawGpsPoints, diagnostics.rawPointCount.toString()),
+                metric(
+                  s.acceptedGpsPoints,
+                  diagnostics.validPointCount.toString(),
+                ),
+                metric(
+                  s.droppedGpsPoints,
+                  diagnostics.droppedPointCount.toString(),
+                ),
+                metric(
+                  s.averageGpsAccuracy,
+                  '${diagnostics.averageAccuracyMeters.toStringAsFixed(0)} m',
+                ),
+                metric(s.maxGpsGap, _formatSeconds(diagnostics.maxGapSeconds)),
+                metric(
+                  s.trackingDuration,
+                  _formatSeconds(diagnostics.durationSeconds),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              s.distanceCalculationHint,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            if (hasGpsGap) ...[
+              const SizedBox(height: 6),
+              Text(
+                s.routeMayBeShortHint,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: cs.error),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '${s.likelyCause}: ${s.likelyCauseGpsGap}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: cs.error),
+              ),
+            ] else if (isPoor) ...[
+              const SizedBox(height: 6),
+              Text(
+                '${s.likelyCause}: ${s.likelyCausePoorAccuracy}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: cs.error),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   String? _resolvedPlatform() {
@@ -165,8 +355,9 @@ class _EditTripScreenState extends State<EditTripScreen> {
       final tolls = _parseExpense(_tollsController.text);
 
       final purposeText = _purposeController.text.trim();
-      final String? resolvedPurpose =
-          purposeText.isNotEmpty ? purposeText : null;
+      final String? resolvedPurpose = purposeText.isNotEmpty
+          ? purposeText
+          : null;
       final resolvedNotes = _notesController.text.trim().isEmpty
           ? null
           : _notesController.text.trim();
@@ -183,20 +374,34 @@ class _EditTripScreenState extends State<EditTripScreen> {
         tollsExpense: tolls,
         businessPurpose: resolvedPurpose,
         notes: resolvedNotes,
-        reviewStatus:
-            wasNeedsReview ? TripReviewStatus.reviewed : null,
+        reviewStatus: wasNeedsReview ? TripReviewStatus.reviewed : null,
       );
 
       await _tripService.updateTrip(updated);
+      await widget.onPreferencesRefresh();
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.strings.tripUpdated)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(widget.strings.tripUpdated)));
       Navigator.pop(context, true);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<void> _handleQuickReview({String? category}) async {
+    if (_isSaving) return;
+    if (category != null) {
+      setState(() {
+        _selectedCategory = category;
+        if (category != 'business') {
+          _selectedPlatform = null;
+          _customPlatformController.clear();
+        }
+      });
+    }
+    await _handleSave();
   }
 
   Future<void> _handleDelete() async {
@@ -226,6 +431,7 @@ class _EditTripScreenState extends State<EditTripScreen> {
     if (confirmed != true || !mounted) return;
 
     await _tripService.deleteTrip(widget.trip.id);
+    await widget.onPreferencesRefresh();
 
     if (!mounted) return;
     Navigator.pop(context, true);
@@ -260,8 +466,11 @@ class _EditTripScreenState extends State<EditTripScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline,
-                      size: 20, color: cs.onSecondaryContainer),
+                  Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: cs.onSecondaryContainer,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -269,19 +478,55 @@ class _EditTripScreenState extends State<EditTripScreen> {
                       children: [
                         Text(
                           s.detectedTripNeedsReview,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: cs.onSecondaryContainer,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: cs.onSecondaryContainer,
+                              ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           s.confirmDetailsAndMarkReviewed,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: cs.onSecondaryContainer,
-                                  ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: cs.onSecondaryContainer),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${s.tripSavedAutomatically} ${s.stoppedAfterIdle}',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: cs.onSecondaryContainer),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            FilledButton.tonalIcon(
+                              onPressed: _isSaving
+                                  ? null
+                                  : () => _handleQuickReview(
+                                      category: 'business',
+                                    ),
+                              icon: const Icon(Icons.work_outline, size: 18),
+                              label: Text(s.business),
+                            ),
+                            FilledButton.tonalIcon(
+                              onPressed: _isSaving
+                                  ? null
+                                  : () => _handleQuickReview(
+                                      category: 'personal',
+                                    ),
+                              icon: const Icon(Icons.person_outline, size: 18),
+                              label: Text(s.personal),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: _isSaving
+                                  ? null
+                                  : () => _handleQuickReview(),
+                              icon: const Icon(Icons.check, size: 18),
+                              label: Text(s.reviewed),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -297,9 +542,9 @@ class _EditTripScreenState extends State<EditTripScreen> {
               widget.trip.endLongitude != null) ...[
             Text(
               s.detectedRoute,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: 8),
             TripMapPreview(
@@ -309,6 +554,10 @@ class _EditTripScreenState extends State<EditTripScreen> {
               endLongitude: widget.trip.endLongitude!,
               routePoints: widget.trip.routePoints,
             ),
+            const SizedBox(height: 16),
+          ],
+          if (widget.trip.trackingDiagnostics != null) ...[
+            _trackingQualityCard(widget.trip.trackingDiagnostics!),
             const SizedBox(height: 16),
           ],
           AddressAutocompleteField(
@@ -390,9 +639,9 @@ class _EditTripScreenState extends State<EditTripScreen> {
           const SizedBox(height: 20),
           Text(
             s.expensesOptional,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: cs.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           Row(
@@ -400,8 +649,9 @@ class _EditTripScreenState extends State<EditTripScreen> {
               Expanded(
                 child: TextField(
                   controller: _parkingController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: InputDecoration(
                     labelText: s.parking,
                     border: const OutlineInputBorder(),
@@ -413,8 +663,9 @@ class _EditTripScreenState extends State<EditTripScreen> {
               Expanded(
                 child: TextField(
                   controller: _tollsController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: InputDecoration(
                     labelText: s.tolls,
                     border: const OutlineInputBorder(),
@@ -431,6 +682,19 @@ class _EditTripScreenState extends State<EditTripScreen> {
               labelText: s.businessPurpose,
               border: const OutlineInputBorder(),
             ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _purposeTemplates(s)
+                .map(
+                  (purpose) => ActionChip(
+                    label: Text(purpose),
+                    onPressed: () => _purposeController.text = purpose,
+                  ),
+                )
+                .toList(growable: false),
           ),
           const SizedBox(height: 12),
           TextField(

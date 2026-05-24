@@ -328,7 +328,14 @@ class _AddShiftSheetState extends State<_AddShiftSheet> {
   final _parkingController = TextEditingController();
   final _tollsController = TextEditingController();
 
-  static const _presets = ['Uber', 'Lyft', 'DoorDash', 'Instacart'];
+  static const _presets = [
+    'Spark Driver',
+    'Uber',
+    'Lyft',
+    'DoorDash',
+    'Instacart',
+    'Amazon Flex',
+  ];
 
   String _platformName = 'Uber';
   bool _isCustomPlatform = false;

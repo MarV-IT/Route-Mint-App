@@ -25,6 +25,7 @@ class _RouteMintAppState extends State<RouteMintApp> {
   AppLanguage _selectedLanguage = AppLanguage.english;
 
   UserPreferences? _preferences; // null = still loading from storage
+  int _selectedNavigationIndex = 0;
 
   @override
   void initState() {
@@ -83,8 +84,8 @@ class _RouteMintAppState extends State<RouteMintApp> {
 
     final themeMode = switch (_preferences?.themeMode ?? AppThemeMode.system) {
       AppThemeMode.system => ThemeMode.system,
-      AppThemeMode.light  => ThemeMode.light,
-      AppThemeMode.dark   => ThemeMode.dark,
+      AppThemeMode.light => ThemeMode.light,
+      AppThemeMode.dark => ThemeMode.dark,
     };
 
     return MaterialApp(
@@ -131,6 +132,10 @@ class _RouteMintAppState extends State<RouteMintApp> {
         onUnitChanged: _changeUnit,
         onLanguageChanged: _changeLanguage,
         onPreferencesChanged: _changePreferences,
+        onPreferencesRefresh: _loadPreferences,
+        selectedIndex: _selectedNavigationIndex,
+        onSelectedIndexChanged: (index) =>
+            setState(() => _selectedNavigationIndex = index),
         strings: strings,
       ),
     );

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(flutter analyze *)",
       "Bash(flutter pub *)",
-      "Bash(flutter test *)"
+      "Bash(flutter test *)",
+      "Bash(Get-Content \"c:\\\\Users\\\\march\\\\route_mint_app\\\\lib\\\\core\\\\location\\\\geolocator_tracking_provider.dart\")"
     ]
   }
 }

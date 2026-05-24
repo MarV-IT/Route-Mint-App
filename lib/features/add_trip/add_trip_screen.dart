@@ -12,19 +12,34 @@ import '../work_mode/services/work_mode_service.dart';
 
 const _kOtherPlatform = 'Other';
 const List<String> _kDefaultPlatforms = [
-  'Uber', 'Lyft', 'DoorDash', 'Instacart', 'Spark Driver', 'Amazon Flex',
+  'Uber',
+  'Lyft',
+  'DoorDash',
+  'Instacart',
+  'Spark Driver',
+  'Amazon Flex',
+];
+List<String> _purposeTemplates(AppStrings s) => [
+  s.purposeDelivery,
+  s.purposeClientVisit,
+  s.purposeSupplies,
+  s.purposeAirport,
+  s.purposeMaintenance,
+  s.purposeOther,
 ];
 
 class AddTripScreen extends StatefulWidget {
   final AppStrings strings;
   final AppUnit unit;
   final UserPreferences preferences;
+  final Future<void> Function() onPreferencesRefresh;
 
   const AddTripScreen({
     super.key,
     required this.strings,
     required this.unit,
     required this.preferences,
+    required this.onPreferencesRefresh,
   });
 
   @override
@@ -80,24 +95,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
   }
 
   WorkShift? _matchingShift(WorkModeSettings settings) {
-    if (!settings.isEnabled) return null;
-
-    final now = DateTime.now();
-    final currentMinutes = now.hour * 60 + now.minute;
-
-    for (final shift in settings.shifts) {
-      final startMinutes = shift.startHour * 60 + shift.startMinute;
-      final endMinutes = shift.endHour * 60 + shift.endMinute;
-
-      final isOvernight = endMinutes < startMinutes;
-      final isMatch = isOvernight
-          ? currentMinutes >= startMinutes || currentMinutes < endMinutes
-          : currentMinutes >= startMinutes && currentMinutes < endMinutes;
-
-      if (isMatch) return shift;
-    }
-
-    return null;
+    return _workModeService.matchingShiftAt(settings, DateTime.now());
   }
 
   List<String> _buildPlatformOptions(WorkModeSettings settings) {
@@ -120,10 +118,10 @@ class _AddTripScreenState extends State<AddTripScreen> {
     return value < 0 ? 0 : value;
   }
 
-  String _purposeHint() {
+  String _purposeHint(AppStrings s) {
     final platform = _activeShift?.platformName ?? _resolvedManualPlatform();
-    if (platform != null) return '$platform business trip';
-    if (_selectedCategory == 'business') return 'Business trip';
+    if (platform != null) return s.platformBusinessTrip(platform);
+    if (_selectedCategory == 'business') return s.businessTrip;
     return '';
   }
 
@@ -179,8 +177,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
         resolvedPurpose = purposeText;
       } else if (resolvedCategory == 'business') {
         resolvedPurpose = resolvedPlatform != null
-            ? '$resolvedPlatform business trip'
-            : 'Business trip';
+            ? widget.strings.platformBusinessTrip(resolvedPlatform)
+            : widget.strings.businessTrip;
       }
 
       final resolvedNotes = _notesController.text.trim().isEmpty
@@ -206,6 +204,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
       );
 
       await _tripService.addTrip(trip);
+      await widget.onPreferencesRefresh();
 
       if (!mounted) return;
       _fromController.clear();
@@ -225,7 +224,9 @@ class _AddTripScreenState extends State<AddTripScreen> {
       final label = resolvedPlatform != null
           ? '${widget.strings.tripSaved} · $resolvedPlatform'
           : widget.strings.tripSaved;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(label)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(label)));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -404,9 +405,22 @@ class _AddTripScreenState extends State<AddTripScreen> {
             controller: _purposeController,
             decoration: InputDecoration(
               labelText: s.businessPurpose,
-              hintText: _purposeHint(),
+              hintText: _purposeHint(s),
               border: const OutlineInputBorder(),
             ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _purposeTemplates(s)
+                .map(
+                  (purpose) => ActionChip(
+                    label: Text(purpose),
+                    onPressed: () => _purposeController.text = purpose,
+                  ),
+                )
+                .toList(growable: false),
           ),
           const SizedBox(height: 12),
           TextField(

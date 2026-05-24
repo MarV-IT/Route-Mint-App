@@ -19,13 +19,49 @@ class TripRoutePoint {
     if (timestamp != null) 'timestamp': timestamp!.toIso8601String(),
   };
 
-  factory TripRoutePoint.fromJson(Map<String, dynamic> json) =>
-      TripRoutePoint(
-        latitude: (json['latitude'] as num).toDouble(),
-        longitude: (json['longitude'] as num).toDouble(),
-        timestamp: json['timestamp'] is String
-            ? DateTime.tryParse(json['timestamp'] as String)
-            : null,
+  factory TripRoutePoint.fromJson(Map<String, dynamic> json) => TripRoutePoint(
+    latitude: (json['latitude'] as num).toDouble(),
+    longitude: (json['longitude'] as num).toDouble(),
+    timestamp: json['timestamp'] is String
+        ? _parseLocalDateTime(json['timestamp'] as String)
+        : null,
+  );
+}
+
+class TripTrackingDiagnostics {
+  const TripTrackingDiagnostics({
+    required this.rawPointCount,
+    required this.validPointCount,
+    required this.droppedPointCount,
+    required this.averageAccuracyMeters,
+    required this.maxGapSeconds,
+    required this.durationSeconds,
+  });
+
+  final int rawPointCount;
+  final int validPointCount;
+  final int droppedPointCount;
+  final double averageAccuracyMeters;
+  final int maxGapSeconds;
+  final int durationSeconds;
+
+  Map<String, dynamic> toJson() => {
+    'rawPointCount': rawPointCount,
+    'validPointCount': validPointCount,
+    'droppedPointCount': droppedPointCount,
+    'averageAccuracyMeters': averageAccuracyMeters,
+    'maxGapSeconds': maxGapSeconds,
+    'durationSeconds': durationSeconds,
+  };
+
+  factory TripTrackingDiagnostics.fromJson(Map<String, dynamic> json) =>
+      TripTrackingDiagnostics(
+        rawPointCount: _intOrDefault(json['rawPointCount']),
+        validPointCount: _intOrDefault(json['validPointCount']),
+        droppedPointCount: _intOrDefault(json['droppedPointCount']),
+        averageAccuracyMeters: _doubleOrDefault(json['averageAccuracyMeters']),
+        maxGapSeconds: _intOrDefault(json['maxGapSeconds']),
+        durationSeconds: _intOrDefault(json['durationSeconds']),
       );
 }
 
@@ -50,6 +86,7 @@ class Trip {
   final double? endLatitude;
   final double? endLongitude;
   final List<TripRoutePoint> routePoints;
+  final TripTrackingDiagnostics? trackingDiagnostics;
 
   const Trip({
     required this.id,
@@ -72,6 +109,7 @@ class Trip {
     this.endLatitude,
     this.endLongitude,
     this.routePoints = const [],
+    this.trackingDiagnostics,
   });
 
   Map<String, dynamic> toJson() => {
@@ -95,10 +133,11 @@ class Trip {
     'endLatitude': endLatitude,
     'endLongitude': endLongitude,
     'routePoints': routePoints.map((p) => p.toJson()).toList(),
+    'trackingDiagnostics': trackingDiagnostics?.toJson(),
   };
 
   factory Trip.fromJson(Map<String, dynamic> json) {
-    final date = DateTime.parse(json['date'] as String);
+    final date = _parseLocalDateTime(json['date'] as String)!;
     return Trip(
       id: json['id'] as String,
       from: json['from'] as String,
@@ -120,16 +159,19 @@ class Trip {
         orElse: () => TripReviewStatus.reviewed,
       ),
       startTime: json['startTime'] is String
-          ? DateTime.tryParse(json['startTime'] as String)
+          ? _parseLocalDateTime(json['startTime'] as String)
           : date,
       endTime: json['endTime'] is String
-          ? DateTime.tryParse(json['endTime'] as String)
+          ? _parseLocalDateTime(json['endTime'] as String)
           : null,
       startLatitude: _doubleOrNull(json['startLatitude']),
       startLongitude: _doubleOrNull(json['startLongitude']),
       endLatitude: _doubleOrNull(json['endLatitude']),
       endLongitude: _doubleOrNull(json['endLongitude']),
       routePoints: _parseRoutePoints(json['routePoints']),
+      trackingDiagnostics: _parseTrackingDiagnostics(
+        json['trackingDiagnostics'],
+      ),
     );
   }
 
@@ -154,6 +196,7 @@ class Trip {
     Object? endLatitude = _sentinel,
     Object? endLongitude = _sentinel,
     List<TripRoutePoint>? routePoints,
+    Object? trackingDiagnostics = _sentinel,
   }) => Trip(
     id: id ?? this.id,
     from: from ?? this.from,
@@ -187,6 +230,9 @@ class Trip {
         ? this.endLongitude
         : endLongitude as double?,
     routePoints: routePoints ?? this.routePoints,
+    trackingDiagnostics: trackingDiagnostics == _sentinel
+        ? this.trackingDiagnostics
+        : trackingDiagnostics as TripTrackingDiagnostics?,
   );
 
   @override
@@ -213,6 +259,8 @@ double _doubleOrDefault(Object? value) => value is num ? value.toDouble() : 0;
 
 double? _doubleOrNull(Object? value) => value is num ? value.toDouble() : null;
 
+int _intOrDefault(Object? value) => value is num ? value.toInt() : 0;
+
 List<TripRoutePoint> _parseRoutePoints(Object? value) {
   if (value is! List) return const [];
   return value
@@ -220,3 +268,11 @@ List<TripRoutePoint> _parseRoutePoints(Object? value) {
       .map(TripRoutePoint.fromJson)
       .toList(growable: false);
 }
+
+TripTrackingDiagnostics? _parseTrackingDiagnostics(Object? value) {
+  if (value is! Map<String, dynamic>) return null;
+  return TripTrackingDiagnostics.fromJson(value);
+}
+
+DateTime? _parseLocalDateTime(String value) =>
+    DateTime.tryParse(value)?.toLocal();

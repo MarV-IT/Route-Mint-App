@@ -16,6 +16,9 @@ class MainNavigationScreen extends StatefulWidget {
   final ValueChanged<AppUnit?> onUnitChanged;
   final ValueChanged<AppLanguage?> onLanguageChanged;
   final ValueChanged<UserPreferences> onPreferencesChanged;
+  final Future<void> Function() onPreferencesRefresh;
+  final int selectedIndex;
+  final ValueChanged<int> onSelectedIndexChanged;
   final AppStrings strings;
 
   const MainNavigationScreen({
@@ -26,6 +29,9 @@ class MainNavigationScreen extends StatefulWidget {
     required this.onUnitChanged,
     required this.onLanguageChanged,
     required this.onPreferencesChanged,
+    required this.onPreferencesRefresh,
+    required this.selectedIndex,
+    required this.onSelectedIndexChanged,
     required this.strings,
   });
 
@@ -34,10 +40,22 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _selectedIndex = 0;
+  bool _tripsShowNeedsReview = false;
 
   void _selectTab(int index) {
-    setState(() => _selectedIndex = index);
+    setState(() {
+      // Reset the inbox filter when the user navigates away from Trips
+      // so a subsequent normal tap on the Trips tab shows all trips.
+      if (index != 1) _tripsShowNeedsReview = false;
+    });
+    widget.onSelectedIndexChanged(index);
+  }
+
+  void _navigateToTripsForReview() {
+    setState(() {
+      _tripsShowNeedsReview = true;
+    });
+    widget.onSelectedIndexChanged(1);
   }
 
   @override
@@ -49,19 +67,25 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         strings: strings,
         unit: widget.unit,
         preferences: widget.preferences,
+        onPreferencesChanged: widget.onPreferencesChanged,
+        onPreferencesRefresh: widget.onPreferencesRefresh,
         onStartTrip: () => _selectTab(2),
         onAddManually: () => _selectTab(2),
         onAddExpense: () => _selectTab(2),
+        onReviewTrips: _navigateToTripsForReview,
       ),
       TripsScreen(
         strings: strings,
         unit: widget.unit,
         currencyCode: widget.preferences.currencyCode,
+        showNeedsReviewOnly: _tripsShowNeedsReview,
+        onPreferencesRefresh: widget.onPreferencesRefresh,
       ),
       AddTripScreen(
         strings: strings,
         unit: widget.unit,
         preferences: widget.preferences,
+        onPreferencesRefresh: widget.onPreferencesRefresh,
       ),
       ReportsScreen(
         strings: strings,
@@ -82,13 +106,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     return Scaffold(
       body: Column(
         children: [
-          Expanded(child: pages[_selectedIndex]),
+          Expanded(child: pages[widget.selectedIndex]),
           // Show a persistent banner on every tab except Today (index 0),
           // where the tracking card already shows status.
           ValueListenableBuilder<bool>(
             valueListenable: appTrackingService.isTrackingNotifier,
             builder: (context, isTracking, _) {
-              if (!isTracking || _selectedIndex == 0) {
+              if (!isTracking || widget.selectedIndex == 0) {
                 return const SizedBox.shrink();
               }
               return _ActiveTrackingBanner(strings: strings);
@@ -97,15 +121,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
+        selectedIndex: widget.selectedIndex,
         onDestinationSelected: (index) {
           _selectTab(index);
         },
         destinations: [
           NavigationDestination(
-            icon: const Icon(Icons.today_outlined),
-            selectedIcon: const Icon(Icons.today),
-            label: strings.today,
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home),
+            label: strings.home,
           ),
           NavigationDestination(
             icon: const Icon(Icons.route_outlined),

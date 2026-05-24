@@ -478,7 +478,14 @@ class _OnboardingShiftSheet extends StatefulWidget {
 class _OnboardingShiftSheetState extends State<_OnboardingShiftSheet> {
   final _platformController = TextEditingController();
 
-  static const _presets = ['Uber', 'Lyft', 'DoorDash', 'Instacart'];
+  static const _presets = [
+    'Spark Driver',
+    'Uber',
+    'Lyft',
+    'DoorDash',
+    'Instacart',
+    'Amazon Flex',
+  ];
 
   String _platformName = 'Uber';
   bool _isCustomPlatform = false;

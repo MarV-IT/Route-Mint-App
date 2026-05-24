@@ -1,25 +1,86 @@
 import 'dart:io' show Platform;
 import 'package:geolocator/geolocator.dart';
+import 'auto_trip_detection_service.dart';
 import 'foreground_trip_tracking_service.dart';
 import 'tracking_result.dart';
 
 // App-level singleton wired to the device GPS.
-// Using a top-level variable because ForegroundTripTrackingService
-// is intentionally not a singleton to keep it testable.
 final ForegroundTripTrackingService appTrackingService =
     ForegroundTripTrackingService(
-  pointStreamFactory: _geolocatorStream,
-);
+      pointStreamFactory: geolocatorTrackingStream,
+      initialPositionProvider: _geolocatorCurrentPosition,
+      stopPositionProvider: _geolocatorCurrentPosition,
+    );
 
-Stream<TrackingPoint> _geolocatorStream() {
+final AutoTripDetectionService appAutoDetectionService =
+    AutoTripDetectionService(
+      monitoringStreamFactory: geolocatorMonitoringStream,
+      initialPositionProvider: _geolocatorCurrentPosition,
+    );
+
+Future<TrackingPoint?> _geolocatorCurrentPosition() async {
+  final pos = await Geolocator.getCurrentPosition(
+    locationSettings: _currentPositionSettings(),
+  ).timeout(const Duration(seconds: 15));
+  return TrackingPoint(
+    latitude: pos.latitude,
+    longitude: pos.longitude,
+    accuracyMeters: pos.accuracy,
+    timestamp: DateTime.now(),
+  );
+}
+
+LocationSettings _currentPositionSettings() {
+  if (Platform.isAndroid) {
+    return AndroidSettings(
+      accuracy: LocationAccuracy.bestForNavigation,
+      distanceFilter: 0,
+    );
+  }
+  return const LocationSettings(accuracy: LocationAccuracy.bestForNavigation);
+}
+
+Stream<TrackingPoint> geolocatorMonitoringStream() {
+  final LocationSettings settings;
+  if (Platform.isAndroid) {
+    settings = AndroidSettings(
+      accuracy: LocationAccuracy.bestForNavigation,
+      distanceFilter: 5,
+      intervalDuration: const Duration(seconds: 3),
+      foregroundNotificationConfig: const ForegroundNotificationConfig(
+        notificationTitle: 'MarV Route is watching for trips',
+        notificationText:
+            'Trip detection is active. A notification is shown while monitoring.',
+        enableWakeLock: true,
+        setOngoing: true,
+      ),
+    );
+  } else {
+    settings = const LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 5,
+    );
+  }
+  return Geolocator.getPositionStream(locationSettings: settings).map(
+    (pos) => TrackingPoint(
+      latitude: pos.latitude,
+      longitude: pos.longitude,
+      accuracyMeters: pos.accuracy,
+      timestamp: DateTime.now(),
+    ),
+  );
+}
+
+Stream<TrackingPoint> geolocatorTrackingStream() {
   final LocationSettings settings;
   if (Platform.isAndroid) {
     // AndroidSettings starts a foreground service so tracking continues
     // while the screen is off. The notification is dismissed automatically
     // when the stream subscription is cancelled (Stop Tracking).
     settings = AndroidSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 15,
+      accuracy: LocationAccuracy.bestForNavigation,
+      distanceFilter: 3,
+      intervalDuration: const Duration(seconds: 2),
       foregroundNotificationConfig: const ForegroundNotificationConfig(
         notificationTitle: 'MarV Route is tracking your trip',
         notificationText: 'Tracking continues while your screen is off.',
@@ -30,7 +91,7 @@ Stream<TrackingPoint> _geolocatorStream() {
   } else {
     settings = const LocationSettings(
       accuracy: LocationAccuracy.high,
-      distanceFilter: 15,
+      distanceFilter: 5,
     );
   }
   return Geolocator.getPositionStream(locationSettings: settings).map(
@@ -38,7 +99,7 @@ Stream<TrackingPoint> _geolocatorStream() {
       latitude: pos.latitude,
       longitude: pos.longitude,
       accuracyMeters: pos.accuracy,
-      timestamp: pos.timestamp,
+      timestamp: DateTime.now(),
     ),
   );
 }

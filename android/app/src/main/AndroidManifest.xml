@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Network: required for Firebase Auth and Firestore cloud backup -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Notifications: required on Android 13+ for trip-saved alerts -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Location: used only for foreground trip tracking while the app is active -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -8,6 +10,8 @@
 
     <!-- Foreground service: allows tracking to continue while the screen is off -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Lets the app ask Android to exempt trip tracking from battery optimizations -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- Required on Android 14+ to declare the foreground service uses location -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
