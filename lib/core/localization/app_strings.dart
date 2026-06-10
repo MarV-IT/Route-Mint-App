@@ -135,6 +135,96 @@ class AppStrings {
     fa: 'افزودن هزینه',
   );
 
+  String get expenseType => _value(
+    en: 'Expense type',
+    es: 'Tipo de gasto',
+    fr: 'Type de dépense',
+    ru: 'Тип расхода',
+    uk: 'Тип витрати',
+    fa: 'نوع هزینه',
+  );
+
+  String get amount => _value(
+    en: 'Amount',
+    es: 'Importe',
+    fr: 'Montant',
+    ru: 'Сумма',
+    uk: 'Сума',
+    fa: 'مبلغ',
+  );
+
+  String get vendor => _value(
+    en: 'Vendor',
+    es: 'Proveedor',
+    fr: 'Fournisseur',
+    ru: 'Продавец',
+    uk: 'Продавець',
+    fa: 'فروشنده',
+  );
+
+  String get repair => _value(
+    en: 'Repair',
+    es: 'Reparación',
+    fr: 'Réparation',
+    ru: 'Ремонт',
+    uk: 'Ремонт',
+    fa: 'تعمیر',
+  );
+
+  String get serviceExpense => _value(
+    en: 'Service',
+    es: 'Servicio',
+    fr: 'Service',
+    ru: 'Сервис',
+    uk: 'Сервіс',
+    fa: 'سرویس',
+  );
+
+  String get saveExpense => _value(
+    en: 'Save expense',
+    es: 'Guardar gasto',
+    fr: 'Enregistrer la dépense',
+    ru: 'Сохранить расход',
+    uk: 'Зберегти витрату',
+    fa: 'ذخیره هزینه',
+  );
+
+  String get expenseSaved => _value(
+    en: 'Expense saved',
+    es: 'Gasto guardado',
+    fr: 'Dépense enregistrée',
+    ru: 'Расход сохранён',
+    uk: 'Витрату збережено',
+    fa: 'هزینه ذخیره شد',
+  );
+
+  String get recentExpenses => _value(
+    en: 'Recent expenses',
+    es: 'Gastos recientes',
+    fr: 'Dépenses récentes',
+    ru: 'Недавние расходы',
+    uk: 'Останні витрати',
+    fa: 'هزینه‌های اخیر',
+  );
+
+  String get noExpenses => _value(
+    en: 'No expenses yet',
+    es: 'Aún no hay gastos',
+    fr: 'Aucune dépense pour le moment',
+    ru: 'Расходов пока нет',
+    uk: 'Витрат ще немає',
+    fa: 'هنوز هزینه‌ای وجود ندارد',
+  );
+
+  String get expenseAmountMustBePositive => _value(
+    en: 'Expense amount must be greater than 0',
+    es: 'El importe debe ser mayor que 0',
+    fr: 'Le montant doit être supérieur à 0',
+    ru: 'Сумма расхода должна быть больше 0',
+    uk: 'Сума витрати має бути більшою за 0',
+    fa: 'مبلغ هزینه باید بیشتر از ۰ باشد',
+  );
+
   // ─── Add trip screen ──────────────────────────────────────────────────────
 
   String get addTrip => _value(
@@ -611,6 +701,342 @@ class AppStrings {
     ru: 'Профиль сохранён',
     uk: 'Профіль збережено',
     fa: 'پروفایل ذخیره شد',
+  );
+
+  String get about => _value(
+    en: 'About',
+    es: 'Acerca de',
+    fr: 'À propos',
+    ru: 'О приложении',
+    uk: 'Про додаток',
+    fa: 'درباره',
+  );
+
+  String get appVersion => _value(
+    en: 'Version',
+    es: 'Versión',
+    fr: 'Version',
+    ru: 'Версия',
+    uk: 'Версія',
+    fa: 'نسخه',
+  );
+
+  String get buildNumber => _value(
+    en: 'Build number',
+    es: 'Número de compilación',
+    fr: 'Numéro de build',
+    ru: 'Номер сборки',
+    uk: 'Номер збірки',
+    fa: 'شماره ساخت',
+  );
+
+  String get testerBuild => _value(
+    en: 'Tester build',
+    es: 'Versión de prueba',
+    fr: 'Version de test',
+    ru: 'Тестовая сборка',
+    uk: 'Тестова збірка',
+    fa: 'نسخه آزمایشی',
+  );
+
+  String get subscription => _value(
+    en: 'Subscription',
+    es: 'Suscripción',
+    fr: 'Abonnement',
+    ru: 'Подписка',
+    uk: 'Підписка',
+    fa: 'اشتراک',
+  );
+
+  String get pro =>
+      _value(en: 'PRO', es: 'PRO', fr: 'PRO', ru: 'PRO', uk: 'PRO', fa: 'PRO');
+
+  String get goPro => _value(
+    en: 'Go Pro',
+    es: 'Pasar a Pro',
+    fr: 'Passer Pro',
+    ru: 'Перейти на Pro',
+    uk: 'Перейти на Pro',
+    fa: 'ارتقا به Pro',
+  );
+
+  String get freePlan => _value(
+    en: 'Free plan',
+    es: 'Plan gratis',
+    fr: 'Formule gratuite',
+    ru: 'Бесплатный план',
+    uk: 'Безкоштовний план',
+    fa: 'طرح رایگان',
+  );
+
+  String get proActive => _value(
+    en: 'Pro active',
+    es: 'Pro activo',
+    fr: 'Pro actif',
+    ru: 'Pro активен',
+    uk: 'Pro активний',
+    fa: 'Pro فعال است',
+  );
+
+  String get testerProEnabled => _value(
+    en: 'Tester Pro is enabled',
+    es: 'Tester Pro está activado',
+    fr: 'Tester Pro est activé',
+    ru: 'Tester Pro включён',
+    uk: 'Tester Pro увімкнено',
+    fa: 'Tester Pro فعال است',
+  );
+
+  String get enableTesterPro => _value(
+    en: 'Enable tester Pro',
+    es: 'Activar Tester Pro',
+    fr: 'Activer Tester Pro',
+    ru: 'Включить Tester Pro',
+    uk: 'Увімкнути Tester Pro',
+    fa: 'فعال کردن Tester Pro',
+  );
+
+  String get enableTesterProSubtitle => _value(
+    en: 'Temporary switch for testing Pro features before payments are connected.',
+    es: 'Interruptor temporal para probar funciones Pro antes de conectar pagos.',
+    fr: 'Option temporaire pour tester les fonctions Pro avant les paiements.',
+    ru: 'Временный переключатель для тестирования Pro-функций до подключения платежей.',
+    uk: 'Тимчасовий перемикач для тестування Pro-функцій до підключення платежів.',
+    fa: 'کلید موقت برای آزمایش قابلیت‌های Pro پیش از اتصال پرداخت‌ها.',
+  );
+
+  String get unlockProTitle => _value(
+    en: 'Unlock MarV Route Pro',
+    es: 'Desbloquea MarV Route Pro',
+    fr: 'Débloquer MarV Route Pro',
+    ru: 'Откройте MarV Route Pro',
+    uk: 'Розблокуйте MarV Route Pro',
+    fa: 'MarV Route Pro را فعال کنید',
+  );
+
+  String get unlockProBody => _value(
+    en: 'Prepare cleaner mileage reports, protect your data, and track driving costs with Pro tools.',
+    es: 'Prepara informes de millaje más limpios, protege tus datos y controla costos con herramientas Pro.',
+    fr: 'Préparez de meilleurs rapports, protégez vos données et suivez vos coûts avec les outils Pro.',
+    ru: 'Готовьте более чистые отчёты, защищайте данные и отслеживайте расходы с Pro-инструментами.',
+    uk: 'Готуйте чистіші звіти, захищайте дані та відстежуйте витрати з Pro-інструментами.',
+    fa: 'با ابزارهای Pro گزارش‌های بهتر بسازید، داده‌ها را محافظت کنید و هزینه‌ها را پیگیری کنید.',
+  );
+
+  String get proUnlimitedReports => _value(
+    en: 'Unlimited PDF and CSV reports',
+    es: 'Informes PDF y CSV ilimitados',
+    fr: 'Rapports PDF et CSV illimités',
+    ru: 'Неограниченные PDF и CSV отчёты',
+    uk: 'Необмежені PDF та CSV звіти',
+    fa: 'گزارش‌های PDF و CSV نامحدود',
+  );
+
+  String get proCloudBackup => _value(
+    en: 'Cloud backup',
+    es: 'Copia en la nube',
+    fr: 'Sauvegarde cloud',
+    ru: 'Облачная резервная копия',
+    uk: 'Cloud backup',
+    fa: 'پشتیبان ابری',
+  );
+
+  String get proFuelSummaries => _value(
+    en: 'Fuel summaries in reports',
+    es: 'Resumen de combustible en informes',
+    fr: 'Résumé carburant dans les rapports',
+    ru: 'Сводки топлива в отчётах',
+    uk: 'Підсумки пального у звітах',
+    fa: 'خلاصه سوخت در گزارش‌ها',
+  );
+
+  String get proMonthlyCloseChecklist => _value(
+    en: 'Monthly close checklist',
+    es: 'Lista de cierre mensual',
+    fr: 'Liste de clôture mensuelle',
+    ru: 'Чек-лист закрытия месяца',
+    uk: 'Чекліст закриття місяця',
+    fa: 'فهرست بستن ماهانه',
+  );
+
+  String get proAutoDetection => _value(
+    en: 'Auto trip detection',
+    es: 'Detección automática de viajes',
+    fr: 'Détection automatique des trajets',
+    ru: 'Авто-обнаружение поездок',
+    uk: 'Авто-виявлення поїздок',
+    fa: 'شناسایی خودکار سفر',
+  );
+
+  String get proMaintenanceReminders => _value(
+    en: 'Maintenance reminders',
+    es: 'Recordatorios de mantenimiento',
+    fr: 'Rappels d’entretien',
+    ru: 'Напоминания об обслуживании',
+    uk: 'Нагадування про обслуговування',
+    fa: 'یادآوری‌های نگهداری',
+  );
+
+  String get paymentsComingSoon => _value(
+    en: 'Payments coming soon',
+    es: 'Pagos próximamente',
+    fr: 'Paiements bientôt disponibles',
+    ru: 'Платежи скоро',
+    uk: 'Платежі скоро',
+    fa: 'پرداخت به‌زودی',
+  );
+
+  String get testerProHint => _value(
+    en: 'Use the tester Pro switch in Profile to preview these features.',
+    es: 'Usa el interruptor Tester Pro en Perfil para probar estas funciones.',
+    fr: 'Utilisez Tester Pro dans Profil pour prévisualiser ces fonctions.',
+    ru: 'Используйте переключатель Tester Pro в профиле для предпросмотра функций.',
+    uk: 'Використовуйте перемикач Tester Pro у профілі для перегляду цих функцій.',
+    fa: 'برای پیش‌نمایش این قابلیت‌ها از کلید Tester Pro در پروفایل استفاده کنید.',
+  );
+
+  String get help => _value(
+    en: 'Help',
+    es: 'Ayuda',
+    fr: 'Aide',
+    ru: 'Помощь',
+    uk: 'Допомога',
+    fa: 'راهنما',
+  );
+
+  String get howItWorks => _value(
+    en: 'Help / How it works',
+    es: 'Ayuda / Cómo funciona',
+    fr: 'Aide / Fonctionnement',
+    ru: 'Помощь / Как это работает',
+    uk: 'Допомога / Як це працює',
+    fa: 'راهنما / چگونه کار می‌کند',
+  );
+
+  String get helpTrackTripsTitle => _value(
+    en: 'Track trips',
+    es: 'Registrar viajes',
+    fr: 'Suivre les trajets',
+    ru: 'Отслеживание поездок',
+    uk: 'Відстеження поїздок',
+    fa: 'ثبت سفرها',
+  );
+
+  String get helpTrackTripsBody => _value(
+    en: 'Add trips manually or use auto detection to record mileage.',
+    es: 'Añade viajes manualmente o usa la detección automática para registrar millaje.',
+    fr: 'Ajoutez des trajets manuellement ou utilisez la détection automatique pour enregistrer le kilométrage.',
+    ru: 'Добавляйте поездки вручную или используйте авто-обнаружение для записи пробега.',
+    uk: 'Додавайте поїздки вручну або використовуйте авто-виявлення для запису пробігу.',
+    fa: 'سفرها را دستی اضافه کنید یا از شناسایی خودکار برای ثبت مسافت استفاده کنید.',
+  );
+
+  String get helpAutoDetectionTitle => _value(
+    en: 'Auto detection',
+    es: 'Detección automática',
+    fr: 'Détection automatique',
+    ru: 'Авто-обнаружение',
+    uk: 'Авто-виявлення',
+    fa: 'شناسایی خودکار',
+  );
+
+  String get helpAutoDetectionBody => _value(
+    en: 'Auto detection watches for movement and saves detected trips for review.',
+    es: 'La detección automática observa el movimiento y guarda los viajes detectados para revisión.',
+    fr: 'La détection automatique surveille les mouvements et enregistre les trajets détectés pour vérification.',
+    ru: 'Авто-обнаружение отслеживает движение и сохраняет найденные поездки для проверки.',
+    uk: 'Авто-виявлення стежить за рухом і зберігає виявлені поїздки для перевірки.',
+    fa: 'شناسایی خودکار حرکت را دنبال می‌کند و سفرهای شناسایی‌شده را برای بررسی ذخیره می‌کند.',
+  );
+
+  String get helpReviewTripsTitle => _value(
+    en: 'Review detected trips',
+    es: 'Revisar viajes detectados',
+    fr: 'Vérifier les trajets détectés',
+    ru: 'Проверка найденных поездок',
+    uk: 'Перевірка виявлених поїздок',
+    fa: 'بررسی سفرهای شناسایی‌شده',
+  );
+
+  String get helpReviewTripsBody => _value(
+    en: 'Detected trips are marked Needs review. Confirm category, platform, purpose, and expenses before exporting reports.',
+    es: 'Los viajes detectados se marcan como Necesitan revisión. Confirma categoría, plataforma, propósito y gastos antes de exportar informes.',
+    fr: 'Les trajets détectés sont marqués À vérifier. Confirmez la catégorie, la plateforme, l’objectif et les dépenses avant d’exporter.',
+    ru: 'Обнаруженные поездки помечаются как Требуют проверки. Подтвердите категорию, платформу, цель и расходы перед экспортом.',
+    uk: 'Виявлені поїздки позначаються як Потребують перевірки. Підтвердьте категорію, платформу, мету та витрати перед експортом.',
+    fa: 'سفرهای شناسایی‌شده با نیاز به بررسی علامت می‌خورند. پیش از صدور گزارش، دسته، پلتفرم، هدف و هزینه‌ها را تأیید کنید.',
+  );
+
+  String get helpExpensesFuelTitle => _value(
+    en: 'Add expenses and fuel',
+    es: 'Añadir gastos y combustible',
+    fr: 'Ajouter dépenses et carburant',
+    ru: 'Добавление расходов и топлива',
+    uk: 'Додавання витрат і пального',
+    fa: 'افزودن هزینه‌ها و سوخت',
+  );
+
+  String get helpExpensesFuelBody => _value(
+    en: 'Record parking, tolls, and fuel purchases to understand your driving costs.',
+    es: 'Registra parking, peajes y compras de combustible para entender tus costos de conducción.',
+    fr: 'Enregistrez le stationnement, les péages et les achats de carburant pour comprendre vos coûts.',
+    ru: 'Записывайте парковку, платные дороги и покупки топлива, чтобы понимать расходы на вождение.',
+    uk: 'Записуйте паркування, платні дороги та покупки пального, щоб розуміти витрати на поїздки.',
+    fa: 'پارکینگ، عوارض و خرید سوخت را ثبت کنید تا هزینه‌های رانندگی خود را بهتر بفهمید.',
+  );
+
+  String get helpExportReportsTitle => _value(
+    en: 'Export reports',
+    es: 'Exportar informes',
+    fr: 'Exporter les rapports',
+    ru: 'Экспорт отчётов',
+    uk: 'Експорт звітів',
+    fa: 'صدور گزارش‌ها',
+  );
+
+  String get helpExportReportsBody => _value(
+    en: 'Export Simple PDF, Detailed PDF, or CSV for your records or accountant.',
+    es: 'Exporta PDF simple, PDF detallado o CSV para tus registros o contador.',
+    fr: 'Exportez un PDF simple, un PDF détaillé ou un CSV pour vos dossiers ou votre comptable.',
+    ru: 'Экспортируйте Simple PDF, Detailed PDF или CSV для себя или бухгалтера.',
+    uk: 'Експортуйте Simple PDF, Detailed PDF або CSV для себе чи бухгалтера.',
+    fa: 'برای سوابق خود یا حسابدار، PDF ساده، PDF کامل یا CSV صادر کنید.',
+  );
+
+  String get helpBackupAccountTitle => _value(
+    en: 'Backup and account',
+    es: 'Copia y cuenta',
+    fr: 'Sauvegarde et compte',
+    ru: 'Резервная копия и аккаунт',
+    uk: 'Резервна копія та акаунт',
+    fa: 'پشتیبان و حساب',
+  );
+
+  String get helpBackupAccountBody => _value(
+    en: 'Use local backup or sign in to save a cloud backup to your account.',
+    es: 'Usa copia local o inicia sesión para guardar una copia en la nube en tu cuenta.',
+    fr: 'Utilisez une sauvegarde locale ou connectez-vous pour enregistrer une sauvegarde cloud.',
+    ru: 'Используйте локальную копию или войдите, чтобы сохранить облачную копию в аккаунте.',
+    uk: 'Використовуйте локальну копію або увійдіть, щоб зберегти cloud backup в акаунті.',
+    fa: 'از پشتیبان محلی استفاده کنید یا وارد شوید تا پشتیبان ابری در حساب شما ذخیره شود.',
+  );
+
+  String get helpVehicleMaintenanceTitle => _value(
+    en: 'Vehicle maintenance',
+    es: 'Mantenimiento del vehículo',
+    fr: 'Entretien du véhicule',
+    ru: 'Обслуживание автомобиля',
+    uk: 'Технічне обслуговування авто',
+    fa: 'نگهداری خودرو',
+  );
+
+  String get helpVehicleMaintenanceBody => _value(
+    en: 'Track odometer and oil change reminders.',
+    es: 'Controla el odómetro y recordatorios de cambio de aceite.',
+    fr: 'Suivez le compteur et les rappels de vidange.',
+    ru: 'Отслеживайте одометр и напоминания о замене масла.',
+    uk: 'Відстежуйте одометр і нагадування про заміну масла.',
+    fa: 'کیلومترشمار و یادآوری تعویض روغن را پیگیری کنید.',
   );
 
   String get units => _value(
@@ -1597,6 +2023,87 @@ class AppStrings {
     fa: 'قبل از صدور گزارش‌ها، سفرهای شناسایی شده را بررسی کنید.',
   );
 
+  String get monthlyCloseChecklist => _value(
+    en: 'Monthly close checklist',
+    es: 'Lista de cierre mensual',
+    fr: 'Liste de clôture mensuelle',
+    ru: 'Чек-лист закрытия месяца',
+    uk: 'Чекліст закриття місяця',
+    fa: 'فهرست بستن ماهانه',
+  );
+
+  String get reviewDetectedTrips => _value(
+    en: 'Review detected trips',
+    es: 'Revisar viajes detectados',
+    fr: 'Vérifier les trajets détectés',
+    ru: 'Проверить обнаруженные поездки',
+    uk: 'Переглянути виявлені поїздки',
+    fa: 'بررسی سفرهای شناسایی‌شده',
+  );
+
+  String get checkCategories => _value(
+    en: 'Check business/personal categories',
+    es: 'Revisar categorías de negocio/personales',
+    fr: 'Vérifier les catégories pro/personnelles',
+    ru: 'Проверить категории бизнес/личные',
+    uk: 'Перевірити категорії бізнес/особисті',
+    fa: 'بررسی دسته‌های کاری/شخصی',
+  );
+
+  String get checkFuelEntries => _value(
+    en: 'Check fuel entries',
+    es: 'Revisar registros de combustible',
+    fr: 'Vérifier les entrées carburant',
+    ru: 'Проверить записи топлива',
+    uk: 'Перевірити записи пального',
+    fa: 'بررسی ثبت‌های سوخت',
+  );
+
+  String get checkParkingAndTolls => _value(
+    en: 'Check parking and tolls',
+    es: 'Revisar parking y peajes',
+    fr: 'Vérifier parking et péages',
+    ru: 'Проверить парковку и платные дороги',
+    uk: 'Перевірити паркування та платні дороги',
+    fa: 'بررسی پارکینگ و عوارض',
+  );
+
+  String get backUpYourData => _value(
+    en: 'Back up your data',
+    es: 'Haz copia de seguridad',
+    fr: 'Sauvegarder vos données',
+    ru: 'Создать резервную копию',
+    uk: 'Створити резервну копію',
+    fa: 'پشتیبان‌گیری از داده‌ها',
+  );
+
+  String get exportPdfCsv => _value(
+    en: 'Export PDF/CSV',
+    es: 'Exportar PDF/CSV',
+    fr: 'Exporter PDF/CSV',
+    ru: 'Экспорт PDF/CSV',
+    uk: 'Експорт PDF/CSV',
+    fa: 'صدور PDF/CSV',
+  );
+
+  String get lastBackup => _value(
+    en: 'Last backup',
+    es: 'Última copia',
+    fr: 'Dernière sauvegarde',
+    ru: 'Последняя копия',
+    uk: 'Остання копія',
+    fa: 'آخرین پشتیبان',
+  );
+
+  String get checklistGuidance => _value(
+    en: 'Use this as a quick pre-export review. It does not block export.',
+    es: 'Úsala como revisión rápida antes de exportar. No bloquea la exportación.',
+    fr: 'Utilisez-la comme contrôle rapide avant export. Elle ne bloque pas l’export.',
+    ru: 'Используйте как быструю проверку перед экспортом. Экспорт не блокируется.',
+    uk: 'Використовуйте як швидку перевірку перед експортом. Експорт не блокується.',
+    fa: 'از این برای بررسی سریع پیش از صدور استفاده کنید. صدور را مسدود نمی‌کند.',
+  );
+
   String get reviewTrips => _value(
     en: 'Review trips',
     es: 'Revisar viajes',
@@ -2388,12 +2895,12 @@ class AppStrings {
   // ─── Tracking Diagnostics ────────────────────────────────────────────────
 
   String get trackingDiagnostics => _value(
-    en: 'Tracking diagnostics',
-    es: 'Diagnóstico de seguimiento',
-    fr: 'Diagnostic du suivi',
-    ru: 'Диагностика отслеживания',
-    uk: 'Діагностика відстеження',
-    fa: 'عیب‌یابی ردیابی',
+    en: 'Permission check',
+    es: 'Revisión de permisos',
+    fr: 'Vérification des autorisations',
+    ru: 'Проверка разрешений',
+    uk: 'Перевірка дозволів',
+    fa: 'بررسی اجازه‌ها',
   );
 
   String get trackingDiagnosticsSubtitle => _value(
@@ -2478,12 +2985,12 @@ class AppStrings {
   );
 
   String get refreshDiagnostics => _value(
-    en: 'Refresh diagnostics',
-    es: 'Actualizar diagnóstico',
-    fr: 'Actualiser le diagnostic',
-    ru: 'Обновить диагностику',
-    uk: 'Оновити діагностику',
-    fa: 'به‌روزرسانی عیب‌یابی',
+    en: 'Refresh checks',
+    es: 'Actualizar revisión',
+    fr: 'Actualiser les vérifications',
+    ru: 'Обновить проверку',
+    uk: 'Оновити перевірку',
+    fa: 'به‌روزرسانی بررسی‌ها',
   );
 
   String get allow => _value(
@@ -2493,6 +3000,69 @@ class AppStrings {
     ru: 'Разрешить',
     uk: 'Дозволити',
     fa: 'اجازه دادن',
+  );
+
+  String get sendTestNotification => _value(
+    en: 'Send test notification',
+    es: 'Enviar notificación de prueba',
+    fr: 'Envoyer une notification test',
+    ru: 'Отправить тестовое уведомление',
+    uk: 'Надіслати тестове сповіщення',
+    fa: 'ارسال اعلان آزمایشی',
+  );
+
+  String get testNotificationBody => _value(
+    en: 'Notifications are working.',
+    es: 'Las notificaciones funcionan.',
+    fr: 'Les notifications fonctionnent.',
+    ru: 'Уведомления работают.',
+    uk: 'Сповіщення працюють.',
+    fa: 'اعلان‌ها کار می‌کنند.',
+  );
+
+  String get testNotificationSent => _value(
+    en: 'Test notification sent.',
+    es: 'Notificación de prueba enviada.',
+    fr: 'Notification test envoyée.',
+    ru: 'Тестовое уведомление отправлено.',
+    uk: 'Тестове сповіщення надіслано.',
+    fa: 'اعلان آزمایشی ارسال شد.',
+  );
+
+  String get notificationTestHint => _value(
+    en: 'If nothing appears, enable notifications for MarV Route in Android settings.',
+    es: 'Si no aparece nada, activa las notificaciones de MarV Route en los ajustes de Android.',
+    fr: "Si rien n'apparaît, activez les notifications de MarV Route dans les réglages Android.",
+    ru: 'Если ничего не появилось, включите уведомления MarV Route в настройках Android.',
+    uk: 'Якщо нічого не зʼявилося, увімкніть сповіщення MarV Route в налаштуваннях Android.',
+    fa: 'اگر چیزی نمایش داده نشد، اعلان‌های MarV Route را در تنظیمات Android فعال کنید.',
+  );
+
+  String get trackingSetupWarningTitle => _value(
+    en: 'Tracking setup needs attention',
+    es: 'Revisa la configuración de seguimiento',
+    fr: 'Le suivi demande une vérification',
+    ru: 'Нужно проверить настройки отслеживания',
+    uk: 'Потрібно перевірити налаштування відстеження',
+    fa: 'تنظیمات ردیابی نیاز به توجه دارد',
+  );
+
+  String get trackingSetupWarningBody => _value(
+    en: 'Notifications or battery settings may limit trip alerts and background tracking.',
+    es: 'Las notificaciones o la batería pueden limitar las alertas y el seguimiento en segundo plano.',
+    fr: 'Les notifications ou la batterie peuvent limiter les alertes et le suivi en arrière-plan.',
+    ru: 'Уведомления или батарея могут ограничивать оповещения и фоновое отслеживание.',
+    uk: 'Сповіщення або налаштування батареї можуть обмежувати попередження та фонове відстеження.',
+    fa: 'اعلان‌ها یا تنظیمات باتری ممکن است هشدارهای سفر و ردیابی پس‌زمینه را محدود کند.',
+  );
+
+  String get checkPermissions => _value(
+    en: 'Check permissions',
+    es: 'Revisar permisos',
+    fr: 'Vérifier les autorisations',
+    ru: 'Проверить разрешения',
+    uk: 'Перевірити дозволи',
+    fa: 'بررسی اجازه‌ها',
   );
 
   String get open => _value(
@@ -3247,6 +3817,336 @@ class AppStrings {
     ru: 'Качество пробега выглядит хорошим.',
     uk: 'Якість пробігу виглядає нормальною.',
     fa: 'کیفیت مسافت خوب به نظر می‌رسد.',
+  );
+
+  String get authEmailAlreadyInUse => _value(
+    en: 'This email is already registered. Try signing in.',
+    es: 'Este correo ya está registrado. Intenta iniciar sesión.',
+    fr: 'Cet e-mail est déjà enregistré. Essayez de vous connecter.',
+    ru: 'Этот адрес уже зарегистрирован. Попробуйте войти.',
+    uk: 'Цю електронну адресу вже зареєстровано. Спробуйте увійти.',
+    fa: 'این ایمیل قبلاً ثبت شده است. وارد شوید.',
+  );
+
+  String get authInvalidEmail => _value(
+    en: 'Please enter a valid email address.',
+    es: 'Ingresa una dirección de correo válida.',
+    fr: 'Saisissez une adresse e-mail valide.',
+    ru: 'Введите действительный адрес электронной почты.',
+    uk: 'Введіть дійсну електронну адресу.',
+    fa: 'لطفاً یک ایمیل معتبر وارد کنید.',
+  );
+
+  String get authWeakPassword => _value(
+    en: 'Password is too weak. Use at least 6 characters.',
+    es: 'La contraseña es demasiado débil. Usa al menos 6 caracteres.',
+    fr: 'Le mot de passe est trop faible. Utilisez au moins 6 caractères.',
+    ru: 'Пароль слишком слабый. Используйте минимум 6 символов.',
+    uk: 'Пароль занадто слабкий. Використайте щонайменше 6 символів.',
+    fa: 'رمز عبور خیلی ضعیف است. حداقل از ۶ نویسه استفاده کنید.',
+  );
+
+  String get authWrongPassword => _value(
+    en: 'Incorrect password.',
+    es: 'Contraseña incorrecta.',
+    fr: 'Mot de passe incorrect.',
+    ru: 'Неверный пароль.',
+    uk: 'Неправильний пароль.',
+    fa: 'رمز عبور نادرست است.',
+  );
+
+  String get authUserNotFound => _value(
+    en: 'No account found with this email.',
+    es: 'No se encontró una cuenta con este correo.',
+    fr: 'Aucun compte trouvé avec cet e-mail.',
+    ru: 'Аккаунт с этим адресом не найден.',
+    uk: 'Обліковий запис із цією адресою не знайдено.',
+    fa: 'هیچ حسابی با این ایمیل پیدا نشد.',
+  );
+
+  String get networkErrorCheckConnection => _value(
+    en: 'Network error. Check your internet connection.',
+    es: 'Error de red. Revisa tu conexión a internet.',
+    fr: 'Erreur réseau. Vérifiez votre connexion internet.',
+    ru: 'Ошибка сети. Проверьте подключение к интернету.',
+    uk: 'Помилка мережі. Перевірте підключення до інтернету.',
+    fa: 'خطای شبکه. اتصال اینترنت خود را بررسی کنید.',
+  );
+
+  String get authTooManyRequests => _value(
+    en: 'Too many attempts. Try again later.',
+    es: 'Demasiados intentos. Inténtalo más tarde.',
+    fr: 'Trop de tentatives. Réessayez plus tard.',
+    ru: 'Слишком много попыток. Попробуйте позже.',
+    uk: 'Забагато спроб. Спробуйте пізніше.',
+    fa: 'تلاش‌های زیادی انجام شد. بعداً دوباره امتحان کنید.',
+  );
+
+  String get authOperationNotAllowed => _value(
+    en: 'Email/password sign-in is not enabled.',
+    es: 'El inicio con correo y contraseña no está habilitado.',
+    fr: 'La connexion par e-mail/mot de passe n’est pas activée.',
+    ru: 'Вход по email/паролю не включён.',
+    uk: 'Вхід через email/пароль не ввімкнено.',
+    fa: 'ورود با ایمیل/رمز عبور فعال نیست.',
+  );
+
+  String get authenticationFailedTryAgain => _value(
+    en: 'Authentication failed. Please try again.',
+    es: 'Autenticación fallida. Inténtalo de nuevo.',
+    fr: 'Échec de l’authentification. Veuillez réessayer.',
+    ru: 'Ошибка аутентификации. Попробуйте снова.',
+    uk: 'Помилка автентифікації. Спробуйте ще раз.',
+    fa: 'احراز هویت ناموفق بود. دوباره تلاش کنید.',
+  );
+
+  String get cloudBackupFailedTryAgain => _value(
+    en: 'Cloud backup failed. Please try again.',
+    es: 'La copia en la nube falló. Inténtalo de nuevo.',
+    fr: 'La sauvegarde cloud a échoué. Veuillez réessayer.',
+    ru: 'Не удалось создать облачную копию. Попробуйте снова.',
+    uk: 'Не вдалося створити хмарну резервну копію. Спробуйте ще раз.',
+    fa: 'پشتیبان‌گیری ابری ناموفق بود. دوباره تلاش کنید.',
+  );
+
+  String get cloudRestoreFailedTryAgain => _value(
+    en: 'Cloud restore failed. Please try again.',
+    es: 'La restauración desde la nube falló. Inténtalo de nuevo.',
+    fr: 'La restauration cloud a échoué. Veuillez réessayer.',
+    ru: 'Не удалось восстановить из облака. Попробуйте снова.',
+    uk: 'Не вдалося відновити з хмари. Спробуйте ще раз.',
+    fa: 'بازیابی ابری ناموفق بود. دوباره تلاش کنید.',
+  );
+
+  String get cloudBackupPermissionDenied => _value(
+    en: 'Cloud backup permission denied. Please sign in again.',
+    es: 'Permiso de copia en la nube denegado. Inicia sesión de nuevo.',
+    fr: 'Autorisation de sauvegarde cloud refusée. Reconnectez-vous.',
+    ru: 'Доступ к облачной копии запрещён. Войдите снова.',
+    uk: 'Доступ до хмарної резервної копії заборонено. Увійдіть знову.',
+    fa: 'مجوز پشتیبان‌گیری ابری رد شد. دوباره وارد شوید.',
+  );
+
+  String get fuelLog => _value(
+    en: 'Fuel Log',
+    es: 'Registro de combustible',
+    fr: 'Journal carburant',
+    ru: 'Журнал топлива',
+    uk: 'Журнал пального',
+    fa: 'ثبت سوخت',
+  );
+
+  String get fuelSummary => _value(
+    en: 'Fuel summary',
+    es: 'Resumen de combustible',
+    fr: 'Résumé carburant',
+    ru: 'Сводка топлива',
+    uk: 'Підсумок пального',
+    fa: 'خلاصه سوخت',
+  );
+
+  String get fuelCost => _value(
+    en: 'Fuel cost',
+    es: 'Costo de combustible',
+    fr: 'Coût du carburant',
+    ru: 'Стоимость топлива',
+    uk: 'Вартість пального',
+    fa: 'هزینه سوخت',
+  );
+
+  String get addFuel => _value(
+    en: 'Add Fuel',
+    es: 'Agregar combustible',
+    fr: 'Ajouter du carburant',
+    ru: 'Добавить топливо',
+    uk: 'Додати пальне',
+    fa: 'افزودن سوخت',
+  );
+
+  String get editFuel => _value(
+    en: 'Edit Fuel',
+    es: 'Editar combustible',
+    fr: 'Modifier le carburant',
+    ru: 'Редактировать топливо',
+    uk: 'Редагувати пальне',
+    fa: 'ویرایش سوخت',
+  );
+
+  String get fuelAmount => _value(
+    en: 'Fuel amount',
+    es: 'Cantidad de combustible',
+    fr: 'Quantité de carburant',
+    ru: 'Количество топлива',
+    uk: 'Кількість пального',
+    fa: 'مقدار سوخت',
+  );
+
+  String get averageFuelPrice => _value(
+    en: 'Average fuel price',
+    es: 'Precio promedio del combustible',
+    fr: 'Prix moyen du carburant',
+    ru: 'Средняя цена топлива',
+    uk: 'Середня ціна пального',
+    fa: 'میانگین قیمت سوخت',
+  );
+
+  String get costPerMile => _value(
+    en: 'Cost per mile',
+    es: 'Costo por milla',
+    fr: 'Coût par mile',
+    ru: 'Стоимость за милю',
+    uk: 'Вартість за милю',
+    fa: 'هزینه در هر مایل',
+  );
+
+  String get costPerKm => _value(
+    en: 'Cost per km',
+    es: 'Costo por km',
+    fr: 'Coût par km',
+    ru: 'Стоимость за км',
+    uk: 'Вартість за км',
+    fa: 'هزینه در هر کیلومتر',
+  );
+
+  String get perGallon => _value(
+    en: 'per gallon',
+    es: 'por galón',
+    fr: 'par gallon',
+    ru: 'за галлон',
+    uk: 'за галон',
+    fa: 'در هر گالن',
+  );
+
+  String get perLiter => _value(
+    en: 'per liter',
+    es: 'por litro',
+    fr: 'par litre',
+    ru: 'за литр',
+    uk: 'за літр',
+    fa: 'در هر لیتر',
+  );
+
+  String get notAvailable => _value(
+    en: 'N/A',
+    es: 'N/D',
+    fr: 'N/D',
+    ru: 'Н/Д',
+    uk: 'Н/Д',
+    fa: 'ناموجود',
+  );
+
+  String get gallons =>
+      _value(en: 'gal', es: 'gal', fr: 'gal', ru: 'гал', uk: 'гал', fa: 'گالن');
+
+  String get liters =>
+      _value(en: 'L', es: 'L', fr: 'L', ru: 'л', uk: 'л', fa: 'لیتر');
+
+  String get totalCost => _value(
+    en: 'Total cost',
+    es: 'Costo total',
+    fr: 'Coût total',
+    ru: 'Общая стоимость',
+    uk: 'Загальна вартість',
+    fa: 'هزینه کل',
+  );
+
+  String get stationName => _value(
+    en: 'Station name',
+    es: 'Nombre de la gasolinera',
+    fr: 'Nom de la station',
+    ru: 'Название заправки',
+    uk: 'Назва заправки',
+    fa: 'نام پمپ بنزین',
+  );
+
+  String get fuelEntrySaved => _value(
+    en: 'Fuel entry saved',
+    es: 'Registro de combustible guardado',
+    fr: 'Entrée carburant enregistrée',
+    ru: 'Запись о топливе сохранена',
+    uk: 'Запис про пальне збережено',
+    fa: 'ثبت سوخت ذخیره شد',
+  );
+
+  String get fuelEntryDeleted => _value(
+    en: 'Fuel entry deleted',
+    es: 'Registro de combustible eliminado',
+    fr: 'Entrée carburant supprimée',
+    ru: 'Запись о топливе удалена',
+    uk: 'Запис про пальне видалено',
+    fa: 'ثبت سوخت حذف شد',
+  );
+
+  String get fuelAmountMustBePositive => _value(
+    en: 'Fuel amount must be greater than 0',
+    es: 'La cantidad de combustible debe ser mayor que 0',
+    fr: 'La quantité de carburant doit être supérieure à 0',
+    ru: 'Количество топлива должно быть больше 0',
+    uk: 'Кількість пального має бути більшою за 0',
+    fa: 'مقدار سوخت باید بیشتر از ۰ باشد',
+  );
+
+  String get totalCostCannotBeNegative => _value(
+    en: 'Total cost cannot be negative',
+    es: 'El costo total no puede ser negativo',
+    fr: 'Le coût total ne peut pas être négatif',
+    ru: 'Общая стоимость не может быть отрицательной',
+    uk: 'Загальна вартість не може бути від’ємною',
+    fa: 'هزینه کل نمی‌تواند منفی باشد',
+  );
+
+  String get noFuelEntries => _value(
+    en: 'No fuel entries yet',
+    es: 'Aún no hay registros de combustible',
+    fr: 'Aucune entrée carburant pour le moment',
+    ru: 'Записей о топливе пока нет',
+    uk: 'Записів про пальне ще немає',
+    fa: 'هنوز ثبت سوختی وجود ندارد',
+  );
+
+  String get deleteFuelEntry => _value(
+    en: 'Delete fuel entry',
+    es: 'Eliminar registro de combustible',
+    fr: 'Supprimer l’entrée carburant',
+    ru: 'Удалить запись о топливе',
+    uk: 'Видалити запис про пальне',
+    fa: 'حذف ثبت سوخت',
+  );
+
+  String get deleteFuelEntryConfirm => _value(
+    en: 'Delete this fuel purchase?',
+    es: '¿Eliminar esta compra de combustible?',
+    fr: 'Supprimer cet achat de carburant ?',
+    ru: 'Удалить эту покупку топлива?',
+    uk: 'Видалити цю покупку пального?',
+    fa: 'این خرید سوخت حذف شود؟',
+  );
+
+  String get date => _value(
+    en: 'Date',
+    es: 'Fecha',
+    fr: 'Date',
+    ru: 'Дата',
+    uk: 'Дата',
+    fa: 'تاریخ',
+  );
+
+  String get odometer => _value(
+    en: 'Odometer',
+    es: 'Odómetro',
+    fr: 'Compteur',
+    ru: 'Одометр',
+    uk: 'Одометр',
+    fa: 'کیلومترشمار',
+  );
+
+  String get saving => _value(
+    en: 'Saving...',
+    es: 'Guardando...',
+    fr: 'Enregistrement...',
+    ru: 'Сохранение...',
+    uk: 'Збереження...',
+    fa: 'در حال ذخیره...',
   );
 
   String _value({

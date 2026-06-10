@@ -1,6 +1,8 @@
 import '../tax/tax_service.dart';
 import '../../app/app.dart';
 
+enum SubscriptionStatus { free, pro, testerPro }
+
 /// Stores the user's app-wide preferences, set during onboarding
 /// and editable afterwards from the Profile screen.
 class UserPreferences {
@@ -13,6 +15,7 @@ class UserPreferences {
   final String? businessName;
   final String? vehicleName;
   final bool autoTripDetectionEnabled;
+  final SubscriptionStatus subscriptionStatus;
   final AppThemeMode themeMode;
   final String? accountantName;
   final String? accountantPhone;
@@ -29,6 +32,7 @@ class UserPreferences {
   final double? brakePadChangeIntervalKm;
   final double? brakePadReminderThresholdKm;
   final DateTime? lastOdometerUpdateAt;
+  final DateTime? lastAutomaticCloudBackupAt;
 
   const UserPreferences({
     required this.country,
@@ -40,6 +44,7 @@ class UserPreferences {
     this.businessName,
     this.vehicleName,
     this.autoTripDetectionEnabled = false,
+    this.subscriptionStatus = SubscriptionStatus.free,
     this.themeMode = AppThemeMode.system,
     this.accountantName,
     this.accountantPhone,
@@ -55,6 +60,7 @@ class UserPreferences {
     this.brakePadChangeIntervalKm,
     this.brakePadReminderThresholdKm,
     this.lastOdometerUpdateAt,
+    this.lastAutomaticCloudBackupAt,
   });
 
   /// Default preferences before onboarding is completed.
@@ -90,6 +96,7 @@ class UserPreferences {
     'businessName': businessName,
     'vehicleName': vehicleName,
     'autoTripDetectionEnabled': autoTripDetectionEnabled,
+    'subscriptionStatus': subscriptionStatus.name,
     'themeMode': themeMode.name,
     'accountantName': accountantName,
     'accountantPhone': accountantPhone,
@@ -105,6 +112,7 @@ class UserPreferences {
     'brakePadChangeIntervalKm': brakePadChangeIntervalKm,
     'brakePadReminderThresholdKm': brakePadReminderThresholdKm,
     'lastOdometerUpdateAt': lastOdometerUpdateAt?.toIso8601String(),
+    'lastAutomaticCloudBackupAt': lastAutomaticCloudBackupAt?.toIso8601String(),
   };
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) =>
@@ -133,6 +141,10 @@ class UserPreferences {
         autoTripDetectionEnabled: json['autoTripDetectionEnabled'] is bool
             ? json['autoTripDetectionEnabled'] as bool
             : false,
+        subscriptionStatus: SubscriptionStatus.values.firstWhere(
+          (s) => s.name == json['subscriptionStatus'],
+          orElse: () => SubscriptionStatus.free,
+        ),
         themeMode: AppThemeMode.values.firstWhere(
           (t) => t.name == json['themeMode'],
           orElse: () => AppThemeMode.system,
@@ -161,6 +173,9 @@ class UserPreferences {
         lastOdometerUpdateAt: json['lastOdometerUpdateAt'] is String
             ? _parseLocalDateTime(json['lastOdometerUpdateAt'] as String)
             : null,
+        lastAutomaticCloudBackupAt: json['lastAutomaticCloudBackupAt'] is String
+            ? _parseLocalDateTime(json['lastAutomaticCloudBackupAt'] as String)
+            : null,
       );
 
   UserPreferences copyWith({
@@ -173,6 +188,7 @@ class UserPreferences {
     Object? businessName = _sentinel,
     Object? vehicleName = _sentinel,
     bool? autoTripDetectionEnabled,
+    SubscriptionStatus? subscriptionStatus,
     AppThemeMode? themeMode,
     Object? accountantName = _sentinel,
     Object? accountantPhone = _sentinel,
@@ -188,6 +204,7 @@ class UserPreferences {
     Object? brakePadChangeIntervalKm = _sentinel,
     Object? brakePadReminderThresholdKm = _sentinel,
     Object? lastOdometerUpdateAt = _sentinel,
+    Object? lastAutomaticCloudBackupAt = _sentinel,
   }) => UserPreferences(
     country: country ?? this.country,
     currencyCode: currencyCode ?? this.currencyCode,
@@ -205,6 +222,7 @@ class UserPreferences {
         : vehicleName as String?,
     autoTripDetectionEnabled:
         autoTripDetectionEnabled ?? this.autoTripDetectionEnabled,
+    subscriptionStatus: subscriptionStatus ?? this.subscriptionStatus,
     themeMode: themeMode ?? this.themeMode,
     accountantName: accountantName == _sentinel
         ? this.accountantName
@@ -248,6 +266,9 @@ class UserPreferences {
     lastOdometerUpdateAt: lastOdometerUpdateAt == _sentinel
         ? this.lastOdometerUpdateAt
         : lastOdometerUpdateAt as DateTime?,
+    lastAutomaticCloudBackupAt: lastAutomaticCloudBackupAt == _sentinel
+        ? this.lastAutomaticCloudBackupAt
+        : lastAutomaticCloudBackupAt as DateTime?,
   );
 
   @override
@@ -261,7 +282,8 @@ class UserPreferences {
       'driverName: $driverName, '
       'businessName: $businessName, '
       'vehicleName: $vehicleName, '
-      'autoTripDetectionEnabled: $autoTripDetectionEnabled)';
+      'autoTripDetectionEnabled: $autoTripDetectionEnabled, '
+      'subscriptionStatus: $subscriptionStatus)';
 }
 
 const Object _sentinel = Object();

@@ -3,6 +3,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../../app/app.dart';
+import '../../features/fuel/models/fuel_entry.dart';
 import '../../features/trips/models/trip.dart';
 import '../../features/work_mode/models/work_shift.dart';
 import '../../shared/utils/distance_utils.dart';
@@ -11,12 +12,14 @@ import 'pdf_report_labels.dart';
 
 enum PdfReportType { simple, detailed }
 
+const double _litersPerGallon = 3.785411784;
+
 class ReportPdfService {
   // ─── Palette ──────────────────────────────────────────────────────────────
 
-  static const _teal = PdfColor.fromInt(0xFF009688);
-  static const _tealLight = PdfColor.fromInt(0xFFE0F2F1);
-  static const _tealDark = PdfColor.fromInt(0xFF00695C);
+  static const _brand = PdfColor.fromInt(0xFF52D6FD);
+  static const _brandLight = PdfColor.fromInt(0xFFE7F9FE);
+  static const _brandDark = PdfColor.fromInt(0xFF0B4D5F);
   static const _grey = PdfColor.fromInt(0xFF757575);
   static const _greyLight = PdfColor.fromInt(0xFF9E9E9E);
   static const _divider = PdfColor.fromInt(0xFFE0E0E0);
@@ -43,6 +46,8 @@ class ReportPdfService {
     required Map<String, double> platformBreakdown,
     required Country country,
     required AppUnit unit,
+    required String currencyCode,
+    List<FuelEntry> fuelEntries = const [],
     List<WorkShift> shifts = const [],
     PdfReportType reportType = PdfReportType.simple,
     DateTime? startDate,
@@ -60,10 +65,6 @@ class ReportPdfService {
       start,
     ).replaceAll(' ', '_').toLowerCase();
     final unitStr = unitLabel(unit);
-    final currencyCode = country == Country.usa
-        ? PdfReportLabels.usd
-        : PdfReportLabels.cad;
-
     // Fuel is shift-level only. Parking and tolls combine shift + trip level.
     final totalFuel = shifts.fold(0.0, (s, sh) => s + sh.fuelExpense);
     final totalParking =
@@ -73,6 +74,12 @@ class ReportPdfService {
         shifts.fold(0.0, (s, sh) => s + sh.tollsExpense) +
         trips.fold(0.0, (s, t) => s + t.tollsExpense);
     final totalExpenses = totalFuel + totalParking + totalTolls;
+    final fuelSummary = _FuelSummary.fromEntries(
+      fuelEntries,
+      unit: unit,
+      totalDistanceKm: totalDistance,
+      currencyCode: currencyCode,
+    );
 
     final doc = pw.Document();
 
@@ -90,6 +97,7 @@ class ReportPdfService {
           totalParking: totalParking,
           totalTolls: totalTolls,
           totalExpenses: totalExpenses,
+          fuelSummary: fuelSummary,
           platformBreakdown: platformBreakdown,
           tax: tax,
           country: country,
@@ -115,6 +123,7 @@ class ReportPdfService {
           totalParking: totalParking,
           totalTolls: totalTolls,
           totalExpenses: totalExpenses,
+          fuelSummary: fuelSummary,
           driverName: driverName,
           businessName: businessName,
           vehicleName: vehicleName,
@@ -143,6 +152,7 @@ class ReportPdfService {
     required double totalParking,
     required double totalTolls,
     required double totalExpenses,
+    required _FuelSummary fuelSummary,
     required Map<String, double> platformBreakdown,
     required double tax,
     required Country country,
@@ -152,9 +162,10 @@ class ReportPdfService {
     String? vehicleName,
   }) {
     final identityPairs = _identityPairs(
-        driverName: driverName,
-        businessName: businessName,
-        vehicleName: vehicleName);
+      driverName: driverName,
+      businessName: businessName,
+      vehicleName: vehicleName,
+    );
 
     doc.addPage(
       pw.MultiPage(
@@ -277,6 +288,13 @@ class ReportPdfService {
           pw.SizedBox(height: 28),
 
           // ── Platform breakdown (optional) ─────────────────────────────
+          if (fuelSummary.hasEntries) ...[
+            _sectionTitle(PdfReportLabels.fuelSummary),
+            pw.SizedBox(height: 12),
+            _fuelSummaryCards(fuelSummary),
+            pw.SizedBox(height: 28),
+          ],
+
           if (platformBreakdown.isNotEmpty) ...[
             _sectionTitle(PdfReportLabels.platformBreakdown),
             pw.SizedBox(height: 12),
@@ -305,14 +323,16 @@ class ReportPdfService {
     required double totalParking,
     required double totalTolls,
     required double totalExpenses,
+    required _FuelSummary fuelSummary,
     String? driverName,
     String? businessName,
     String? vehicleName,
   }) {
     final identityPairs = _identityPairs(
-        driverName: driverName,
-        businessName: businessName,
-        vehicleName: vehicleName);
+      driverName: driverName,
+      businessName: businessName,
+      vehicleName: vehicleName,
+    );
 
     doc.addPage(
       pw.MultiPage(
@@ -375,6 +395,13 @@ class ReportPdfService {
           pw.SizedBox(height: 32),
 
           // ── Work Shift Expenses (only when shifts exist) ───────────────
+          if (fuelSummary.hasEntries) ...[
+            _sectionTitle(PdfReportLabels.fuelSummary),
+            pw.SizedBox(height: 10),
+            _fuelSummaryTable(fuelSummary),
+            pw.SizedBox(height: 32),
+          ],
+
           if (shifts.isNotEmpty) ...[
             _sectionTitle(PdfReportLabels.workShiftExpenses),
             pw.SizedBox(height: 10),
@@ -403,7 +430,7 @@ class ReportPdfService {
     return pw.Container(
       padding: const pw.EdgeInsets.only(bottom: 12),
       decoration: const pw.BoxDecoration(
-        border: pw.Border(bottom: pw.BorderSide(color: _teal, width: 2)),
+        border: pw.Border(bottom: pw.BorderSide(color: _brand, width: 2)),
       ),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -418,7 +445,7 @@ class ReportPdfService {
                   style: pw.TextStyle(
                     fontSize: 18,
                     fontWeight: pw.FontWeight.bold,
-                    color: _teal,
+                    color: _brand,
                   ),
                 ),
                 pw.SizedBox(height: 4),
@@ -433,14 +460,14 @@ class ReportPdfService {
           pw.Container(
             padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: pw.BoxDecoration(
-              color: _tealLight,
+              color: _brandLight,
               borderRadius: pw.BorderRadius.circular(6),
             ),
             child: pw.Text(
               badgeLabel,
               style: pw.TextStyle(
                 fontSize: 10,
-                color: _tealDark,
+                color: _brandDark,
                 fontWeight: pw.FontWeight.bold,
               ),
             ),
@@ -562,9 +589,9 @@ class ReportPdfService {
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
-        color: highlight ? _tealLight : _bgCard,
+        color: highlight ? _brandLight : _bgCard,
         borderRadius: pw.BorderRadius.circular(6),
-        border: pw.Border.all(color: highlight ? _teal : _divider, width: 0.5),
+        border: pw.Border.all(color: highlight ? _brand : _divider, width: 0.5),
       ),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -576,7 +603,7 @@ class ReportPdfService {
             style: pw.TextStyle(
               fontSize: 12,
               fontWeight: pw.FontWeight.bold,
-              color: highlight ? _teal : _black,
+              color: highlight ? _brand : _black,
             ),
           ),
         ],
@@ -585,6 +612,96 @@ class ReportPdfService {
   }
 
   // ─── Detailed summary table ───────────────────────────────────────────────
+
+  pw.Widget _fuelSummaryCards(_FuelSummary summary) {
+    return pw.Row(
+      children: [
+        pw.Expanded(
+          child: _statCard(
+            label: PdfReportLabels.totalFuelCost,
+            value: PdfReportLabels.formatReportCurrency(
+              summary.totalCost,
+              summary.currencyCode,
+            ),
+          ),
+        ),
+        pw.SizedBox(width: 10),
+        pw.Expanded(
+          child: _statCard(
+            label: PdfReportLabels.totalFuelAmount,
+            value: summary.formattedVolume,
+          ),
+        ),
+        pw.SizedBox(width: 10),
+        pw.Expanded(
+          child: _statCard(
+            label: PdfReportLabels.averageFuelPrice,
+            value: summary.formattedAveragePrice,
+          ),
+        ),
+        pw.SizedBox(width: 10),
+        pw.Expanded(
+          child: _statCard(
+            label: summary.costPerDistanceLabel,
+            value: summary.formattedCostPerDistance,
+            highlight: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _fuelSummaryTable(_FuelSummary summary) {
+    final rows = [
+      _SummaryRow(
+        PdfReportLabels.totalFuelCost,
+        PdfReportLabels.formatReportCurrency(
+          summary.totalCost,
+          summary.currencyCode,
+        ),
+      ),
+      _SummaryRow(PdfReportLabels.totalFuelAmount, summary.formattedVolume),
+      _SummaryRow(
+        PdfReportLabels.averageFuelPrice,
+        summary.formattedAveragePrice,
+      ),
+      _SummaryRow(
+        summary.costPerDistanceLabel,
+        summary.formattedCostPerDistance,
+        highlight: true,
+      ),
+    ];
+
+    return pw.Table(
+      border: pw.TableBorder.all(color: _divider, width: 0.5),
+      columnWidths: {
+        0: const pw.FlexColumnWidth(3),
+        1: const pw.FlexColumnWidth(2),
+      },
+      children: [
+        for (int i = 0; i < rows.length; i++)
+          pw.TableRow(
+            decoration: pw.BoxDecoration(
+              color: rows[i].highlight
+                  ? _brandLight
+                  : (i.isEven ? PdfColors.white : _bgAlt),
+            ),
+            children: [
+              _tableCell(
+                rows[i].label,
+                bold: rows[i].highlight,
+                color: rows[i].highlight ? _brandDark : _black,
+              ),
+              _tableCell(
+                rows[i].value,
+                bold: rows[i].highlight,
+                color: rows[i].highlight ? _brandDark : _black,
+              ),
+            ],
+          ),
+      ],
+    );
+  }
 
   pw.Widget _detailedSummaryTable({
     required double totalDistance,
@@ -646,7 +763,7 @@ class ReportPdfService {
       children: rows.map((row) {
         if (row.isGroup) {
           return pw.TableRow(
-            decoration: const pw.BoxDecoration(color: _tealLight),
+            decoration: const pw.BoxDecoration(color: _brandLight),
             children: [_tableCellGroup(row.label), pw.Container()],
           );
         }
@@ -655,19 +772,19 @@ class ReportPdfService {
         return pw.TableRow(
           decoration: pw.BoxDecoration(
             color: row.highlight
-                ? _tealLight
+                ? _brandLight
                 : (isEven ? PdfColors.white : _bgAlt),
           ),
           children: [
             _tableCell(
               row.label,
               bold: row.highlight,
-              color: row.highlight ? _tealDark : _black,
+              color: row.highlight ? _brandDark : _black,
             ),
             _tableCell(
               row.value,
               bold: row.highlight,
-              color: row.highlight ? _tealDark : _black,
+              color: row.highlight ? _brandDark : _black,
             ),
           ],
         );
@@ -693,7 +810,7 @@ class ReportPdfService {
       },
       children: [
         pw.TableRow(
-          decoration: const pw.BoxDecoration(color: _teal),
+          decoration: const pw.BoxDecoration(color: _brand),
           children: [
             _tableCell(PdfReportLabels.platform, isHeader: true),
             _tableCell(
@@ -732,7 +849,7 @@ class ReportPdfService {
       },
       children: [
         pw.TableRow(
-          decoration: const pw.BoxDecoration(color: _teal),
+          decoration: const pw.BoxDecoration(color: _brand),
           children: [
             _tableCell(PdfReportLabels.platform, isHeader: true),
             _tableCell(PdfReportLabels.start, isHeader: true),
@@ -803,7 +920,7 @@ class ReportPdfService {
       },
       children: [
         pw.TableRow(
-          decoration: const pw.BoxDecoration(color: _teal),
+          decoration: const pw.BoxDecoration(color: _brand),
           children: [
             _tableCell(PdfReportLabels.date, isHeader: true),
             _tableCell(PdfReportLabels.from, isHeader: true),
@@ -849,13 +966,11 @@ class ReportPdfService {
   }
 
   pw.Widget _tripPurposeCell(Trip trip) {
-    final purpose =
-        (trip.businessPurpose != null && trip.businessPurpose!.isNotEmpty)
-        ? trip.businessPurpose!
-        : PdfReportLabels.businessPurposeFor(
-            category: trip.category,
-            platformName: trip.platformName,
-          );
+    final purpose = PdfReportLabels.exportPurposeFor(
+      category: trip.category,
+      platformName: trip.platformName,
+      businessPurpose: trip.businessPurpose,
+    );
 
     if (trip.notes == null || trip.notes!.isEmpty) {
       return _tableCell(purpose, maxLines: 2, fontSize: 7);
@@ -925,7 +1040,7 @@ class ReportPdfService {
         style: pw.TextStyle(
           fontSize: 7,
           fontWeight: pw.FontWeight.bold,
-          color: _tealDark,
+          color: _brandDark,
           letterSpacing: 0.8,
         ),
       ),
@@ -971,4 +1086,68 @@ class _SummaryRow {
     this.highlight = false,
     this.isGroup = false,
   });
+}
+
+class _FuelSummary {
+  const _FuelSummary({
+    required this.hasEntries,
+    required this.totalCost,
+    required this.displayVolume,
+    required this.volumeUnit,
+    required this.averagePrice,
+    required this.priceUnitLabel,
+    required this.costPerDistance,
+    required this.costPerDistanceLabel,
+    required this.currencyCode,
+  });
+
+  final bool hasEntries;
+  final double totalCost;
+  final double displayVolume;
+  final String volumeUnit;
+  final double? averagePrice;
+  final String priceUnitLabel;
+  final double? costPerDistance;
+  final String costPerDistanceLabel;
+  final String currencyCode;
+
+  factory _FuelSummary.fromEntries(
+    List<FuelEntry> entries, {
+    required AppUnit unit,
+    required double totalDistanceKm,
+    required String currencyCode,
+  }) {
+    final totalCost = entries.fold(0.0, (sum, e) => sum + e.totalCost);
+    final totalLiters = entries.fold(0.0, (sum, e) => sum + e.volumeLiters);
+    final usesKm = unit == AppUnit.kilometers;
+    final displayVolume = usesKm ? totalLiters : totalLiters / _litersPerGallon;
+    final displayDistance = fromKilometers(totalDistanceKm, unit);
+
+    return _FuelSummary(
+      hasEntries: entries.isNotEmpty,
+      totalCost: totalCost,
+      displayVolume: displayVolume,
+      volumeUnit: usesKm ? 'L' : 'gal',
+      averagePrice: displayVolume > 0 ? totalCost / displayVolume : null,
+      priceUnitLabel: usesKm
+          ? PdfReportLabels.perLiter
+          : PdfReportLabels.perGallon,
+      costPerDistance: displayDistance > 0 ? totalCost / displayDistance : null,
+      costPerDistanceLabel: usesKm
+          ? PdfReportLabels.costPerKm
+          : PdfReportLabels.costPerMile,
+      currencyCode: currencyCode,
+    );
+  }
+
+  String get formattedVolume =>
+      '${displayVolume.toStringAsFixed(1)} $volumeUnit';
+
+  String get formattedAveragePrice => averagePrice == null
+      ? PdfReportLabels.na
+      : '${PdfReportLabels.formatReportCurrency(averagePrice!, currencyCode)} $priceUnitLabel';
+
+  String get formattedCostPerDistance => costPerDistance == null
+      ? PdfReportLabels.na
+      : PdfReportLabels.formatReportCurrency(costPerDistance!, currencyCode);
 }

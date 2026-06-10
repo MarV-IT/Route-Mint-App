@@ -29,21 +29,28 @@ class AutoTripDetectionService {
   // ── Detection thresholds ────────────────────────────────────────────────
   static const double _maxAccuracyMeters =
       TrackingResult.defaultMaxAccuracyMeters;
+  static const double _startMaxAccuracyMeters = 75;
 
   // Start detection: a trip starts after enough displacement, enough
   // cumulative movement, or two consecutive vehicle-speed samples.
   static const int _startWindowSeconds = 180; // 3-min rolling window
-  static const double _startDisplacementMeters = 75; // A: first→last in window
+  static const double _startDisplacementMeters = 250; // A: first→last in window
+  static const int _startOutsideAnchorPoints = 2;
   static const double _startTotalMovementMeters =
-      100; // B: cumulative path in window
-  static const double _startSpeedKmh = 5.0; // C: instant speed trigger
-  static const int _startConsecutivePoints = 2; // N consecutive fast points
+      350; // B: cumulative path in window
+  static const double _startSpeedKmh = 15.0; // C: instant speed trigger
+  static const int _startConsecutivePoints = 3; // N consecutive fast points
 
   // Stop detection: save the active trip after 3 minutes without meaningful
   // movement, then resume monitoring for the next trip.
   static const int _stopTimeoutSeconds = 180; // 3-min idle → stop
   static const double _stopMovementThresholdMeters =
-      30; // meaningful move resets idle
+      100; // meaningful move resets idle
+
+  static const double _minimumAutoTripDistanceKm = 0.5;
+  static const double _autoRouteSegmentMeters = 30;
+  static const double _liveMapSegmentMeters = 75;
+  static const int _stationaryRouteFreezeSeconds = 45;
 
   // Runtime caps and polling fallback. Polling keeps detection working when
   // Android does not deliver position stream events while monitoring.
@@ -190,22 +197,34 @@ class AutoTripDetectionService {
     final window = _monitoringBuffer
         .where((p) => !p.timestamp.isBefore(windowCutoff))
         .toList(growable: false);
+    final startQualityWindow = window
+        .where((p) => p.accuracyMeters <= _startMaxAccuracyMeters)
+        .toList(growable: false);
 
-    if (window.length < 2) {
+    if (startQualityWindow.length < 2) {
       if (kDebugMode) {
         debugPrint(
           '[AutoDetection] shouldStart: window too small '
-          '(${window.length} pts in last ${_startWindowSeconds}s)',
+          '(${startQualityWindow.length} start-quality pts in last '
+          '${_startWindowSeconds}s)',
         );
       }
       return false;
     }
 
-    final firstPoint = window.first;
+    final firstPoint = startQualityWindow.first;
+    if (!_hasLeftStartAnchor(startQualityWindow, firstPoint)) {
+      if (kDebugMode) {
+        debugPrint('[AutoDetection] shouldStart: still inside start anchor');
+      }
+      _consecutiveSpeedCount = 0;
+      return false;
+    }
 
     // Condition A: displacement first→last >= _startDisplacementMeters
     final displacementM =
-        TrackingResult.distanceBetweenKm(firstPoint, latest) * 1000;
+        TrackingResult.distanceBetweenKm(firstPoint, startQualityWindow.last) *
+        1000;
     if (kDebugMode) {
       debugPrint(
         '[AutoDetection] shouldStart A: displacement='
@@ -219,7 +238,8 @@ class AutoTripDetectionService {
     }
 
     // Condition B: cumulative path >= _startTotalMovementMeters
-    final totalM = TrackingResult.calculateDistanceKm(window) * 1000;
+    final totalM =
+        TrackingResult.calculateDistanceKm(startQualityWindow) * 1000;
     if (kDebugMode) {
       debugPrint(
         '[AutoDetection] shouldStart B: total movement='
@@ -236,11 +256,12 @@ class AutoTripDetectionService {
 
     // Condition C: speed >= _startSpeedKmh for N consecutive point pairs.
     // Use inMilliseconds to avoid zero-rounding on sub-second intervals.
-    if (_monitoringBuffer.length >= 2) {
-      final prev = _monitoringBuffer[_monitoringBuffer.length - 2];
-      final dtMs = latest.timestamp.difference(prev.timestamp).inMilliseconds;
+    if (startQualityWindow.length >= 2) {
+      final prev = startQualityWindow[startQualityWindow.length - 2];
+      final current = startQualityWindow.last;
+      final dtMs = current.timestamp.difference(prev.timestamp).inMilliseconds;
       if (dtMs > 0) {
-        final km = TrackingResult.distanceBetweenKm(prev, latest);
+        final km = TrackingResult.distanceBetweenKm(prev, current);
         final kmh = km / (dtMs / 3600000.0);
         if (kDebugMode) {
           debugPrint(
@@ -263,6 +284,17 @@ class AutoTripDetectionService {
     }
 
     return false;
+  }
+
+  bool _hasLeftStartAnchor(List<TrackingPoint> window, TrackingPoint anchor) {
+    var outsideCount = 0;
+    for (final point in window) {
+      final meters = TrackingResult.distanceBetweenKm(anchor, point) * 1000;
+      if (meters >= _startDisplacementMeters) {
+        outsideCount++;
+      }
+    }
+    return outsideCount >= _startOutsideAnchorPoints;
   }
 
   Future<void> _addInitialMonitoringPoint() async {
@@ -341,13 +373,36 @@ class AutoTripDetectionService {
       return;
     }
 
+    final prev = _lastMovementPoint;
+    if (prev != null && _lastMovementTime != null) {
+      final meters = TrackingResult.distanceBetweenKm(prev, point) * 1000;
+      final idleSec = point.timestamp.difference(_lastMovementTime!).inSeconds;
+      if (idleSec >= _stationaryRouteFreezeSeconds &&
+          meters < _stopMovementThresholdMeters) {
+        if (kDebugMode) {
+          debugPrint(
+            '[AutoDetection] stationary GPS drift suppressed - '
+            'idle=${idleSec}s, drift=${meters.toStringAsFixed(0)} m',
+          );
+        }
+        if (idleSec >= _stopTimeoutSeconds) {
+          if (kDebugMode) {
+            debugPrint(
+              '[AutoDetection] stop condition met - '
+              'idle for ${idleSec}s',
+            );
+          }
+          _autoStopTrip();
+        }
+        return;
+      }
+    }
+
     _trackingPoints.add(point);
     if (_trackingPoints.length > _maxTrackingPoints) {
       _trackingPoints.removeRange(0, _maxTrackingPoints ~/ 4);
     }
-    activeRouteNotifier.value = List<TrackingPoint>.unmodifiable(
-      _trackingPoints,
-    );
+    _publishActiveRoute();
 
     if (kDebugMode) {
       debugPrint(
@@ -358,7 +413,6 @@ class AutoTripDetectionService {
     }
 
     // Update movement timestamp when meaningful displacement occurs.
-    final prev = _lastMovementPoint;
     if (prev != null) {
       final meters = TrackingResult.distanceBetweenKm(prev, point) * 1000;
       if (meters >= _stopMovementThresholdMeters) {
@@ -417,9 +471,7 @@ class AutoTripDetectionService {
       ..addAll(_monitoringBuffer);
     _tripRawPointCount = _trackingPoints.length;
     _tripDroppedPointCount = 0;
-    activeRouteNotifier.value = List<TrackingPoint>.unmodifiable(
-      _trackingPoints,
-    );
+    _publishActiveRoute();
     _lastMovementPoint = _trackingPoints.isNotEmpty
         ? _trackingPoints.last
         : null;
@@ -482,6 +534,8 @@ class AutoTripDetectionService {
     final result = TrackingResult.fromPoints(
       points,
       maxAccuracyMeters: _maxAccuracyMeters,
+      minimumDistanceKm: _minimumAutoTripDistanceKm,
+      minimumSegmentDistanceMeters: _autoRouteSegmentMeters,
       rawPointCountOverride: fromMonitoringBuffer
           ? points.length
           : _tripRawPointCount,
@@ -504,7 +558,7 @@ class AutoTripDetectionService {
           debugPrint(
             '[AutoDetection] result=null — '
             'distance=${distM.toStringAsFixed(0)} m below minimum '
-            '(${(TrackingResult.defaultMinimumDistanceKm * 1000).toStringAsFixed(0)} m)',
+            '(${(_minimumAutoTripDistanceKm * 1000).toStringAsFixed(0)} m)',
           );
         }
       }
@@ -523,8 +577,8 @@ class AutoTripDetectionService {
     final end = result.points.last;
 
     final addresses = await Future.wait([
-      _geocodingService.reverseGeocode(start.latitude, start.longitude),
-      _geocodingService.reverseGeocode(end.latitude, end.longitude),
+      _reverseGeocodeSafely(start.latitude, start.longitude),
+      _reverseGeocodeSafely(end.latitude, end.longitude),
     ]);
 
     final tripId = DateTime.now().millisecondsSinceEpoch.toString();
@@ -605,5 +659,27 @@ class AutoTripDetectionService {
     _lastMovementPoint = null;
     _tripRawPointCount = 0;
     _tripDroppedPointCount = 0;
+  }
+
+  void _publishActiveRoute() {
+    final visibleRoute = TrackingResult.simplifyRoutePoints(
+      _trackingPoints,
+      minimumSegmentDistanceMeters: _liveMapSegmentMeters,
+    );
+    activeRouteNotifier.value = List<TrackingPoint>.unmodifiable(visibleRoute);
+  }
+
+  Future<String?> _reverseGeocodeSafely(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      return await _geocodingService.reverseGeocode(latitude, longitude);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[AutoDetection] reverse geocoding failed: $e');
+      }
+      return null;
+    }
   }
 }

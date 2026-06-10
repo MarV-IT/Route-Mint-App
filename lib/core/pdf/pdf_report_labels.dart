@@ -45,6 +45,14 @@ class PdfReportLabels {
   static const parking = 'Parking';
   static const tolls = 'Tolls';
   static const totalExpenses = 'Total Expenses';
+  static const fuelSummary = 'Fuel Summary';
+  static const totalFuelCost = 'Total Fuel Cost';
+  static const totalFuelAmount = 'Total Fuel Amount';
+  static const averageFuelPrice = 'Average Fuel Price';
+  static const costPerMile = 'Cost per Mile';
+  static const costPerKm = 'Cost per Km';
+  static const perGallon = 'Per Gallon';
+  static const perLiter = 'Per Liter';
 
   // ─── Platform breakdown ───────────────────────────────────────────────────
   static const platformBreakdown = 'Platform Breakdown';
@@ -143,5 +151,31 @@ class PdfReportLabels {
       return '$platformName business trip';
     }
     return 'Business trip';
+  }
+
+  static String exportPurposeFor({
+    required String category,
+    String? platformName,
+    String? businessPurpose,
+  }) {
+    final rawPurpose = businessPurpose?.trim();
+    if (category != 'business') return na;
+    if (rawPurpose == null || rawPurpose.isEmpty) {
+      return businessPurposeFor(category: category, platformName: platformName);
+    }
+
+    final platform = platformName?.trim();
+    if (_isAscii(rawPurpose)) {
+      return rawPurpose;
+    }
+
+    if (platform != null && platform.isNotEmpty) {
+      return '$platform business trip';
+    }
+    return 'Business trip';
+  }
+
+  static bool _isAscii(String value) {
+    return value.codeUnits.every((unit) => unit >= 0x20 && unit <= 0x7E);
   }
 }

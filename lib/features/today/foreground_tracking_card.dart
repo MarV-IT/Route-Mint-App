@@ -18,11 +18,13 @@ class ForegroundTrackingCard extends StatefulWidget {
     required this.strings,
     required this.preferences,
     required this.onTripSaved,
+    this.compact = false,
   });
 
   final AppStrings strings;
   final UserPreferences preferences;
   final VoidCallback onTripSaved;
+  final bool compact;
 
   @override
   State<ForegroundTrackingCard> createState() => _ForegroundTrackingCardState();
@@ -92,8 +94,8 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
           final start = result.points.first;
           final end = result.points.last;
           final addresses = await Future.wait([
-            _geocodingService.reverseGeocode(start.latitude, start.longitude),
-            _geocodingService.reverseGeocode(end.latitude, end.longitude),
+            _reverseGeocodeSafely(start.latitude, start.longitude),
+            _reverseGeocodeSafely(end.latitude, end.longitude),
           ]);
           final workSettings = await _workModeService.loadSettings();
           await _tripService.addTrip(
@@ -138,8 +140,8 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
       final end = result.points.last;
 
       final addresses = await Future.wait([
-        _geocodingService.reverseGeocode(start.latitude, start.longitude),
-        _geocodingService.reverseGeocode(end.latitude, end.longitude),
+        _reverseGeocodeSafely(start.latitude, start.longitude),
+        _reverseGeocodeSafely(end.latitude, end.longitude),
       ]);
       final workSettings = await _workModeService.loadSettings();
       final platformName = _workModeService
@@ -272,6 +274,69 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
               _ => (strings.notTracking, colorScheme.onSurfaceVariant),
             };
 
+            if (widget.compact) {
+              return Card(
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            isTracking ? Icons.gps_fixed : Icons.gps_not_fixed,
+                            size: 20,
+                            color: isTracking ? colorScheme.primary : null,
+                          ),
+                          const Spacer(),
+                          if (autoEnabled)
+                            Tooltip(
+                              message: isTracking
+                                  ? strings.stopTracking
+                                  : strings.startTracking,
+                              child: IconButton.filledTonal(
+                                visualDensity: VisualDensity.compact,
+                                onPressed:
+                                    (isTracking
+                                        ? _isBusy
+                                        : (autoIsActive || _isBusy))
+                                    ? null
+                                    : isTracking
+                                    ? _handleStop
+                                    : _handleStart,
+                                icon: Icon(
+                                  isTracking ? Icons.stop : Icons.gps_fixed,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        strings.foregroundTracking,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        statusText,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: statusColor),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
             return Card(
               elevation: 0,
               child: Padding(
@@ -329,5 +394,19 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
         );
       },
     );
+  }
+
+  Future<String?> _reverseGeocodeSafely(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      return await _geocodingService.reverseGeocode(latitude, longitude);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[ForegroundTracking] reverse geocoding failed: $e');
+      }
+      return null;
+    }
   }
 }

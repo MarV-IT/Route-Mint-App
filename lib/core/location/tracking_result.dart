@@ -63,6 +63,7 @@ class TrackingResult {
     Iterable<TrackingPoint> points, {
     double maxAccuracyMeters = defaultMaxAccuracyMeters,
     double minimumDistanceKm = defaultMinimumDistanceKm,
+    double minimumSegmentDistanceMeters = defaultMinimumSegmentDistanceMeters,
     int? rawPointCountOverride,
     int? droppedPointCountOverride,
   }) {
@@ -75,7 +76,10 @@ class TrackingResult {
       return null;
     }
 
-    final routePoints = simplifyRoutePoints(validPoints);
+    final routePoints = simplifyRoutePoints(
+      validPoints,
+      minimumSegmentDistanceMeters: minimumSegmentDistanceMeters,
+    );
     if (routePoints.length < 2) {
       return null;
     }

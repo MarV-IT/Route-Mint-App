@@ -1,7 +1,16 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../core/backup/cloud_backup_service.dart';
+import '../../core/device/battery_optimization_service.dart';
 import '../../core/localization/app_strings.dart';
+import '../../core/location/geolocator_tracking_provider.dart';
+import '../../core/location/location_permission_service.dart';
+import '../../core/location/reverse_geocoding_service.dart';
+import '../../core/location/tracking_result.dart';
+import '../../core/notifications/trip_notification_service.dart';
 import '../../core/preferences/user_preferences.dart';
+import '../../core/subscription/entitlement_service.dart';
+import '../../core/subscription/pro_feature_gate.dart';
 import '../../core/tax/tax_service.dart';
 import '../../shared/utils/currency_utils.dart';
 import '../../shared/utils/distance_utils.dart';
@@ -18,6 +27,8 @@ import 'live_trip_map_card.dart';
 import 'oil_change_card.dart';
 
 enum _DashboardPeriod { today, thisWeek, thisMonth, thisYear }
+
+const _useCompactHomeHeader = true;
 
 class _SetupChecklistCard extends StatelessWidget {
   const _SetupChecklistCard({
@@ -251,6 +262,125 @@ class _ReviewInboxCard extends StatelessWidget {
   }
 }
 
+class _CompactProFeatureCard extends StatelessWidget {
+  const _CompactProFeatureCard({
+    required this.strings,
+    required this.title,
+    required this.icon,
+  });
+
+  final AppStrings strings;
+  final String title;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Card(
+      elevation: 0,
+      color: cs.secondaryContainer,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => openGoProScreen(context, strings),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 20, color: cs.onSecondaryContainer),
+                  const Spacer(),
+                  Icon(
+                    Icons.workspace_premium_outlined,
+                    size: 18,
+                    color: cs.onSecondaryContainer,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: cs.onSecondaryContainer,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                strings.goPro,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: cs.onSecondaryContainer),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrackingSetupWarningCard extends StatelessWidget {
+  const _TrackingSetupWarningCard({
+    required this.strings,
+    required this.onCheckPermissions,
+  });
+
+  final AppStrings strings;
+  final VoidCallback onCheckPermissions;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Card(
+      elevation: 0,
+      color: cs.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.warning_amber_outlined, color: cs.onErrorContainer),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    strings.trackingSetupWarningTitle,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: cs.onErrorContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    strings.trackingSetupWarningBody,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: cs.onErrorContainer),
+                  ),
+                  const SizedBox(height: 10),
+                  FilledButton.tonalIcon(
+                    onPressed: onCheckPermissions,
+                    icon: const Icon(Icons.health_and_safety_outlined),
+                    label: Text(strings.checkPermissions),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class TodayScreen extends StatefulWidget {
   final AppStrings strings;
   final AppUnit unit;
@@ -261,6 +391,7 @@ class TodayScreen extends StatefulWidget {
   final VoidCallback onAddManually;
   final VoidCallback onAddExpense;
   final VoidCallback onReviewTrips;
+  final VoidCallback onCheckPermissions;
 
   const TodayScreen({
     super.key,
@@ -273,6 +404,7 @@ class TodayScreen extends StatefulWidget {
     required this.onAddManually,
     required this.onAddExpense,
     required this.onReviewTrips,
+    required this.onCheckPermissions,
   });
 
   @override
@@ -284,6 +416,9 @@ class _TodayScreenState extends State<TodayScreen> {
   final _tripService = TripService();
   final _workModeService = WorkModeService();
   final _cloudBackupService = CloudBackupService();
+  final _batteryService = BatteryOptimizationService();
+  final _permissionService = LocationPermissionService();
+  final _geocodingService = ReverseGeocodingService();
   late final TextEditingController _odometerReminderController;
 
   _DashboardPeriod _period = _DashboardPeriod.today;
@@ -294,6 +429,9 @@ class _TodayScreenState extends State<TodayScreen> {
   int _needsReviewCount = 0;
   bool _hasWorkShift = false;
   bool _hasCloudBackup = false;
+  bool _trackingActionBusy = false;
+  bool? _notificationsEnabled;
+  bool? _batteryUnrestricted;
 
   @override
   void initState() {
@@ -303,6 +441,7 @@ class _TodayScreenState extends State<TodayScreen> {
     );
     _loadTrips();
     _loadSetupChecklistState();
+    _enforceProEntitlements();
   }
 
   @override
@@ -330,6 +469,22 @@ class _TodayScreenState extends State<TodayScreen> {
         );
       }
       _loadSetupChecklistState();
+      _enforceProEntitlements();
+    }
+  }
+
+  Future<void> _enforceProEntitlements() async {
+    final entitlements = EntitlementService(widget.preferences);
+    if (entitlements.canUseAutoDetection) return;
+
+    if (widget.preferences.autoTripDetectionEnabled) {
+      widget.onPreferencesChanged(
+        widget.preferences.copyWith(autoTripDetectionEnabled: false),
+      );
+    }
+
+    if (appAutoDetectionService.isMonitoring) {
+      await appAutoDetectionService.stopMonitoring();
     }
   }
 
@@ -341,11 +496,16 @@ class _TodayScreenState extends State<TodayScreen> {
   Future<void> _loadSetupChecklistState() async {
     final workSettings = await _workModeService.loadSettings();
     final hasCloudBackup = await _cloudBackupService.hasCloudBackup();
+    final notifications = await TripNotificationService.instance
+        .areNotificationsEnabled();
+    final battery = await _batteryService.isIgnoringBatteryOptimizations();
     if (!mounted) return;
 
     setState(() {
       _hasWorkShift = workSettings.shifts.isNotEmpty;
       _hasCloudBackup = hasCloudBackup;
+      _notificationsEnabled = notifications;
+      _batteryUnrestricted = battery;
     });
   }
 
@@ -360,6 +520,10 @@ class _TodayScreenState extends State<TodayScreen> {
       widget.preferences.autoTripDetectionEnabled &&
       _hasWorkShift &&
       _hasCloudBackup;
+
+  bool get _shouldShowTrackingSetupWarning =>
+      widget.preferences.autoTripDetectionEnabled &&
+      (_notificationsEnabled == false || _batteryUnrestricted == false);
 
   bool get _isWeeklyOdometerReminderDue {
     final now = DateTime.now();
@@ -451,6 +615,169 @@ class _TodayScreenState extends State<TodayScreen> {
     widget.onPreferencesRefresh();
   }
 
+  Future<void> _handleQuickStartTrip() async {
+    if (_trackingActionBusy) return;
+
+    final isTracking = appTrackingService.isTrackingNotifier.value;
+    if (isTracking) {
+      await _stopQuickTrip();
+    } else {
+      await _startQuickTrip();
+    }
+  }
+
+  Future<void> _startQuickTrip() async {
+    setState(() => _trackingActionBusy = true);
+    try {
+      final status = await _permissionService.checkAndRequest();
+      if (!mounted) return;
+
+      switch (status) {
+        case LocationPermissionStatus.granted:
+          await TripNotificationService.instance.requestPermission();
+          final started = await appTrackingService.startTracking();
+          if (!started && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(widget.strings.trackingError)),
+            );
+          }
+        case LocationPermissionStatus.denied:
+        case LocationPermissionStatus.permanentlyDenied:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(widget.strings.locationPermissionRequired)),
+          );
+        case LocationPermissionStatus.serviceDisabled:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(widget.strings.locationServicesDisabled)),
+          );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(widget.strings.trackingError)));
+    } finally {
+      if (mounted) setState(() => _trackingActionBusy = false);
+    }
+  }
+
+  Future<void> _stopQuickTrip() async {
+    setState(() => _trackingActionBusy = true);
+    try {
+      final (result, reason) = await appTrackingService.stopTracking();
+      if (result == null) {
+        if (!mounted) return;
+        final msg = switch (reason) {
+          TrackingFailureReason.noAccuratePoints =>
+            widget.strings.noGpsPointsRecorded,
+          TrackingFailureReason.tooFewPoints =>
+            widget.strings.notEnoughMovementDetected,
+          TrackingFailureReason.distanceTooShort =>
+            widget.strings.notEnoughMovementDetected,
+          null => widget.strings.notEnoughMovementDetected,
+        };
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
+        return;
+      }
+
+      final start = result.points.first;
+      final end = result.points.last;
+      final addresses = await Future.wait([
+        _reverseGeocodeSafely(start.latitude, start.longitude),
+        _reverseGeocodeSafely(end.latitude, end.longitude),
+      ]);
+      final workSettings = await _workModeService.loadSettings();
+      final platformName = _workModeService
+          .matchingShiftAt(workSettings, result.startedAt)
+          ?.platformName;
+
+      await _tripService.addTrip(
+        _buildTrackedTrip(
+          result: result,
+          from: addresses[0],
+          to: addresses[1],
+          platformName: platformName,
+        ),
+      );
+      await TripNotificationService.instance.showTripSavedForReview(
+        distanceKm: result.distanceKm,
+      );
+
+      _handleTripSaved();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.strings.detectedTripSavedForReview)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(widget.strings.trackingError)));
+    } finally {
+      if (mounted) setState(() => _trackingActionBusy = false);
+    }
+  }
+
+  Trip _buildTrackedTrip({
+    required TrackingResult result,
+    required String? from,
+    required String? to,
+    required String? platformName,
+  }) {
+    final start = result.points.first;
+    final end = result.points.last;
+    return Trip(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      from: from ?? widget.strings.detectedStart,
+      to: to ?? widget.strings.detectedEnd,
+      distance: result.distanceKm,
+      category: platformName == null ? 'personal' : 'business',
+      date: result.startedAt.toLocal(),
+      platformName: platformName,
+      detectionMode: TripDetectionMode.automatic,
+      reviewStatus: TripReviewStatus.needsReview,
+      startTime: result.startedAt.toLocal(),
+      endTime: result.endedAt.toLocal(),
+      startLatitude: start.latitude,
+      startLongitude: start.longitude,
+      endLatitude: end.latitude,
+      endLongitude: end.longitude,
+      routePoints: result.points
+          .map(
+            (p) => TripRoutePoint(
+              latitude: p.latitude,
+              longitude: p.longitude,
+              timestamp: p.timestamp.toLocal(),
+            ),
+          )
+          .toList(growable: false),
+      trackingDiagnostics: TripTrackingDiagnostics(
+        rawPointCount: result.rawPointCount,
+        validPointCount: result.validPointCount,
+        droppedPointCount: result.droppedPointCount,
+        averageAccuracyMeters: result.averageAccuracyMeters,
+        maxGapSeconds: result.maxGapSeconds,
+        durationSeconds: result.endedAt.difference(result.startedAt).inSeconds,
+      ),
+    );
+  }
+
+  Future<String?> _reverseGeocodeSafely(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      return await _geocodingService.reverseGeocode(latitude, longitude);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[TodayQuickTracking] reverse geocoding failed: $e');
+      }
+      return null;
+    }
+  }
+
   String get _mileageLabel {
     final s = widget.strings;
     return switch (_period) {
@@ -481,8 +808,26 @@ class _TodayScreenState extends State<TodayScreen> {
     };
   }
 
+  Widget _trackingHeader(EntitlementService entitlements) {
+    return IntrinsicHeight(
+      child: entitlements.canUseAutoDetection
+          ? AutoDetectionCard(
+              strings: widget.strings,
+              preferences: widget.preferences,
+              onTripSaved: _handleTripSaved,
+              compact: true,
+            )
+          : _CompactProFeatureCard(
+              strings: widget.strings,
+              title: widget.strings.proAutoDetection,
+              icon: Icons.radar_outlined,
+            ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final entitlements = EntitlementService(widget.preferences);
     final businessCount = _periodTrips
         .where((t) => t.category == 'business')
         .length;
@@ -495,6 +840,32 @@ class _TodayScreenState extends State<TodayScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (_useCompactHomeHeader) ...[
+            _trackingHeader(entitlements),
+            const SizedBox(height: 12),
+            if (_shouldShowTrackingSetupWarning) ...[
+              _TrackingSetupWarningCard(
+                strings: widget.strings,
+                onCheckPermissions: widget.onCheckPermissions,
+              ),
+              const SizedBox(height: 12),
+            ],
+            LiveTripMapCard(strings: widget.strings, bottomSpacing: 12),
+            ValueListenableBuilder<bool>(
+              valueListenable: appTrackingService.isTrackingNotifier,
+              builder: (context, isTracking, _) {
+                return QuickActionsCard(
+                  strings: widget.strings,
+                  onStartTrip: _handleQuickStartTrip,
+                  onAddManually: widget.onAddManually,
+                  onAddExpense: widget.onAddExpense,
+                  isTripTracking: isTracking,
+                  isStartTripBusy: _trackingActionBusy,
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -560,38 +931,55 @@ class _TodayScreenState extends State<TodayScreen> {
             subtitle: countryLabel,
           ),
           const SizedBox(height: 12),
-          OilChangeCard(
-            strings: widget.strings,
-            preferences: widget.preferences,
-            unit: widget.unit,
-          ),
-          const SizedBox(height: 12),
-          BrakePadCard(
-            strings: widget.strings,
-            preferences: widget.preferences,
-            unit: widget.unit,
-          ),
-          const SizedBox(height: 12),
-          QuickActionsCard(
-            strings: widget.strings,
-            onStartTrip: widget.onStartTrip,
-            onAddManually: widget.onAddManually,
-            onAddExpense: widget.onAddExpense,
-          ),
-          const SizedBox(height: 12),
-          ForegroundTrackingCard(
-            strings: widget.strings,
-            preferences: widget.preferences,
-            onTripSaved: _handleTripSaved,
-          ),
-          const SizedBox(height: 12),
-          AutoDetectionCard(
-            strings: widget.strings,
-            preferences: widget.preferences,
-            onTripSaved: _handleTripSaved,
-          ),
-          const SizedBox(height: 12),
-          LiveTripMapCard(strings: widget.strings),
+          if (entitlements.canUseMaintenanceReminders) ...[
+            OilChangeCard(
+              strings: widget.strings,
+              preferences: widget.preferences,
+              unit: widget.unit,
+            ),
+            const SizedBox(height: 12),
+            BrakePadCard(
+              strings: widget.strings,
+              preferences: widget.preferences,
+              unit: widget.unit,
+            ),
+          ] else ...[
+            ProLockedCard(
+              strings: widget.strings,
+              title: widget.strings.proMaintenanceReminders,
+              icon: Icons.car_repair_outlined,
+            ),
+          ],
+          if (!_useCompactHomeHeader) ...[
+            const SizedBox(height: 12),
+            QuickActionsCard(
+              strings: widget.strings,
+              onStartTrip: widget.onStartTrip,
+              onAddManually: widget.onAddManually,
+              onAddExpense: widget.onAddExpense,
+            ),
+            const SizedBox(height: 12),
+            ForegroundTrackingCard(
+              strings: widget.strings,
+              preferences: widget.preferences,
+              onTripSaved: _handleTripSaved,
+            ),
+            const SizedBox(height: 12),
+            if (entitlements.canUseAutoDetection)
+              AutoDetectionCard(
+                strings: widget.strings,
+                preferences: widget.preferences,
+                onTripSaved: _handleTripSaved,
+              )
+            else
+              ProLockedCard(
+                strings: widget.strings,
+                title: widget.strings.proAutoDetection,
+                icon: Icons.radar_outlined,
+              ),
+            const SizedBox(height: 12),
+            LiveTripMapCard(strings: widget.strings),
+          ],
         ],
       ),
     );

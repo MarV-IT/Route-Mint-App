@@ -1,4 +1,11 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../core/backup/cloud_backup_service.dart';
+import '../core/backup/daily_cloud_backup_service.dart';
 import '../core/localization/app_strings.dart';
 import '../core/preferences/user_preferences.dart';
 import '../core/preferences/preferences_service.dart';
@@ -21,23 +28,107 @@ class RouteMintApp extends StatefulWidget {
 
 class _RouteMintAppState extends State<RouteMintApp> {
   final _prefsService = PreferencesService();
+  final _cloudBackupService = CloudBackupService();
+  final _dailyCloudBackupService = DailyCloudBackupService();
 
   AppLanguage _selectedLanguage = AppLanguage.english;
 
   UserPreferences? _preferences; // null = still loading from storage
   int _selectedNavigationIndex = 0;
+  Timer? _dailyCloudBackupTimer;
+  StreamSubscription<User?>? _authSubscription;
+  bool _dailyCloudBackupRunning = false;
+  bool _cloudRestoreRunning = false;
+  int _dataRefreshKey = 0;
 
   @override
   void initState() {
     super.initState();
+    if (Firebase.apps.isNotEmpty) {
+      _authSubscription = FirebaseAuth.instance.authStateChanges().listen((
+        user,
+      ) async {
+        if (user != null) {
+          await _restoreCloudBackupOnFreshInstall();
+        }
+        _scheduleDailyCloudBackup();
+        _checkDailyCloudBackup();
+      });
+    }
     _loadPreferences();
+  }
+
+  @override
+  void dispose() {
+    _dailyCloudBackupTimer?.cancel();
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadPreferences() async {
     final prefs = await _prefsService.loadPreferences();
+    if (!mounted) return;
     setState(() {
       _preferences = prefs;
       _selectedLanguage = prefs.language;
+    });
+    _scheduleDailyCloudBackup(prefs);
+    _checkDailyCloudBackup(prefs);
+  }
+
+  Future<void> _checkDailyCloudBackup([UserPreferences? preferences]) async {
+    if (_dailyCloudBackupRunning) return;
+    final prefs = preferences ?? _preferences;
+    if (prefs == null) return;
+
+    _dailyCloudBackupRunning = true;
+    final updated = await _dailyCloudBackupService.runIfDue(prefs);
+    _dailyCloudBackupRunning = false;
+    if (updated == null || !mounted) return;
+
+    setState(() {
+      _preferences = updated;
+      _selectedLanguage = updated.language;
+    });
+    _scheduleDailyCloudBackup(updated);
+  }
+
+  Future<void> _restoreCloudBackupOnFreshInstall() async {
+    if (_cloudRestoreRunning) return;
+    _cloudRestoreRunning = true;
+    try {
+      final restored = await _cloudBackupService.restoreIfLocalDataIsEmpty();
+      if (!restored || !mounted) return;
+
+      final restoredPrefs = await _prefsService.loadPreferences();
+      if (!mounted) return;
+      setState(() {
+        _preferences = restoredPrefs;
+        _selectedLanguage = restoredPrefs.language;
+        _dataRefreshKey++;
+      });
+      if (kDebugMode) {
+        debugPrint('[CloudBackup] restored backup on fresh install');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[CloudBackup] fresh install restore skipped: $e');
+      }
+    } finally {
+      _cloudRestoreRunning = false;
+    }
+  }
+
+  void _scheduleDailyCloudBackup([UserPreferences? preferences]) {
+    _dailyCloudBackupTimer?.cancel();
+    final prefs = preferences ?? _preferences;
+    if (prefs == null) return;
+
+    final nextBackup = _dailyCloudBackupService.nextBackupTime();
+    final delay = nextBackup.difference(DateTime.now());
+    _dailyCloudBackupTimer = Timer(delay, () {
+      _checkDailyCloudBackup();
+      _scheduleDailyCloudBackup();
     });
   }
 
@@ -48,6 +139,7 @@ class _RouteMintAppState extends State<RouteMintApp> {
     final updated = _preferences!.copyWith(unit: newUnit);
     setState(() => _preferences = updated);
     _prefsService.savePreferences(updated);
+    _scheduleDailyCloudBackup(updated);
   }
 
   void _changeLanguage(AppLanguage? newLanguage) {
@@ -58,20 +150,25 @@ class _RouteMintAppState extends State<RouteMintApp> {
       _selectedLanguage = newLanguage;
     });
     _prefsService.savePreferences(updated);
+    _scheduleDailyCloudBackup(updated);
   }
 
   void _changePreferences(UserPreferences updated) {
     setState(() {
       _preferences = updated;
       _selectedLanguage = updated.language;
+      _dataRefreshKey++;
     });
     _prefsService.savePreferences(updated);
+    _scheduleDailyCloudBackup(updated);
+    _checkDailyCloudBackup(updated);
   }
 
   void _onOnboardingComplete(UserPreferences prefs) {
     final updated = prefs.copyWith(language: _selectedLanguage);
     setState(() => _preferences = updated);
     _prefsService.savePreferences(updated);
+    _scheduleDailyCloudBackup(updated);
   }
 
   // ─── Build ────────────────────────────────────────────────────────────────
@@ -126,6 +223,7 @@ class _RouteMintAppState extends State<RouteMintApp> {
     return AuthGate(
       strings: strings,
       child: MainNavigationScreen(
+        key: ValueKey(_dataRefreshKey),
         unit: _preferences!.unit,
         preferences: _preferences!,
         selectedLanguage: _selectedLanguage,

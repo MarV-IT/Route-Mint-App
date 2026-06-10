@@ -1,18 +1,23 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/auth/auth_service.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/preferences/preferences_service.dart';
 import '../../core/preferences/user_preferences.dart';
+import '../../core/subscription/entitlement_service.dart';
+import '../../core/subscription/pro_feature_gate.dart';
 import '../../core/tax/tax_service.dart';
 import '../../core/backup/backup_service.dart';
 import '../../core/backup/cloud_backup_service.dart';
 import '../../app/app.dart';
 import '../../shared/utils/distance_utils.dart';
 import '../auth/auth_screen.dart';
+import '../help/help_screen.dart';
 import '../work_mode/work_mode_screen.dart';
 import 'tracking_diagnostics_screen.dart';
 
@@ -61,6 +66,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _backupService = BackupService();
   final _cloudBackupService = CloudBackupService();
   final _prefsService = PreferencesService();
+  final _authService = AuthService();
+  User? _lastKnownUser;
   bool _isExportingBackup = false;
   bool _isImportingBackup = false;
   bool _isUploadingCloud = false;
@@ -212,6 +219,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _saveMaintenance() {
     final s = widget.strings;
+    final entitlements = EntitlementService(widget.preferences);
+    if (!requireProFeature(
+      context: context,
+      strings: s,
+      allowed: entitlements.canUseMaintenanceReminders,
+    )) {
+      return;
+    }
+
     final unit = widget.selectedUnit;
 
     final odomInput = _parseOptionalDouble(_odometerController.text);
@@ -418,6 +434,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _handleCloudUpload() async {
+    final entitlements = EntitlementService(widget.preferences);
+    if (!requireProFeature(
+      context: context,
+      strings: widget.strings,
+      allowed: entitlements.canUseCloudBackup,
+    )) {
+      return;
+    }
+
     setState(() => _isUploadingCloud = true);
     try {
       await _cloudBackupService.uploadBackupForCurrentUser();
@@ -427,17 +452,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SnackBar(content: Text(widget.strings.cloudBackupUploaded)),
       );
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[CloudBackup] upload failed: $e');
+      }
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(widget.strings.cloudBackupFailed)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_cloudErrorMessage(e, restore: false))),
+      );
     } finally {
       if (mounted) setState(() => _isUploadingCloud = false);
     }
   }
 
   Future<void> _handleCloudRestore() async {
-    final hasBackup = await _cloudBackupService.hasCloudBackup();
+    bool hasBackup;
+    try {
+      hasBackup = await _cloudBackupService.hasCloudBackupOrThrow();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[CloudBackup] backup check failed: $e');
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_cloudErrorMessage(e, restore: true))),
+      );
+      return;
+    }
     if (!mounted) return;
 
     if (!hasBackup) {
@@ -468,21 +508,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     setState(() => _isRestoringCloud = true);
     try {
-      await _cloudBackupService.restoreBackupForCurrentUser();
+      final result = await _cloudBackupService.restoreBackupForCurrentUser();
       final restoredPrefs = await _prefsService.loadPreferences();
       if (!mounted) return;
+      setState(() => _cloudRefreshKey++);
       widget.onPreferencesChanged(restoredPrefs);
+      final skipped =
+          result.skippedTripCount +
+          result.skippedExpenseCount +
+          result.skippedFuelCount;
+      final details =
+          '${result.tripCount} trips, ${result.expenseCount} expenses, ${result.fuelCount} fuel';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.strings.cloudBackupRestored)),
+        SnackBar(
+          content: Text(
+            skipped == 0
+                ? '${widget.strings.cloudBackupRestored}: $details'
+                : '${widget.strings.cloudBackupRestored}: $details ($skipped skipped)',
+          ),
+        ),
       );
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[CloudBackup] restore failed: $e');
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.strings.cloudRestoreFailed)),
+        SnackBar(content: Text(_cloudErrorMessage(e, restore: true))),
       );
     } finally {
       if (mounted) setState(() => _isRestoringCloud = false);
     }
+  }
+
+  String _cloudErrorMessage(Object error, {required bool restore}) {
+    final s = widget.strings;
+
+    if (error is StateError) {
+      final message = error.message.toLowerCase();
+      if (message.contains('not signed in')) {
+        return s.signInToUseCloudBackup;
+      }
+      if (message.contains('no cloud backup')) {
+        return s.noCloudBackupFound;
+      }
+    }
+
+    if (error is FirebaseException) {
+      switch (error.code) {
+        case 'permission-denied':
+        case 'unauthenticated':
+          return s.cloudBackupPermissionDenied;
+        case 'unavailable':
+        case 'deadline-exceeded':
+        case 'network-request-failed':
+          return s.networkErrorCheckConnection;
+      }
+    }
+
+    return restore ? s.cloudRestoreFailedTryAgain : s.cloudBackupFailedTryAgain;
   }
 
   String _formatDateTime(DateTime dt) {
@@ -521,9 +605,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _proBadge(AppStrings s) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        s.pro,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  void _setTesterPro(bool enabled) {
+    final updated = widget.preferences.copyWith(
+      subscriptionStatus: enabled
+          ? SubscriptionStatus.testerPro
+          : SubscriptionStatus.free,
+    );
+    widget.onPreferencesChanged(updated);
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = widget.strings;
+    final entitlements = EntitlementService(widget.preferences);
 
     return Scaffold(
       appBar: AppBar(title: Text(s.profile)),
@@ -537,9 +648,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               // ── Account ───────────────────────────────────────────────────
               StreamBuilder<User?>(
-                stream: AuthService().authStateChanges(),
+                stream: _authService.authStateChanges(),
+                initialData: _authService.currentUser,
                 builder: (context, snapshot) {
-                  final user = snapshot.data;
+                  final snapshotUser = snapshot.data;
+                  if (snapshotUser != null) _lastKnownUser = snapshotUser;
+                  final user = snapshotUser ?? _lastKnownUser;
                   if (user != null) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -554,8 +668,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           leading: const Icon(Icons.logout),
                           title: Text(s.signOut),
                           onTap: () async {
-                            await AuthService().signOut();
+                            await _authService.signOut();
+                            _lastKnownUser = null;
                             if (!context.mounted) return;
+                            setState(() {});
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text(s.signedOut)),
                             );
@@ -582,6 +698,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           MaterialPageRoute(
                             builder: (_) => AuthScreen(
                               strings: s,
+                              onAuthenticated: () => Navigator.pop(context),
                               onContinueAsGuest: () => Navigator.pop(context),
                             ),
                           ),
@@ -590,6 +707,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   );
                 },
+              ),
+            ],
+          ),
+
+          _profileSection(
+            icon: Icons.workspace_premium_outlined,
+            title: s.subscription,
+            initiallyExpanded: true,
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.workspace_premium_outlined),
+                title: Text(entitlements.isPro ? s.proActive : s.freePlan),
+                subtitle: Text(
+                  entitlements.isTesterPro
+                      ? s.testerProEnabled
+                      : s.unlockProBody,
+                ),
+                trailing: entitlements.isPro
+                    ? _proBadge(s)
+                    : const Icon(Icons.chevron_right),
+                onTap: () => openGoProScreen(context, s),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                secondary: const Icon(Icons.science_outlined),
+                title: Text(s.enableTesterPro),
+                subtitle: Text(s.enableTesterProSubtitle),
+                value: entitlements.isTesterPro,
+                onChanged: _setTesterPro,
               ),
             ],
           ),
@@ -744,117 +891,132 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: Icons.car_repair_outlined,
             title: s.vehicleMaintenance,
             children: [
-              TextField(
-                controller: _odometerController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
+              if (entitlements.canUseMaintenanceReminders) ...[
+                TextField(
+                  controller: _odometerController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: s.currentOdometer,
+                    hintText: s.optional,
+                    suffixText: _unitSuffix,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
-                decoration: InputDecoration(
-                  labelText: s.currentOdometer,
-                  hintText: s.optional,
-                  suffixText: _unitSuffix,
-                  border: const OutlineInputBorder(),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _lastOilController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: s.lastOilChangeOdometer,
+                    hintText: s.optional,
+                    suffixText: _unitSuffix,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _lastOilController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _intervalController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: s.oilChangeInterval,
+                    hintText: widget.selectedUnit == AppUnit.miles
+                        ? '5000'
+                        : '8000',
+                    suffixText: _unitSuffix,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
-                decoration: InputDecoration(
-                  labelText: s.lastOilChangeOdometer,
-                  hintText: s.optional,
-                  suffixText: _unitSuffix,
-                  border: const OutlineInputBorder(),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _thresholdController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: s.oilChangeReminderThreshold,
+                    hintText: widget.selectedUnit == AppUnit.miles
+                        ? '500'
+                        : '800',
+                    suffixText: _unitSuffix,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _intervalController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _lastBrakePadController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: s.lastBrakePadChangeOdometer,
+                    hintText: s.optional,
+                    suffixText: _unitSuffix,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
-                decoration: InputDecoration(
-                  labelText: s.oilChangeInterval,
-                  hintText: widget.selectedUnit == AppUnit.miles
-                      ? '5000'
-                      : '8000',
-                  suffixText: _unitSuffix,
-                  border: const OutlineInputBorder(),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _brakePadIntervalController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: s.brakePadChangeInterval,
+                    hintText: widget.selectedUnit == AppUnit.miles
+                        ? '30000'
+                        : '48000',
+                    suffixText: _unitSuffix,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _thresholdController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _brakePadThresholdController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: s.brakePadReminderThreshold,
+                    hintText: widget.selectedUnit == AppUnit.miles
+                        ? '1000'
+                        : '1600',
+                    suffixText: _unitSuffix,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
-                decoration: InputDecoration(
-                  labelText: s.oilChangeReminderThreshold,
-                  hintText: widget.selectedUnit == AppUnit.miles
-                      ? '500'
-                      : '800',
-                  suffixText: _unitSuffix,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _lastBrakePadController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: InputDecoration(
-                  labelText: s.lastBrakePadChangeOdometer,
-                  hintText: s.optional,
-                  suffixText: _unitSuffix,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _brakePadIntervalController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: InputDecoration(
-                  labelText: s.brakePadChangeInterval,
-                  hintText: widget.selectedUnit == AppUnit.miles
-                      ? '30000'
-                      : '48000',
-                  suffixText: _unitSuffix,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _brakePadThresholdController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: InputDecoration(
-                  labelText: s.brakePadReminderThreshold,
-                  hintText: widget.selectedUnit == AppUnit.miles
-                      ? '1000'
-                      : '1600',
-                  suffixText: _unitSuffix,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 44,
-                child: FilledButton(
-                  onPressed: _saveMaintenance,
-                  child: Text(
-                    _saveOrEditLabel(
-                      hasInfo: _hasMaintenanceInfo,
-                      saveLabel: s.saveMaintenanceInfo,
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 44,
+                  child: FilledButton(
+                    onPressed: _saveMaintenance,
+                    child: Text(
+                      _saveOrEditLabel(
+                        hasInfo: _hasMaintenanceInfo,
+                        saveLabel: s.saveMaintenanceInfo,
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ] else
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.car_repair_outlined),
+                  title: Row(
+                    children: [
+                      Expanded(child: Text(s.proMaintenanceReminders)),
+                      _proBadge(s),
+                    ],
+                  ),
+                  subtitle: Text(s.unlockProBody),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => openGoProScreen(context, s),
+                ),
             ],
           ),
 
@@ -1003,10 +1165,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // ── Automation ────────────────────────────────────────────────
               SwitchListTile(
                 secondary: const Icon(Icons.radar_outlined),
-                title: Text(s.autoTripDetection),
+                title: Row(
+                  children: [
+                    Expanded(child: Text(s.autoTripDetection)),
+                    _proBadge(s),
+                  ],
+                ),
                 subtitle: Text(s.autoTripDetectionDescription),
                 value: widget.preferences.autoTripDetectionEnabled,
                 onChanged: (value) {
+                  if (value &&
+                      !requireProFeature(
+                        context: context,
+                        strings: s,
+                        allowed: entitlements.canUseAutoDetection,
+                      )) {
+                    return;
+                  }
                   final updated = widget.preferences.copyWith(
                     autoTripDetectionEnabled: value,
                   );
@@ -1076,9 +1251,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 4),
               StreamBuilder<User?>(
-                stream: AuthService().authStateChanges(),
+                stream: _authService.authStateChanges(),
+                initialData: _authService.currentUser,
                 builder: (context, snapshot) {
-                  final user = snapshot.data;
+                  final snapshotUser = snapshot.data;
+                  if (snapshotUser != null) _lastKnownUser = snapshotUser;
+                  final user = snapshotUser ?? _lastKnownUser;
                   if (user == null) {
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -1108,7 +1286,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.cloud_upload_outlined),
-                        title: Text(s.backupToCloud),
+                        title: Row(
+                          children: [
+                            Expanded(child: Text(s.backupToCloud)),
+                            _proBadge(s),
+                          ],
+                        ),
                         trailing: _isUploadingCloud
                             ? const SizedBox(
                                 width: 20,
@@ -1160,6 +1343,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 },
               ),
               const Divider(),
+            ],
+          ),
+
+          _profileSection(
+            icon: Icons.help_outline,
+            title: s.help,
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.help_outline),
+                title: Text(s.howItWorks),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => HelpScreen(strings: s)),
+                ),
+              ),
+            ],
+          ),
+
+          _profileSection(
+            icon: Icons.info_outline,
+            title: s.about,
+            children: [
+              FutureBuilder<PackageInfo>(
+                future: PackageInfo.fromPlatform(),
+                builder: (context, snapshot) {
+                  final info = snapshot.data;
+                  final rawName = info?.appName.trim() ?? '';
+                  final appName = rawName.isEmpty || rawName == 'route_mint_app'
+                      ? 'MarV Route'
+                      : rawName;
+                  return Column(
+                    children: [
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.apps_outlined),
+                        title: Text(appName),
+                        subtitle: Text(s.testerBuild),
+                      ),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.tag_outlined),
+                        title: Text(s.appVersion),
+                        subtitle: Text(info?.version ?? '...'),
+                      ),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.numbers_outlined),
+                        title: Text(s.buildNumber),
+                        subtitle: Text(info?.buildNumber ?? '...'),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ],
           ),
 

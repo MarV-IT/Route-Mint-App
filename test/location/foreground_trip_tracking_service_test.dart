@@ -239,9 +239,17 @@ void main() {
         monitoringController.add(
           TrackingPoint(
             latitude: 0,
-            longitude: 0.0007,
+            longitude: 0.0023,
             accuracyMeters: 10,
             timestamp: start.add(const Duration(seconds: 30)),
+          ),
+        );
+        monitoringController.add(
+          TrackingPoint(
+            latitude: 0,
+            longitude: 0.0030,
+            accuracyMeters: 10,
+            timestamp: start.add(const Duration(seconds: 45)),
           ),
         );
         await Future<void>.delayed(Duration.zero);
@@ -271,6 +279,82 @@ void main() {
       },
     );
 
+    test('does not start tracking from compact stationary GPS drift', () async {
+      final monitoringController = StreamController<TrackingPoint>.broadcast();
+      final start = DateTime(2026, 4, 27, 9);
+
+      final service = AutoTripDetectionService(
+        monitoringStreamFactory: () => monitoringController.stream,
+      );
+
+      await service.startMonitoring();
+      final points = [
+        (0.00000, 0.00000),
+        (0.00040, 0.00000),
+        (0.00040, 0.00040),
+        (0.00000, 0.00040),
+        (-0.00040, 0.00040),
+        (-0.00040, 0.00000),
+        (0.00000, -0.00040),
+      ];
+      for (var i = 0; i < points.length; i++) {
+        final point = points[i];
+        monitoringController.add(
+          TrackingPoint(
+            latitude: point.$1,
+            longitude: point.$2,
+            accuracyMeters: 10,
+            timestamp: start.add(Duration(seconds: i * 20)),
+          ),
+        );
+      }
+      await Future<void>.delayed(Duration.zero);
+
+      expect(service.state, AutoDetectionState.monitoring);
+
+      service.stateNotifier.value = AutoDetectionState.idle;
+      unawaited(monitoringController.close());
+    });
+
+    test('does not start tracking for a short 200 meter reposition', () async {
+      final monitoringController = StreamController<TrackingPoint>.broadcast();
+      final start = DateTime(2026, 4, 27, 9);
+
+      final service = AutoTripDetectionService(
+        monitoringStreamFactory: () => monitoringController.stream,
+        initialPositionProvider: () async => TrackingPoint(
+          latitude: 0,
+          longitude: 0,
+          accuracyMeters: 10,
+          timestamp: start,
+        ),
+      );
+
+      await service.startMonitoring();
+      monitoringController.add(
+        TrackingPoint(
+          latitude: 0,
+          longitude: 0.0012,
+          accuracyMeters: 10,
+          timestamp: start.add(const Duration(seconds: 30)),
+        ),
+      );
+      monitoringController.add(
+        TrackingPoint(
+          latitude: 0,
+          longitude: 0.0018,
+          accuracyMeters: 10,
+          timestamp: start.add(const Duration(seconds: 60)),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(service.state, AutoDetectionState.monitoring);
+
+      await service.stopMonitoring();
+      unawaited(monitoringController.close());
+    });
+
     test('returns to monitoring after three idle minutes', () async {
       final monitoringController = StreamController<TrackingPoint>.broadcast();
       final start = DateTime(2026, 4, 27, 9);
@@ -289,21 +373,17 @@ void main() {
       monitoringController.add(
         TrackingPoint(
           latitude: 0,
-          longitude: 0.0007,
+          longitude: 0.0023,
           accuracyMeters: 10,
           timestamp: start.add(const Duration(seconds: 30)),
         ),
       );
-      await Future<void>.delayed(Duration.zero);
-
-      expect(service.state, AutoDetectionState.tracking);
-
       monitoringController.add(
         TrackingPoint(
           latitude: 0,
-          longitude: 0.0007,
+          longitude: 0.0030,
           accuracyMeters: 10,
-          timestamp: start.add(const Duration(seconds: 209)),
+          timestamp: start.add(const Duration(seconds: 45)),
         ),
       );
       await Future<void>.delayed(Duration.zero);
@@ -313,9 +393,21 @@ void main() {
       monitoringController.add(
         TrackingPoint(
           latitude: 0,
-          longitude: 0.0007,
+          longitude: 0.0030,
           accuracyMeters: 10,
-          timestamp: start.add(const Duration(seconds: 210)),
+          timestamp: start.add(const Duration(seconds: 224)),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(service.state, AutoDetectionState.tracking);
+
+      monitoringController.add(
+        TrackingPoint(
+          latitude: 0,
+          longitude: 0.0030,
+          accuracyMeters: 10,
+          timestamp: start.add(const Duration(seconds: 225)),
         ),
       );
       await Future<void>.delayed(const Duration(milliseconds: 10));

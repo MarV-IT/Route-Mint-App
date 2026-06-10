@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/auth/auth_service.dart';
 import '../../core/localization/app_strings.dart';
@@ -8,10 +9,12 @@ class AuthScreen extends StatefulWidget {
     super.key,
     required this.strings,
     required this.onContinueAsGuest,
+    this.onAuthenticated,
   });
 
   final AppStrings strings;
   final VoidCallback onContinueAsGuest;
+  final VoidCallback? onAuthenticated;
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -44,8 +47,7 @@ class _AuthScreenState extends State<AuthScreen> {
       return s.fillRequiredFields;
     }
     if (_passwordController.text.length < 6) return s.passwordTooShort;
-    if (!_isLogin &&
-        _passwordController.text != _confirmController.text) {
+    if (!_isLogin && _passwordController.text != _confirmController.text) {
       return s.passwordsDoNotMatch;
     }
     return null;
@@ -73,13 +75,23 @@ class _AuthScreenState extends State<AuthScreen> {
           _passwordController.text,
         );
       }
+      if (!mounted) return;
+      widget.onAuthenticated?.call();
       // Auth state change propagates through AuthGate's StreamBuilder.
     } on FirebaseAuthException catch (e) {
+      if (kDebugMode) {
+        debugPrint('[Auth] submit failed: ${e.code} ${e.message}');
+      }
       if (!mounted) return;
       setState(() => _errorMessage = _mapError(e));
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[Auth] submit failed: $e');
+      }
       if (!mounted) return;
-      setState(() => _errorMessage = widget.strings.authFailed);
+      setState(
+        () => _errorMessage = widget.strings.authenticationFailedTryAgain,
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -98,12 +110,23 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       await _authService.sendPasswordResetEmail(email);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.strings.passwordResetSent)),
-      );
-    } catch (_) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(widget.strings.passwordResetSent)));
+    } on FirebaseAuthException catch (e) {
+      if (kDebugMode) {
+        debugPrint('[Auth] password reset failed: ${e.code} ${e.message}');
+      }
       if (!mounted) return;
-      setState(() => _errorMessage = widget.strings.authFailed);
+      setState(() => _errorMessage = _mapError(e));
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[Auth] password reset failed: $e');
+      }
+      if (!mounted) return;
+      setState(
+        () => _errorMessage = widget.strings.authenticationFailedTryAgain,
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -112,8 +135,16 @@ class _AuthScreenState extends State<AuthScreen> {
   String _mapError(FirebaseAuthException e) {
     final s = widget.strings;
     return switch (e.code) {
-      'weak-password' => s.passwordTooShort,
-      _ => s.authFailed,
+      'email-already-in-use' => s.authEmailAlreadyInUse,
+      'invalid-email' => s.authInvalidEmail,
+      'weak-password' => s.authWeakPassword,
+      'wrong-password' => s.authWrongPassword,
+      'invalid-credential' => s.authWrongPassword,
+      'user-not-found' => s.authUserNotFound,
+      'network-request-failed' => s.networkErrorCheckConnection,
+      'too-many-requests' => s.authTooManyRequests,
+      'operation-not-allowed' => s.authOperationNotAllowed,
+      _ => s.authenticationFailedTryAgain,
     };
   }
 
@@ -145,13 +176,10 @@ class _AuthScreenState extends State<AuthScreen> {
                   Text(
                     'MarV Route',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineMedium
-                        ?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: cs.primary,
-                        ),
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: cs.primary,
+                    ),
                   ),
                   const SizedBox(height: 32),
 
@@ -220,11 +248,14 @@ class _AuthScreenState extends State<AuthScreen> {
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.lock_outlined),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
                         onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword),
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                     ),
                   ),
@@ -240,11 +271,14 @@ class _AuthScreenState extends State<AuthScreen> {
                         border: const OutlineInputBorder(),
                         prefixIcon: const Icon(Icons.lock_outlined),
                         suffixIcon: IconButton(
-                          icon: Icon(_obscureConfirm
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined),
+                          icon: Icon(
+                            _obscureConfirm
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
                           onPressed: () => setState(
-                              () => _obscureConfirm = !_obscureConfirm),
+                            () => _obscureConfirm = !_obscureConfirm,
+                          ),
                         ),
                       ),
                     ),
@@ -267,10 +301,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     Text(
                       _errorMessage!,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: cs.error),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: cs.error),
                     ),
                     const SizedBox(height: 8),
                   ],
@@ -285,7 +318,9 @@ class _AuthScreenState extends State<AuthScreen> {
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : Text(_isLogin ? s.signIn : s.createAccount),
                     ),
@@ -300,9 +335,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
                           'or',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
+                          style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: cs.onSurfaceVariant),
                         ),
                       ),

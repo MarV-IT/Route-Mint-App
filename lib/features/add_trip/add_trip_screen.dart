@@ -53,8 +53,6 @@ class _AddTripScreenState extends State<AddTripScreen> {
   final _fromController = TextEditingController();
   final _toController = TextEditingController();
   final _distanceController = TextEditingController();
-  final _parkingController = TextEditingController();
-  final _tollsController = TextEditingController();
   final _purposeController = TextEditingController();
   final _notesController = TextEditingController();
   final _customPlatformController = TextEditingController();
@@ -77,8 +75,6 @@ class _AddTripScreenState extends State<AddTripScreen> {
     _fromController.dispose();
     _toController.dispose();
     _distanceController.dispose();
-    _parkingController.dispose();
-    _tollsController.dispose();
     _purposeController.dispose();
     _notesController.dispose();
     _customPlatformController.dispose();
@@ -111,11 +107,6 @@ class _AddTripScreenState extends State<AddTripScreen> {
       }
     }
     return result;
-  }
-
-  double _parseExpense(String text) {
-    final value = double.tryParse(text.trim()) ?? 0;
-    return value < 0 ? 0 : value;
   }
 
   String _purposeHint(AppStrings s) {
@@ -168,8 +159,6 @@ class _AddTripScreenState extends State<AddTripScreen> {
           : (resolvedCategory == 'business' ? _resolvedManualPlatform() : null);
 
       final distanceKm = toKilometers(distance, widget.unit);
-      final parking = _parseExpense(_parkingController.text);
-      final tolls = _parseExpense(_tollsController.text);
 
       final purposeText = _purposeController.text.trim();
       String? resolvedPurpose;
@@ -194,8 +183,6 @@ class _AddTripScreenState extends State<AddTripScreen> {
         category: resolvedCategory,
         date: now,
         platformName: resolvedPlatform,
-        parkingExpense: parking,
-        tollsExpense: tolls,
         businessPurpose: resolvedPurpose,
         notes: resolvedNotes,
         detectionMode: TripDetectionMode.manual,
@@ -210,8 +197,6 @@ class _AddTripScreenState extends State<AddTripScreen> {
       _fromController.clear();
       _toController.clear();
       _distanceController.clear();
-      _parkingController.clear();
-      _tollsController.clear();
       _purposeController.clear();
       _notesController.clear();
       _customPlatformController.clear();
@@ -362,45 +347,6 @@ class _AddTripScreenState extends State<AddTripScreen> {
             ],
           ],
           const SizedBox(height: 20),
-          Text(
-            s.expensesOptional,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _parkingController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: s.parking,
-                    border: const OutlineInputBorder(),
-                    prefixText: '${widget.preferences.currencyCode} ',
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: _tollsController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: s.tolls,
-                    border: const OutlineInputBorder(),
-                    prefixText: '${widget.preferences.currencyCode} ',
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           TextField(
             controller: _purposeController,
             decoration: InputDecoration(

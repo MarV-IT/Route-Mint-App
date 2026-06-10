@@ -12,11 +12,13 @@ class AutoDetectionCard extends StatefulWidget {
     required this.strings,
     required this.preferences,
     required this.onTripSaved,
+    this.compact = false,
   });
 
   final AppStrings strings;
   final UserPreferences preferences;
   final VoidCallback onTripSaved;
+  final bool compact;
 
   @override
   State<AutoDetectionCard> createState() => _AutoDetectionCardState();
@@ -129,6 +131,83 @@ class _AutoDetectionCardState extends State<AutoDetectionCard> {
           ),
           _ => (strings.tripDetectedTracking, colorScheme.primary),
         };
+
+        if (widget.compact) {
+          final toggleAutoDetection = !autoEnabled || _isBusy
+              ? null
+              : isActive
+              ? _handleStop
+              : _handleStart;
+
+          return Card(
+            elevation: 0,
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: toggleAutoDetection,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          isActive ? Icons.sensors : Icons.sensors_off,
+                          size: 20,
+                          color: isActive ? colorScheme.primary : null,
+                        ),
+                        const Spacer(),
+                        if (autoEnabled)
+                          Tooltip(
+                            message: isActive
+                                ? strings.stopAutoDetection
+                                : strings.startAutoDetection,
+                            child: IconButton.filledTonal(
+                              visualDensity: VisualDensity.compact,
+                              onPressed: toggleAutoDetection,
+                              icon: Icon(
+                                isActive ? Icons.stop : Icons.sensors,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      strings.autoTripDetection,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      statusText,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: statusColor),
+                    ),
+                    if (_errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          _errorMessage!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colorScheme.error),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
 
         return Card(
           elevation: 0,

@@ -11,8 +11,8 @@ class TripNotificationService {
 
   static final TripNotificationService instance = TripNotificationService._();
 
-  static const _channelId = 'trip_saved';
-  static const _channelName = 'Trip saved';
+  static const _channelId = 'trip_alerts_v2';
+  static const _channelName = 'Trip alerts';
   static const _channelDescription =
       'Notifications shown when a trip is recorded.';
 
@@ -22,6 +22,7 @@ class TripNotificationService {
     'route_mint_app/notification_settings',
   );
   Future<void>? _initialization;
+  bool _channelReady = false;
 
   Future<void> initialize() {
     if (kIsWeb) return Future.value();
@@ -36,17 +37,18 @@ class TripNotificationService {
     );
 
     await _plugin.initialize(settings);
+    await _ensureAndroidChannel();
   }
 
   /// Requests the OS notification permission.
   ///
   /// Must be called from within the widget tree (after [runApp]) so the
   /// Android activity is visible and can host the system permission dialog.
-  Future<void> requestPermission() async {
-    if (kIsWeb) return;
+  Future<bool?> requestPermission() async {
+    if (kIsWeb) return null;
     try {
       await initialize();
-      await _plugin
+      return await _plugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
           >()
@@ -55,6 +57,7 @@ class TripNotificationService {
       if (kDebugMode) {
         debugPrint('[TripNotification] requestPermission failed: $e');
       }
+      return null;
     }
   }
 
@@ -62,6 +65,9 @@ class TripNotificationService {
     if (kIsWeb) return null;
     try {
       await initialize();
+      final nativeEnabled = await _nativeNotificationsEnabled();
+      if (nativeEnabled != null) return nativeEnabled;
+
       return await _plugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
@@ -91,6 +97,7 @@ class TripNotificationService {
 
     try {
       await initialize();
+      await _ensureNotificationPermission();
 
       final prefs = await PreferencesService().loadPreferences();
       final strings = AppStrings(prefs.language);
@@ -100,6 +107,12 @@ class TripNotificationService {
       final body = distanceText == null
           ? strings.detectedTripSavedForReview
           : '${strings.detectedTripSavedForReview} - $distanceText';
+
+      final nativeShown = await _showNativeNotification(
+        title: 'MarV Route',
+        body: body,
+      );
+      if (nativeShown == true || nativeShown == false) return;
 
       await _plugin.show(
         DateTime.now().millisecondsSinceEpoch.remainder(100000),
@@ -112,8 +125,12 @@ class TripNotificationService {
             channelDescription: _channelDescription,
             importance: Importance.high,
             priority: Priority.high,
+            channelShowBadge: true,
             category: AndroidNotificationCategory.status,
             visibility: NotificationVisibility.public,
+            playSound: true,
+            enableVibration: true,
+            ticker: 'Detected trip saved for review',
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -132,6 +149,128 @@ class TripNotificationService {
       if (kDebugMode) {
         debugPrint('[TripNotification] failed to show notification: $e');
       }
+    }
+  }
+
+  Future<bool> showTestNotification() async {
+    if (kIsWeb) return false;
+
+    try {
+      await initialize();
+      await _ensureNotificationPermission();
+
+      final prefs = await PreferencesService().loadPreferences();
+      final strings = AppStrings(prefs.language);
+
+      final nativeShown = await _showNativeNotification(
+        title: 'MarV Route',
+        body: strings.testNotificationBody,
+      );
+      if (nativeShown != null) return nativeShown;
+
+      await _plugin.show(
+        DateTime.now().millisecondsSinceEpoch.remainder(100000),
+        'MarV Route',
+        strings.testNotificationBody,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channelId,
+            _channelName,
+            channelDescription: _channelDescription,
+            importance: Importance.high,
+            priority: Priority.high,
+            channelShowBadge: true,
+            category: AndroidNotificationCategory.status,
+            visibility: NotificationVisibility.public,
+            playSound: true,
+            enableVibration: true,
+            ticker: 'MarV Route test notification',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+          macOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: 'test_notification',
+      );
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[TripNotification] failed to show test notification: $e');
+      }
+      return false;
+    }
+  }
+
+  Future<void> _ensureAndroidChannel() async {
+    if (_channelReady) return;
+
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (android == null) return;
+
+    const channel = AndroidNotificationChannel(
+      _channelId,
+      _channelName,
+      description: _channelDescription,
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+      showBadge: true,
+    );
+    await android.createNotificationChannel(channel);
+    _channelReady = true;
+  }
+
+  Future<void> _ensureNotificationPermission() async {
+    final enabled = await areNotificationsEnabled();
+    if (enabled == true || enabled == null) return;
+
+    final granted = await requestPermission();
+    if (kDebugMode && granted == false) {
+      debugPrint('[TripNotification] notifications are disabled by Android');
+    }
+  }
+
+  Future<bool?> _nativeNotificationsEnabled() async {
+    try {
+      return await _settingsChannel.invokeMethod<bool>(
+        'areNotificationsEnabled',
+      );
+    } on MissingPluginException {
+      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[TripNotification] native status check failed: $e');
+      }
+      return null;
+    }
+  }
+
+  Future<bool?> _showNativeNotification({
+    required String title,
+    required String body,
+  }) async {
+    try {
+      return await _settingsChannel.invokeMethod<bool>('showNotification', {
+        'title': title,
+        'body': body,
+      });
+    } on MissingPluginException {
+      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[TripNotification] native show failed: $e');
+      }
+      return null;
     }
   }
 }

@@ -6,6 +6,8 @@ class QuickActionsCard extends StatelessWidget {
   final VoidCallback onStartTrip;
   final VoidCallback onAddManually;
   final VoidCallback onAddExpense;
+  final bool isTripTracking;
+  final bool isStartTripBusy;
 
   const QuickActionsCard({
     super.key,
@@ -13,6 +15,8 @@ class QuickActionsCard extends StatelessWidget {
     required this.onStartTrip,
     required this.onAddManually,
     required this.onAddExpense,
+    this.isTripTracking = false,
+    this.isStartTripBusy = false,
   });
 
   @override
@@ -34,9 +38,17 @@ class QuickActionsCard extends StatelessWidget {
               runSpacing: 10,
               children: [
                 FilledButton.icon(
-                  onPressed: onStartTrip,
-                  icon: const Icon(Icons.play_arrow),
-                  label: Text(strings.startTrip),
+                  onPressed: isStartTripBusy ? null : onStartTrip,
+                  icon: isStartTripBusy
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(isTripTracking ? Icons.stop : Icons.play_arrow),
+                  label: Text(
+                    isTripTracking ? strings.stopTracking : strings.startTrip,
+                  ),
                 ),
                 OutlinedButton.icon(
                   onPressed: onAddManually,

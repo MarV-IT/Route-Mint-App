@@ -264,14 +264,14 @@ int _intOrDefault(Object? value) => value is num ? value.toInt() : 0;
 List<TripRoutePoint> _parseRoutePoints(Object? value) {
   if (value is! List) return const [];
   return value
-      .whereType<Map<String, dynamic>>()
-      .map(TripRoutePoint.fromJson)
+      .whereType<Map>()
+      .map((item) => TripRoutePoint.fromJson(Map<String, dynamic>.from(item)))
       .toList(growable: false);
 }
 
 TripTrackingDiagnostics? _parseTrackingDiagnostics(Object? value) {
-  if (value is! Map<String, dynamic>) return null;
-  return TripTrackingDiagnostics.fromJson(value);
+  if (value is! Map) return null;
+  return TripTrackingDiagnostics.fromJson(Map<String, dynamic>.from(value));
 }
 
 DateTime? _parseLocalDateTime(String value) =>

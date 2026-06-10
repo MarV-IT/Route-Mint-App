@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import '../../core/backup/cloud_backup_service.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/pdf/report_pdf_service.dart';
 import '../../core/tax/tax_service.dart';
 import '../../core/preferences/user_preferences.dart';
+import '../../core/subscription/entitlement_service.dart';
+import '../../core/subscription/pro_feature_gate.dart';
 import '../../shared/widgets/summary_card.dart';
 import '../../shared/utils/distance_utils.dart';
 import '../../shared/utils/currency_utils.dart';
 import '../../app/app.dart';
+import '../fuel/models/fuel_entry.dart';
+import '../fuel/services/fuel_service.dart';
 import '../trips/models/trip.dart';
 import '../trips/services/trip_service.dart';
-import '../work_mode/services/work_mode_service.dart';
 import '../../core/export/csv_export_service.dart';
 
 enum ReportPeriodType { thisMonth, lastMonth, custom }
@@ -18,12 +22,14 @@ class ReportsScreen extends StatefulWidget {
   final AppStrings strings;
   final AppUnit unit;
   final UserPreferences preferences;
+  final VoidCallback? onReviewDetectedTrips;
 
   const ReportsScreen({
     super.key,
     required this.strings,
     required this.unit,
     required this.preferences,
+    this.onReviewDetectedTrips,
   });
 
   @override
@@ -32,13 +38,15 @@ class ReportsScreen extends StatefulWidget {
 
 class _ReportsScreenState extends State<ReportsScreen> {
   final _tripService = TripService();
-  final _workModeService = WorkModeService();
+  final _fuelService = FuelService();
   final _pdfService = ReportPdfService();
   final _taxService = TaxService();
   final _csvService = CsvExportService();
+  final _cloudBackupService = CloudBackupService();
 
   // ─── All trips (raw, unfiltered) ─────────────────────────────────────────
   List<Trip> _allTrips = [];
+  List<FuelEntry> _allFuelEntries = [];
 
   // ─── Period selection ─────────────────────────────────────────────────────
   ReportPeriodType _selectedPeriod = ReportPeriodType.thisMonth;
@@ -47,16 +55,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   // ─── Computed state for the selected period ───────────────────────────────
   List<Trip> _reportTrips = [];
+  List<FuelEntry> _reportFuelEntries = [];
   double _totalDistance = 0;
   double _businessDistance = 0;
 
   // ─── Expenses ─────────────────────────────────────────────────────────────
-  // TODO: WorkShift fuel/parking/tolls are not date-filtered until shift log dates are added.
+  // WorkShift expenses have no transaction date, so period reports exclude
+  // them to avoid overstating month-specific totals.
   double _totalFuel = 0;
-  double _totalParking = 0; // shift parking + trip parking for selected period
-  double _totalTolls = 0; // shift tolls + trip tolls for selected period
-  double _shiftParking = 0; // shift-only, reused across period changes
+  double _totalParking = 0;
+  double _totalTolls = 0;
+  double _shiftParking = 0;
   double _shiftTolls = 0;
+  double _totalFuelLogCost = 0;
+  double _totalFuelVolumeLiters = 0;
+  DateTime? _lastCloudBackupTime;
 
   bool _isLoading = true;
   bool _isExportingSimple = false;
@@ -67,9 +80,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
       _isExportingSimple || _isExportingDetailed || _isExportingCsv;
 
   String get _currencyCode => widget.preferences.currencyCode;
-  bool get _hasTripsNeedingReview => _reportTrips.any(
-    (trip) => trip.reviewStatus == TripReviewStatus.needsReview,
-  );
+  int get _needsReviewCount => _reportTrips
+      .where((trip) => trip.reviewStatus == TripReviewStatus.needsReview)
+      .length;
 
   @override
   void initState() {
@@ -119,26 +132,45 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   Future<void> _loadData() async {
     final trips = await _tripService.loadTrips();
-    final workSettings = await _workModeService.loadSettings();
-    final shifts = workSettings.shifts;
+    final fuelEntries = await _fuelService.loadFuelEntries();
+    DateTime? lastCloudBackupTime;
+    try {
+      lastCloudBackupTime = await _cloudBackupService.getLastCloudBackupTime();
+    } catch (_) {
+      lastCloudBackupTime = null;
+    }
 
     _allTrips = trips;
-    final reportTrips = _filterTrips(_currentReportRange());
+    _allFuelEntries = fuelEntries;
+    final range = _currentReportRange();
+    final reportTrips = _filterTrips(range);
+    final reportFuelEntries = _filterFuelEntries(range);
 
     setState(() {
       _reportTrips = reportTrips;
+      _reportFuelEntries = reportFuelEntries;
       _totalDistance = reportTrips.fold(0.0, (s, t) => s + t.distance);
       _businessDistance = reportTrips
           .where((t) => t.category == 'business')
           .fold(0.0, (s, t) => s + t.distance);
-      // TODO: WorkShift fuel/parking/tolls are not date-filtered until shift log dates are added.
-      _totalFuel = shifts.fold(0.0, (s, sh) => s + sh.fuelExpense);
-      _shiftParking = shifts.fold(0.0, (s, sh) => s + sh.parkingExpense);
-      _shiftTolls = shifts.fold(0.0, (s, sh) => s + sh.tollsExpense);
+      // WorkShift expenses are recurring settings without dates. Excluding
+      // them prevents selected-period reports from counting all-time values.
+      _totalFuel = 0;
+      _shiftParking = 0;
+      _shiftTolls = 0;
       _totalParking =
           _shiftParking + reportTrips.fold(0.0, (s, t) => s + t.parkingExpense);
       _totalTolls =
           _shiftTolls + reportTrips.fold(0.0, (s, t) => s + t.tollsExpense);
+      _totalFuelLogCost = reportFuelEntries.fold(
+        0.0,
+        (sum, entry) => sum + entry.totalCost,
+      );
+      _totalFuelVolumeLiters = reportFuelEntries.fold(
+        0.0,
+        (sum, entry) => sum + entry.volumeLiters,
+      );
+      _lastCloudBackupTime = lastCloudBackupTime;
       _isLoading = false;
     });
   }
@@ -147,10 +179,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
       .where((t) => !t.date.isBefore(range.start) && !t.date.isAfter(range.end))
       .toList();
 
+  List<FuelEntry> _filterFuelEntries(DateTimeRange range) => _allFuelEntries
+      .where((e) => !e.date.isBefore(range.start) && !e.date.isAfter(range.end))
+      .toList();
+
   void _computeTotals() {
-    final reportTrips = _filterTrips(_currentReportRange());
+    final range = _currentReportRange();
+    final reportTrips = _filterTrips(range);
+    final reportFuelEntries = _filterFuelEntries(range);
     setState(() {
       _reportTrips = reportTrips;
+      _reportFuelEntries = reportFuelEntries;
       _totalDistance = reportTrips.fold(0.0, (s, t) => s + t.distance);
       _businessDistance = reportTrips
           .where((t) => t.category == 'business')
@@ -159,6 +198,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
           _shiftParking + reportTrips.fold(0.0, (s, t) => s + t.parkingExpense);
       _totalTolls =
           _shiftTolls + reportTrips.fold(0.0, (s, t) => s + t.tollsExpense);
+      _totalFuelLogCost = reportFuelEntries.fold(
+        0.0,
+        (sum, entry) => sum + entry.totalCost,
+      );
+      _totalFuelVolumeLiters = reportFuelEntries.fold(
+        0.0,
+        (sum, entry) => sum + entry.volumeLiters,
+      );
     });
   }
 
@@ -185,10 +232,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
   // ─── Export ───────────────────────────────────────────────────────────────
 
   Future<void> _handleExport(PdfReportType type) async {
-    if (_hasTripsNeedingReview) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.strings.reviewDetectedTripsBeforeExport)),
-      );
+    final entitlements = EntitlementService(widget.preferences);
+    if (!requireProFeature(
+      context: context,
+      strings: widget.strings,
+      allowed: entitlements.canExportUnlimitedReports,
+    )) {
       return;
     }
 
@@ -202,7 +251,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     });
 
     try {
-      final workSettings = await _workModeService.loadSettings();
       final country = widget.preferences.country;
       final tax = _taxService.calculateTaxFromKm(_businessDistance, country);
       final range = _currentReportRange();
@@ -215,7 +263,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
         platformBreakdown: _buildPlatformBreakdown(_reportTrips),
         country: country,
         unit: widget.unit,
-        shifts: workSettings.shifts,
+        currencyCode: _currencyCode,
+        fuelEntries: _reportFuelEntries,
+        shifts: const [],
         reportType: type,
         startDate: range.start,
         endDate: range.end,
@@ -242,10 +292,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Future<void> _handleCsvExport() async {
-    if (_hasTripsNeedingReview) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.strings.reviewDetectedTripsBeforeExport)),
-      );
+    final entitlements = EntitlementService(widget.preferences);
+    if (!requireProFeature(
+      context: context,
+      strings: widget.strings,
+      allowed: entitlements.canExportUnlimitedReports,
+    )) {
       return;
     }
 
@@ -256,6 +308,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         trips: _reportTrips,
         unit: widget.unit,
         currencyCode: _currencyCode,
+        fuelEntries: _reportFuelEntries,
         startDate: range.start,
         endDate: range.end,
       );
@@ -285,6 +338,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
   String _fmtDate(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
 
+  String _fmtDateTime(DateTime d) =>
+      '${_fmtDate(d)} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+
   String _periodTitle(AppStrings s) {
     switch (_selectedPeriod) {
       case ReportPeriodType.thisMonth:
@@ -299,11 +355,37 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
   }
 
+  double get _displayFuelVolume {
+    if (widget.unit == AppUnit.kilometers) return _totalFuelVolumeLiters;
+    return _totalFuelVolumeLiters / 3.785411784;
+  }
+
+  double get _displayDistance => fromKilometers(_totalDistance, widget.unit);
+
+  String _formatFuelVolume(AppStrings s) {
+    final unit = widget.unit == AppUnit.kilometers ? s.liters : s.gallons;
+    return '${_displayFuelVolume.toStringAsFixed(1)} $unit';
+  }
+
+  String _formatAverageFuelPrice(AppStrings s) {
+    final volume = _displayFuelVolume;
+    if (volume <= 0) return s.notAvailable;
+    final suffix = widget.unit == AppUnit.kilometers ? s.perLiter : s.perGallon;
+    return '${formatCurrency(_totalFuelLogCost / volume, _currencyCode)} $suffix';
+  }
+
+  String _formatFuelCostPerDistance(AppStrings s) {
+    final distance = _displayDistance;
+    if (distance <= 0) return s.notAvailable;
+    return formatCurrency(_totalFuelLogCost / distance, _currencyCode);
+  }
+
   // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final s = widget.strings;
+    final entitlements = EntitlementService(widget.preferences);
     final totalExpenses = _totalFuel + _totalParking + _totalTolls;
 
     return Scaffold(
@@ -376,6 +458,46 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   const SizedBox(height: 12),
 
                   // ── Expense breakdown ──────────────────────────────────
+                  if (entitlements.canUseFuelSummaries)
+                    Card(
+                      elevation: 0,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              s.fuelSummary,
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: 12),
+                            _valueRow(
+                              s.fuelCost,
+                              formatCurrency(_totalFuelLogCost, _currencyCode),
+                            ),
+                            _valueRow(s.fuelAmount, _formatFuelVolume(s)),
+                            _valueRow(
+                              s.averageFuelPrice,
+                              _formatAverageFuelPrice(s),
+                            ),
+                            _valueRow(
+                              widget.unit == AppUnit.kilometers
+                                  ? s.costPerKm
+                                  : s.costPerMile,
+                              _formatFuelCostPerDistance(s),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    ProLockedCard(
+                      strings: s,
+                      title: s.proFuelSummaries,
+                      icon: Icons.local_gas_station_outlined,
+                    ),
+                  const SizedBox(height: 12),
+
                   if (totalExpenses > 0)
                     Card(
                       elevation: 0,
@@ -448,6 +570,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   ),
 
                   const SizedBox(height: 28),
+                  if (entitlements.canUseMonthlyCloseChecklist)
+                    _monthlyCloseChecklist(s)
+                  else
+                    ProLockedCard(
+                      strings: s,
+                      title: s.proMonthlyCloseChecklist,
+                      icon: Icons.fact_check_outlined,
+                    ),
+                  const SizedBox(height: 28),
                   const Divider(),
                   const SizedBox(height: 16),
 
@@ -465,23 +596,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  if (_hasTripsNeedingReview) ...[
-                    const SizedBox(height: 12),
-                    Card(
-                      elevation: 0,
-                      color: Theme.of(context).colorScheme.secondaryContainer,
-                      child: ListTile(
-                        leading: Icon(
-                          Icons.rate_review_outlined,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSecondaryContainer,
-                        ),
-                        title: Text(s.needsReview),
-                        subtitle: Text(s.reviewDetectedTripsBeforeExport),
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 16),
 
                   SizedBox(
@@ -558,25 +672,134 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Widget _expenseRow(String label, double amount, {bool bold = false}) {
+    return _valueRow(label, formatCurrency(amount, _currencyCode), bold: bold);
+  }
+
+  Widget _valueRow(String label, String value, {bool bold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
           ),
-          Text(
-            formatCurrency(amount, _currencyCode),
-            style: TextStyle(
-              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+          const SizedBox(width: 16),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _monthlyCloseChecklist(AppStrings s) {
+    final lastBackup = _lastCloudBackupTime;
+    return Card(
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              s.monthlyCloseChecklist,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              s.checklistGuidance,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _checklistTile(
+              label: s.reviewDetectedTrips,
+              detail: _needsReviewCount > 0
+                  ? s.tripsNeedReviewCount(_needsReviewCount)
+                  : null,
+              status: _needsReviewCount > 0
+                  ? _ChecklistStatus.warning
+                  : _ChecklistStatus.done,
+              onTap: widget.onReviewDetectedTrips,
+            ),
+            _checklistTile(
+              label: s.checkCategories,
+              status: _ChecklistStatus.neutral,
+            ),
+            _checklistTile(
+              label: s.checkFuelEntries,
+              detail: _reportFuelEntries.isEmpty ? s.notAvailable : null,
+              status: _reportFuelEntries.isEmpty
+                  ? _ChecklistStatus.neutral
+                  : _ChecklistStatus.done,
+            ),
+            _checklistTile(
+              label: s.checkParkingAndTolls,
+              status: totalParkingAndTolls > 0
+                  ? _ChecklistStatus.done
+                  : _ChecklistStatus.neutral,
+            ),
+            _checklistTile(
+              label: s.backUpYourData,
+              detail: lastBackup == null
+                  ? null
+                  : '${s.lastBackup}: ${_fmtDateTime(lastBackup)}',
+              status: lastBackup == null
+                  ? _ChecklistStatus.neutral
+                  : _ChecklistStatus.done,
+            ),
+            _checklistTile(
+              label: s.exportPdfCsv,
+              status: _ChecklistStatus.neutral,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  double get totalParkingAndTolls => _totalParking + _totalTolls;
+
+  Widget _checklistTile({
+    required String label,
+    required _ChecklistStatus status,
+    String? detail,
+    VoidCallback? onTap,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    final icon = switch (status) {
+      _ChecklistStatus.done => Icons.check_circle_outline,
+      _ChecklistStatus.warning => Icons.warning_amber_outlined,
+      _ChecklistStatus.neutral => Icons.radio_button_unchecked,
+    };
+    final color = switch (status) {
+      _ChecklistStatus.done => Colors.green,
+      _ChecklistStatus.warning => cs.error,
+      _ChecklistStatus.neutral => cs.onSurfaceVariant,
+    };
+
+    return ListTile(
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: color),
+      title: Text(label),
+      subtitle: detail == null ? null : Text(detail),
+      trailing: onTap == null ? null : const Icon(Icons.chevron_right),
+      onTap: onTap,
     );
   }
 
@@ -596,3 +819,5 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 }
+
+enum _ChecklistStatus { done, warning, neutral }

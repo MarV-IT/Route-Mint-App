@@ -9,9 +9,11 @@ class LiveTripMapCard extends StatelessWidget {
   const LiveTripMapCard({
     super.key,
     required this.strings,
+    this.bottomSpacing = 0,
   });
 
   final AppStrings strings;
+  final double bottomSpacing;
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +23,9 @@ class LiveTripMapCard extends StatelessWidget {
         return ValueListenableBuilder<List<TrackingPoint>>(
           valueListenable: appAutoDetectionService.activeRouteNotifier,
           builder: (context, autoPoints, _) {
-            final points =
-                autoPoints.isNotEmpty ? autoPoints : foregroundPoints;
+            final points = autoPoints.isNotEmpty
+                ? autoPoints
+                : foregroundPoints;
             final route = points
                 .map((p) => _safeLatLng(p.latitude, p.longitude))
                 .nonNulls
@@ -30,9 +33,13 @@ class LiveTripMapCard extends StatelessWidget {
 
             if (route.isEmpty) return const SizedBox.shrink();
 
-            return _LiveTripMapContent(
-              strings: strings,
-              route: route,
+            final content = _LiveTripMapContent(strings: strings, route: route);
+            if (bottomSpacing <= 0) return content;
+            return Column(
+              children: [
+                content,
+                SizedBox(height: bottomSpacing),
+              ],
             );
           },
         );
@@ -49,10 +56,7 @@ class LiveTripMapCard extends StatelessWidget {
 }
 
 class _LiveTripMapContent extends StatelessWidget {
-  const _LiveTripMapContent({
-    required this.strings,
-    required this.route,
-  });
+  const _LiveTripMapContent({required this.strings, required this.route});
 
   final AppStrings strings;
   final List<LatLng> route;
@@ -61,7 +65,8 @@ class _LiveTripMapContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final current = route.last;
-    final hasPolyline = route.length >= 2 && !_samePoint(route.first, route.last);
+    final hasPolyline =
+        route.length >= 2 && !_samePoint(route.first, route.last);
 
     return Card(
       elevation: 0,
@@ -99,15 +104,15 @@ class _LiveTripMapContent extends StatelessWidget {
                       )
                     : null,
                 interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.pinchZoom |
+                  flags:
+                      InteractiveFlag.pinchZoom |
                       InteractiveFlag.drag |
                       InteractiveFlag.doubleTapZoom,
                 ),
               ),
               children: [
                 TileLayer(
-                  urlTemplate:
-                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'app.routemint',
                 ),
                 PolylineLayer(
@@ -130,10 +135,7 @@ class _LiveTripMapContent extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: cs.primary,
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: cs.surface,
-                            width: 3,
-                          ),
+                          border: Border.all(color: cs.surface, width: 3),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.25),

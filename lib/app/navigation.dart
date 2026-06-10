@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import '../core/localization/app_strings.dart';
+import '../core/location/auto_trip_detection_service.dart';
 import '../core/location/geolocator_tracking_provider.dart';
 import '../core/preferences/user_preferences.dart';
 import '../features/today/today_screen.dart';
 import '../features/trips/trips_screen.dart';
 import '../features/add_trip/add_trip_screen.dart';
+import '../features/expenses/add_expense_screen.dart';
 import '../features/reports/reports_screen.dart';
 import '../features/profile/profile_screen.dart';
+import '../features/profile/tracking_diagnostics_screen.dart';
 import 'app.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -58,6 +61,28 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     widget.onSelectedIndexChanged(1);
   }
 
+  Future<void> _openAddExpense() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddExpenseScreen(
+          strings: widget.strings,
+          unit: widget.unit,
+          preferences: widget.preferences,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openPermissionCheck() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TrackingDiagnosticsScreen(strings: widget.strings),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final strings = widget.strings;
@@ -71,8 +96,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         onPreferencesRefresh: widget.onPreferencesRefresh,
         onStartTrip: () => _selectTab(2),
         onAddManually: () => _selectTab(2),
-        onAddExpense: () => _selectTab(2),
+        onAddExpense: _openAddExpense,
         onReviewTrips: _navigateToTripsForReview,
+        onCheckPermissions: _openPermissionCheck,
       ),
       TripsScreen(
         strings: strings,
@@ -91,6 +117,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         strings: strings,
         unit: widget.unit,
         preferences: widget.preferences,
+        onReviewDetectedTrips: _navigateToTripsForReview,
       ),
       ProfileScreen(
         strings: strings,
@@ -112,10 +139,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           ValueListenableBuilder<bool>(
             valueListenable: appTrackingService.isTrackingNotifier,
             builder: (context, isTracking, _) {
-              if (!isTracking || widget.selectedIndex == 0) {
-                return const SizedBox.shrink();
-              }
-              return _ActiveTrackingBanner(strings: strings);
+              return ValueListenableBuilder<AutoDetectionState>(
+                valueListenable: appAutoDetectionService.stateNotifier,
+                builder: (context, autoState, _) {
+                  final autoIsActive = autoState != AutoDetectionState.idle;
+                  if ((!isTracking && !autoIsActive) ||
+                      widget.selectedIndex == 0) {
+                    return const SizedBox.shrink();
+                  }
+                  return _ActiveTrackingBanner(
+                    strings: strings,
+                    autoDetectionActive: autoIsActive && !isTracking,
+                  );
+                },
+              );
             },
           ),
         ],
@@ -158,9 +195,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 }
 
 class _ActiveTrackingBanner extends StatelessWidget {
-  const _ActiveTrackingBanner({required this.strings});
+  const _ActiveTrackingBanner({
+    required this.strings,
+    required this.autoDetectionActive,
+  });
 
   final AppStrings strings;
+  final bool autoDetectionActive;
 
   @override
   Widget build(BuildContext context) {
@@ -172,7 +213,7 @@ class _ActiveTrackingBanner extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              Icons.gps_fixed,
+              autoDetectionActive ? Icons.radar_outlined : Icons.gps_fixed,
               size: 16,
               color: colorScheme.onPrimaryContainer,
             ),
@@ -183,7 +224,9 @@ class _ActiveTrackingBanner extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    strings.trackingActiveTitle,
+                    autoDetectionActive
+                        ? strings.autoTripDetection
+                        : strings.trackingActiveTitle,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
@@ -191,7 +234,9 @@ class _ActiveTrackingBanner extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    strings.trackingActiveMessage,
+                    autoDetectionActive
+                        ? strings.tripDetectedTracking
+                        : strings.trackingActiveMessage,
                     style: TextStyle(
                       fontSize: 12,
                       color: colorScheme.onPrimaryContainer,

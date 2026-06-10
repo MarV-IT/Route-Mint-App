@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../core/device/battery_optimization_service.dart';
@@ -71,6 +72,9 @@ class _TrackingDiagnosticsScreenState extends State<TrackingDiagnosticsScreen> {
             ),
           ).timeout(const Duration(seconds: 10));
         } catch (e) {
+          if (kDebugMode) {
+            debugPrint('[TrackingDiagnostics] current position failed: $e');
+          }
           gpsError = e;
         }
       }
@@ -89,6 +93,9 @@ class _TrackingDiagnosticsScreenState extends State<TrackingDiagnosticsScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[TrackingDiagnostics] refresh failed: $e');
+      }
       if (!mounted) return;
       setState(() {
         _gpsError = e;
@@ -104,6 +111,21 @@ class _TrackingDiagnosticsScreenState extends State<TrackingDiagnosticsScreen> {
     if (enabled != true) {
       await TripNotificationService.instance.openNotificationSettings();
     }
+    await _refresh();
+  }
+
+  Future<void> _sendTestNotification() async {
+    final shown = await TripNotificationService.instance.showTestNotification();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          shown
+              ? widget.strings.testNotificationSent
+              : widget.strings.notificationTestHint,
+        ),
+      ),
+    );
     await _refresh();
   }
 
@@ -331,6 +353,24 @@ class _TrackingDiagnosticsScreenState extends State<TrackingDiagnosticsScreen> {
                               child: Text(s.fixNow),
                             ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 8),
+                      child: Text(
+                        s.notificationTestHint,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: _isLoading ? null : _sendTestNotification,
+                        icon: const Icon(Icons.notifications_active_outlined),
+                        label: Text(s.sendTestNotification),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     _statusTile(
                       icon: Icons.battery_saver_outlined,
                       label: s.batteryOptimization,
@@ -390,7 +430,7 @@ class _TrackingDiagnosticsScreenState extends State<TrackingDiagnosticsScreen> {
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
-                          s.gpsError(_gpsError!),
+                          s.trackingError,
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: colorScheme.error),
                         ),
