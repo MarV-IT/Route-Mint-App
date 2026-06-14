@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBXLRVyEV5XzhYr6GT_N0uefCanuug-vkc',
-    appId: '1:1026475770254:android:1ca2bc822ff8d7bf78e4df',
+    appId: '1:1026475770254:android:aefb47680c3f06d178e4df',
     messagingSenderId: '1026475770254',
     projectId: 'route-mint-app-2026',
     storageBucket: 'route-mint-app-2026.firebasestorage.app',

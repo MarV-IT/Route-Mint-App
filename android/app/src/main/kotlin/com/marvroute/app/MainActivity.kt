@@ -1,4 +1,4 @@
-package com.example.route_mint_app
+package com.marvroute.app
 
 import android.Manifest
 import android.app.Notification
