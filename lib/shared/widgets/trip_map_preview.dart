@@ -11,6 +11,7 @@ class TripMapPreview extends StatelessWidget {
     required this.endLatitude,
     required this.endLongitude,
     this.routePoints = const [],
+    this.tileProvider,
   });
 
   final double? startLatitude;
@@ -18,6 +19,10 @@ class TripMapPreview extends StatelessWidget {
   final double? endLatitude;
   final double? endLongitude;
   final List<TripRoutePoint> routePoints;
+
+  /// Overridable tile source. Defaults to the network provider in production;
+  /// tests inject an offline provider to avoid real OpenStreetMap requests.
+  final TileProvider? tileProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +75,7 @@ class TripMapPreview extends StatelessWidget {
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'app.routemint',
+              tileProvider: tileProvider,
             ),
             PolylineLayer(
               polylines: [

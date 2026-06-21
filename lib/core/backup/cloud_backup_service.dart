@@ -7,6 +7,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import '../preferences/preferences_service.dart';
 import '../preferences/user_preferences.dart';
 import '../../features/expenses/models/expense_entry.dart';
@@ -77,6 +78,15 @@ class CloudBackupService {
     return _db.collection('users').doc(uid).collection('backups').doc('latest');
   }
 
+  /// Serializes a trip for the cloud backup with its per-point GPS route
+  /// removed. Route polylines are the dominant size contributor and would push
+  /// heavy users past Firestore's 1 MB document limit; they are cosmetic
+  /// (map preview only), so the cloud copy keeps every trip record but not the
+  /// polyline. Local storage still retains the full route.
+  @visibleForTesting
+  static Map<String, dynamic> tripToBackupJson(Trip trip) =>
+      trip.copyWith(routePoints: const []).toJson();
+
   Future<void> uploadBackupForCurrentUser() async {
     if (_uid == null) throw StateError('Not signed in');
 
@@ -92,7 +102,7 @@ class CloudBackupService {
       'updatedAt': FieldValue.serverTimestamp(),
       'exportedAt': DateTime.now().toIso8601String(),
       'preferences': preferences.toJson(),
-      'trips': trips.map((t) => t.toJson()).toList(),
+      'trips': trips.map(tripToBackupJson).toList(),
       'expenseEntries': expenseEntries.map((e) => e.toJson()).toList(),
       'fuelEntries': fuelEntries.map((e) => e.toJson()).toList(),
       'workModeSettings': workModeSettings.toJson(),

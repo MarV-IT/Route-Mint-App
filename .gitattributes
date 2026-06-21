@@ -1,0 +1,21 @@
+# Normalize line endings: store text as LF in the repo, check out native.
+# Silences the "LF will be replaced by CRLF" warnings on Windows.
+* text=auto
+
+# Windows-only scripts must keep CRLF.
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+gradlew.bat text eol=crlf
+
+# Treat these as binary (never normalize / never diff as text).
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.ico      binary
+*.ttf      binary
+*.otf      binary
+*.jks      binary
+*.keystore binary
+*.aab      binary
+*.apk      binary
