@@ -3639,13 +3639,22 @@ class AppStrings {
     fa: 'استفاده از $platform',
   );
 
-  String get mergeNearbySegment => _value(
-    en: 'Merge nearby segment',
-    es: 'Unir segmento cercano',
-    fr: 'Fusionner le segment proche',
-    ru: 'Объединить близкий сегмент',
-    uk: 'Об’єднати близький сегмент',
-    fa: 'ادغام بخش نزدیک',
+  String get mergeWithPreviousTrip => _value(
+    en: 'Merge with previous trip',
+    es: 'Unir con el viaje anterior',
+    fr: 'Fusionner avec le trajet précédent',
+    ru: 'Объединить с предыдущей поездкой',
+    uk: 'Об’єднати з попередньою поїздкою',
+    fa: 'ادغام با سفر قبلی',
+  );
+
+  String get mergeWithNextTrip => _value(
+    en: 'Merge with next trip',
+    es: 'Unir con el viaje siguiente',
+    fr: 'Fusionner avec le trajet suivant',
+    ru: 'Объединить со следующей поездкой',
+    uk: 'Об’єднати з наступною поїздкою',
+    fa: 'ادغام با سفر بعدی',
   );
 
   String get tripSegmentsMerged => _value(

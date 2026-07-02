@@ -381,6 +381,69 @@ class _TrackingSetupWarningCard extends StatelessWidget {
   }
 }
 
+class _FuelLogShortcutCard extends StatelessWidget {
+  const _FuelLogShortcutCard({
+    required this.strings,
+    required this.onOpenFuelLog,
+  });
+
+  final AppStrings strings;
+  final VoidCallback onOpenFuelLog;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Card(
+      elevation: 0,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onOpenFuelLog,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.local_gas_station_outlined,
+                  color: cs.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      strings.fuelLog,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      strings.addFuel,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class TodayScreen extends StatefulWidget {
   final AppStrings strings;
   final AppUnit unit;
@@ -392,6 +455,7 @@ class TodayScreen extends StatefulWidget {
   final VoidCallback onAddExpense;
   final VoidCallback onReviewTrips;
   final VoidCallback onCheckPermissions;
+  final VoidCallback onOpenFuelLog;
 
   const TodayScreen({
     super.key,
@@ -405,6 +469,7 @@ class TodayScreen extends StatefulWidget {
     required this.onAddExpense,
     required this.onReviewTrips,
     required this.onCheckPermissions,
+    required this.onOpenFuelLog,
   });
 
   @override
@@ -863,6 +928,11 @@ class _TodayScreenState extends State<TodayScreen> {
                   isStartTripBusy: _trackingActionBusy,
                 );
               },
+            ),
+            const SizedBox(height: 12),
+            _FuelLogShortcutCard(
+              strings: widget.strings,
+              onOpenFuelLog: widget.onOpenFuelLog,
             ),
             const SizedBox(height: 12),
           ],

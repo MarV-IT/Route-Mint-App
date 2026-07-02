@@ -363,6 +363,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   double get _displayDistance => fromKilometers(_totalDistance, widget.unit);
 
   String _formatFuelVolume(AppStrings s) {
+    if (_displayFuelVolume <= 0) return s.notAvailable;
     final unit = widget.unit == AppUnit.kilometers ? s.liters : s.gallons;
     return '${_displayFuelVolume.toStringAsFixed(1)} $unit';
   }

@@ -54,7 +54,9 @@ class _AddFuelEntryScreenState extends State<AddFuelEntryScreen> {
           fromKilometers(entry.odometerKm!, widget.unit),
         );
       }
-      _volumeController.text = _fmt(_fromLiters(entry.volumeLiters));
+      if (entry.volumeLiters > 0) {
+        _volumeController.text = _fmt(_fromLiters(entry.volumeLiters));
+      }
       _costController.text = _fmt(entry.totalCost);
       _stationController.text = entry.stationName ?? '';
       _notesController.text = entry.notes ?? '';
@@ -112,13 +114,14 @@ class _AddFuelEntryScreenState extends State<AddFuelEntryScreen> {
   Future<void> _save() async {
     if (_isSaving) return;
 
-    final volume = double.tryParse(_volumeController.text.trim());
+    final volumeText = _volumeController.text.trim();
+    final volume = volumeText.isEmpty ? null : double.tryParse(volumeText);
     final totalCost = double.tryParse(_costController.text.trim()) ?? 0;
     final odometer = _odometerController.text.trim().isEmpty
         ? null
         : double.tryParse(_odometerController.text.trim());
 
-    if (volume == null || volume <= 0) {
+    if (volumeText.isNotEmpty && (volume == null || volume <= 0)) {
       _showError(widget.strings.fuelAmountMustBePositive);
       return;
     }
@@ -141,7 +144,7 @@ class _AddFuelEntryScreenState extends State<AddFuelEntryScreen> {
         odometerKm: odometer == null
             ? null
             : toKilometers(odometer, widget.unit),
-        volumeLiters: _toLiters(volume),
+        volumeLiters: volume == null ? 0 : _toLiters(volume),
         totalCost: totalCost,
         stationName: _stationController.text.trim().isEmpty
             ? null
@@ -198,7 +201,7 @@ class _AddFuelEntryScreenState extends State<AddFuelEntryScreen> {
             controller: _volumeController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: s.fuelAmount,
+              labelText: '${s.fuelAmount} (${s.optional})',
               suffixText: _volumeUnitLabel,
               border: const OutlineInputBorder(),
             ),

@@ -98,7 +98,8 @@ class _FuelLogScreenState extends State<FuelLogScreen> {
     return '${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}/${d.year}';
   }
 
-  String _formatVolume(FuelEntry entry) {
+  String? _formatVolume(FuelEntry entry) {
+    if (entry.volumeLiters <= 0) return null;
     if (_usesMiles) {
       final gallons = entry.volumeLiters / _litersPerGallon;
       return '${gallons.toStringAsFixed(2)} ${widget.strings.gallons}';
@@ -152,7 +153,7 @@ class _FuelLogScreenState extends State<FuelLogScreen> {
                             subtitle: Text(
                               [
                                 _formatDate(entry.date),
-                                _formatVolume(entry),
+                                ?_formatVolume(entry),
                                 ?odometer,
                               ].join(' · '),
                             ),

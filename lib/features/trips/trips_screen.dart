@@ -424,9 +424,18 @@ class _TripsScreenState extends State<TripsScreen> {
               if (mergeCandidate != null) ...[
                 const SizedBox(height: 4),
                 OutlinedButton.icon(
-                  onPressed: () => _mergeTripWith(trip, mergeCandidate),
-                  icon: const Icon(Icons.call_merge_outlined, size: 18),
-                  label: Text(s.mergeNearbySegment),
+                  onPressed: () => _mergeTripWith(trip, mergeCandidate.trip),
+                  icon: Icon(
+                    mergeCandidate.isPrevious
+                        ? Icons.arrow_downward
+                        : Icons.arrow_upward,
+                    size: 18,
+                  ),
+                  label: Text(
+                    mergeCandidate.isPrevious
+                        ? s.mergeWithPreviousTrip
+                        : s.mergeWithNextTrip,
+                  ),
                   style: OutlinedButton.styleFrom(
                     visualDensity: VisualDensity.compact,
                   ),
@@ -495,12 +504,48 @@ class _TripsScreenState extends State<TripsScreen> {
     );
   }
 
-  Trip? _mergeCandidateFor(Trip trip) {
+  ({Trip trip, bool isPrevious})? _mergeCandidateFor(Trip trip) {
     if (trip.detectionMode != TripDetectionMode.automatic) return null;
-    for (final other in _allTrips) {
-      if (isMergeCandidate(trip, other)) return other;
+
+    final candidates = _allTrips
+        .where((other) => isMergeCandidate(trip, other))
+        .toList();
+    if (candidates.isEmpty) return null;
+
+    candidates.sort((a, b) {
+      final gapCompare = _mergeGap(trip, a).compareTo(_mergeGap(trip, b));
+      if (gapCompare != 0) return gapCompare;
+      final tripStart = trip.startTime ?? trip.date;
+      final aDistance = (a.startTime ?? a.date)
+          .difference(tripStart)
+          .inMilliseconds
+          .abs();
+      final bDistance = (b.startTime ?? b.date)
+          .difference(tripStart)
+          .inMilliseconds
+          .abs();
+      return aDistance.compareTo(bDistance);
+    });
+
+    final candidate = candidates.first;
+    final tripStart = trip.startTime ?? trip.date;
+    final candidateStart = candidate.startTime ?? candidate.date;
+    return (trip: candidate, isPrevious: candidateStart.isBefore(tripStart));
+  }
+
+  Duration _mergeGap(Trip trip, Trip other) {
+    final tripStart = trip.startTime ?? trip.date;
+    final tripEnd = trip.endTime ?? trip.date;
+    final otherStart = other.startTime ?? other.date;
+    final otherEnd = other.endTime ?? other.date;
+
+    if (otherEnd.isBefore(tripStart)) {
+      return tripStart.difference(otherEnd);
     }
-    return null;
+    if (tripEnd.isBefore(otherStart)) {
+      return otherStart.difference(tripEnd);
+    }
+    return Duration.zero;
   }
 
   Future<void> _quickReviewTrip(

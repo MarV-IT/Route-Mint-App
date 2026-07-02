@@ -605,6 +605,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _maintenanceGroup({
+    required IconData icon,
+    required String title,
+    required List<Widget> children,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 20, color: cs.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _maintenanceField({
+    required TextEditingController controller,
+    required String label,
+    String? hintText,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hintText ?? widget.strings.optional,
+          suffixText: _unitSuffix,
+          border: const OutlineInputBorder(),
+          filled: true,
+        ),
+      ),
+    );
+  }
+
   Widget _proBadge(AppStrings s) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -892,105 +951,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: s.vehicleMaintenance,
             children: [
               if (entitlements.canUseMaintenanceReminders) ...[
-                TextField(
-                  controller: _odometerController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: s.currentOdometer,
-                    hintText: s.optional,
-                    suffixText: _unitSuffix,
-                    border: const OutlineInputBorder(),
-                  ),
+                _maintenanceGroup(
+                  icon: Icons.speed_outlined,
+                  title: s.currentOdometer,
+                  children: [
+                    _maintenanceField(
+                      controller: _odometerController,
+                      label: s.currentOdometer,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _lastOilController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: s.lastOilChangeOdometer,
-                    hintText: s.optional,
-                    suffixText: _unitSuffix,
-                    border: const OutlineInputBorder(),
-                  ),
+                _maintenanceGroup(
+                  icon: Icons.oil_barrel_outlined,
+                  title: s.oilChange,
+                  children: [
+                    _maintenanceField(
+                      controller: _lastOilController,
+                      label: s.lastOilChangeOdometer,
+                    ),
+                    _maintenanceField(
+                      controller: _intervalController,
+                      label: s.oilChangeInterval,
+                      hintText: widget.selectedUnit == AppUnit.miles
+                          ? '5000'
+                          : '8000',
+                    ),
+                    _maintenanceField(
+                      controller: _thresholdController,
+                      label: s.oilChangeReminderThreshold,
+                      hintText: widget.selectedUnit == AppUnit.miles
+                          ? '500'
+                          : '800',
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _intervalController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: s.oilChangeInterval,
-                    hintText: widget.selectedUnit == AppUnit.miles
-                        ? '5000'
-                        : '8000',
-                    suffixText: _unitSuffix,
-                    border: const OutlineInputBorder(),
-                  ),
+                _maintenanceGroup(
+                  icon: Icons.car_repair_outlined,
+                  title: s.brakePadChange,
+                  children: [
+                    _maintenanceField(
+                      controller: _lastBrakePadController,
+                      label: s.lastBrakePadChangeOdometer,
+                    ),
+                    _maintenanceField(
+                      controller: _brakePadIntervalController,
+                      label: s.brakePadChangeInterval,
+                      hintText: widget.selectedUnit == AppUnit.miles
+                          ? '30000'
+                          : '48000',
+                    ),
+                    _maintenanceField(
+                      controller: _brakePadThresholdController,
+                      label: s.brakePadReminderThreshold,
+                      hintText: widget.selectedUnit == AppUnit.miles
+                          ? '1000'
+                          : '1600',
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _thresholdController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: s.oilChangeReminderThreshold,
-                    hintText: widget.selectedUnit == AppUnit.miles
-                        ? '500'
-                        : '800',
-                    suffixText: _unitSuffix,
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _lastBrakePadController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: s.lastBrakePadChangeOdometer,
-                    hintText: s.optional,
-                    suffixText: _unitSuffix,
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _brakePadIntervalController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: s.brakePadChangeInterval,
-                    hintText: widget.selectedUnit == AppUnit.miles
-                        ? '30000'
-                        : '48000',
-                    suffixText: _unitSuffix,
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _brakePadThresholdController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: s.brakePadReminderThreshold,
-                    hintText: widget.selectedUnit == AppUnit.miles
-                        ? '1000'
-                        : '1600',
-                    suffixText: _unitSuffix,
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
                 SizedBox(
                   height: 44,
                   child: FilledButton(

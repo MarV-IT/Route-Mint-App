@@ -7,6 +7,7 @@ import '../features/today/today_screen.dart';
 import '../features/trips/trips_screen.dart';
 import '../features/add_trip/add_trip_screen.dart';
 import '../features/expenses/add_expense_screen.dart';
+import '../features/fuel/fuel_log_screen.dart';
 import '../features/reports/reports_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/profile/tracking_diagnostics_screen.dart';
@@ -83,6 +84,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
+  Future<void> _openFuelLog() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FuelLogScreen(
+          strings: widget.strings,
+          unit: widget.unit,
+          preferences: widget.preferences,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final strings = widget.strings;
@@ -99,6 +113,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         onAddExpense: _openAddExpense,
         onReviewTrips: _navigateToTripsForReview,
         onCheckPermissions: _openPermissionCheck,
+        onOpenFuelLog: _openFuelLog,
       ),
       TripsScreen(
         strings: strings,

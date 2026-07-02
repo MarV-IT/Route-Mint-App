@@ -1140,8 +1140,9 @@ class _FuelSummary {
     );
   }
 
-  String get formattedVolume =>
-      '${displayVolume.toStringAsFixed(1)} $volumeUnit';
+  String get formattedVolume => displayVolume > 0
+      ? '${displayVolume.toStringAsFixed(1)} $volumeUnit'
+      : PdfReportLabels.na;
 
   String get formattedAveragePrice => averagePrice == null
       ? PdfReportLabels.na

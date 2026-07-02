@@ -4,7 +4,6 @@ import '../../app/app.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/preferences/user_preferences.dart';
 import '../../shared/utils/currency_utils.dart';
-import '../fuel/fuel_log_screen.dart';
 import 'models/expense_entry.dart';
 import 'services/expense_service.dart';
 
@@ -117,19 +116,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     await _loadEntries();
   }
 
-  void _openFuelLog() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => FuelLogScreen(
-          strings: widget.strings,
-          unit: widget.unit,
-          preferences: widget.preferences,
-        ),
-      ),
-    );
-  }
-
   String _categoryLabel(String category) => switch (category) {
     _parking => widget.strings.parking,
     _tolls => widget.strings.tolls,
@@ -201,12 +187,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             onPressed: _isSaving ? null : _saveExpense,
             icon: const Icon(Icons.save_outlined),
             label: Text(_isSaving ? s.saving : s.saveExpense),
-          ),
-          const SizedBox(height: 10),
-          OutlinedButton.icon(
-            onPressed: _openFuelLog,
-            icon: const Icon(Icons.local_gas_station_outlined),
-            label: Text(s.fuelLog),
           ),
           const SizedBox(height: 24),
           Text(s.recentExpenses, style: Theme.of(context).textTheme.titleSmall),

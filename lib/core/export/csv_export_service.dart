@@ -103,7 +103,12 @@ class CsvExportService {
 
     return [
       ['Total Fuel Cost', '$currencyCode ${totalCost.toStringAsFixed(2)}'],
-      ['Total Fuel Amount', '${displayVolume.toStringAsFixed(1)} $volumeUnit'],
+      [
+        'Total Fuel Amount',
+        displayVolume > 0
+            ? '${displayVolume.toStringAsFixed(1)} $volumeUnit'
+            : 'N/A',
+      ],
       [
         'Average Fuel Price',
         averagePrice == null
