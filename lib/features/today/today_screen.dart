@@ -24,6 +24,7 @@ import 'auto_detection_card.dart';
 import 'brake_pad_card.dart';
 import 'foreground_tracking_card.dart';
 import 'live_trip_map_card.dart';
+import 'odometer_reminder.dart';
 import 'oil_change_card.dart';
 
 enum _DashboardPeriod { today, thisWeek, thisMonth, thisYear }
@@ -454,7 +455,7 @@ class TodayScreen extends StatefulWidget {
   final VoidCallback onAddManually;
   final VoidCallback onAddExpense;
   final VoidCallback onReviewTrips;
-  final VoidCallback onCheckPermissions;
+  final Future<void> Function() onCheckPermissions;
   final VoidCallback onOpenFuelLog;
 
   const TodayScreen({
@@ -476,7 +477,8 @@ class TodayScreen extends StatefulWidget {
   State<TodayScreen> createState() => _TodayScreenState();
 }
 
-class _TodayScreenState extends State<TodayScreen> {
+class _TodayScreenState extends State<TodayScreen>
+    with WidgetsBindingObserver {
   final _taxService = TaxService();
   final _tripService = TripService();
   final _workModeService = WorkModeService();
@@ -501,6 +503,7 @@ class _TodayScreenState extends State<TodayScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _odometerReminderController = TextEditingController(
       text: _odometerDisplayText(widget.preferences.vehicleOdometerKm),
     );
@@ -511,8 +514,18 @@ class _TodayScreenState extends State<TodayScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _odometerReminderController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Permissions and battery settings are changed in Android settings, so
+    // re-check them whenever the user comes back to the app.
+    if (state == AppLifecycleState.resumed) {
+      _refreshPermissionStatus();
+    }
   }
 
   @override
@@ -574,6 +587,26 @@ class _TodayScreenState extends State<TodayScreen> {
     });
   }
 
+  /// Re-checks only the tracking-reliability bits (notifications + battery),
+  /// so the setup warning card reacts without re-querying the cloud backup.
+  Future<void> _refreshPermissionStatus() async {
+    final notifications = await TripNotificationService.instance
+        .areNotificationsEnabled();
+    final battery = await _batteryService.isIgnoringBatteryOptimizations();
+    if (!mounted) return;
+
+    setState(() {
+      _notificationsEnabled = notifications;
+      _batteryUnrestricted = battery;
+    });
+  }
+
+  Future<void> _openPermissionCheck() async {
+    await widget.onCheckPermissions();
+    if (!mounted) return;
+    await _refreshPermissionStatus();
+  }
+
   bool get _countryChecklistDone => widget.preferences.onboardingCompleted;
 
   bool get _vehicleChecklistDone =>
@@ -590,14 +623,10 @@ class _TodayScreenState extends State<TodayScreen> {
       widget.preferences.autoTripDetectionEnabled &&
       (_notificationsEnabled == false || _batteryUnrestricted == false);
 
-  bool get _isWeeklyOdometerReminderDue {
-    final now = DateTime.now();
-    if (now.weekday != DateTime.monday) return false;
-    final last = widget.preferences.lastOdometerUpdateAt;
-    if (last == null) return true;
-    final mondayStart = DateTime(now.year, now.month, now.day);
-    return last.isBefore(mondayStart);
-  }
+  bool get _isWeeklyOdometerReminderDue => isWeeklyOdometerReminderDue(
+    now: DateTime.now(),
+    lastUpdate: widget.preferences.lastOdometerUpdateAt,
+  );
 
   Future<void> _saveWeeklyOdometer() async {
     final value = double.tryParse(_odometerReminderController.text.trim());
@@ -911,7 +940,7 @@ class _TodayScreenState extends State<TodayScreen> {
             if (_shouldShowTrackingSetupWarning) ...[
               _TrackingSetupWarningCard(
                 strings: widget.strings,
-                onCheckPermissions: widget.onCheckPermissions,
+                onCheckPermissions: _openPermissionCheck,
               ),
               const SizedBox(height: 12),
             ],
