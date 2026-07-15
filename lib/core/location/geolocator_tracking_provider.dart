@@ -37,8 +37,24 @@ LocationSettings _currentPositionSettings() {
       distanceFilter: 0,
     );
   }
+  if (Platform.isIOS) {
+    return AppleSettings(accuracy: LocationAccuracy.bestForNavigation);
+  }
   return const LocationSettings(accuracy: LocationAccuracy.bestForNavigation);
 }
+
+/// Background updates require the `location` UIBackgroundModes entry in
+/// Info.plist; without it iOS terminates the stream when the app is
+/// backgrounded (and CoreLocation rejects allowBackgroundLocationUpdates).
+AppleSettings _appleStreamSettings({required int distanceFilter}) =>
+    AppleSettings(
+      accuracy: LocationAccuracy.bestForNavigation,
+      distanceFilter: distanceFilter,
+      activityType: ActivityType.automotiveNavigation,
+      allowBackgroundLocationUpdates: true,
+      showBackgroundLocationIndicator: true,
+      pauseLocationUpdatesAutomatically: false,
+    );
 
 Stream<TrackingPoint> geolocatorMonitoringStream() {
   final LocationSettings settings;
@@ -55,6 +71,8 @@ Stream<TrackingPoint> geolocatorMonitoringStream() {
         setOngoing: true,
       ),
     );
+  } else if (Platform.isIOS) {
+    settings = _appleStreamSettings(distanceFilter: 5);
   } else {
     settings = const LocationSettings(
       accuracy: LocationAccuracy.high,
@@ -88,6 +106,8 @@ Stream<TrackingPoint> geolocatorTrackingStream() {
         setOngoing: true,
       ),
     );
+  } else if (Platform.isIOS) {
+    settings = _appleStreamSettings(distanceFilter: 3);
   } else {
     settings = const LocationSettings(
       accuracy: LocationAccuracy.high,

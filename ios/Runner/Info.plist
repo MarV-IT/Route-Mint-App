@@ -3,13 +3,19 @@
 <plist version="1.0">
 <dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Route Mint uses your location to track trips while the app is open.</string>
+	<string>MarV Route uses your location to track trips while the app is open.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>MarV Route uses your location in the background so trips keep recording while your screen is off.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Route Mint App</string>
+	<string>MarV Route</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

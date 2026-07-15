@@ -59,20 +59,20 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyC2jTTS9scZPenpuHu-Z5Vz90hix9-SNks',
-    appId: '1:1026475770254:ios:a9a73eb7583148f978e4df',
+    appId: '1:1026475770254:ios:5f39a17acf6528d678e4df',
     messagingSenderId: '1026475770254',
     projectId: 'route-mint-app-2026',
     storageBucket: 'route-mint-app-2026.firebasestorage.app',
-    iosBundleId: 'com.example.routeMintApp',
+    iosBundleId: 'com.marvroute.app',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyC2jTTS9scZPenpuHu-Z5Vz90hix9-SNks',
-    appId: '1:1026475770254:ios:a9a73eb7583148f978e4df',
+    appId: '1:1026475770254:ios:5f39a17acf6528d678e4df',
     messagingSenderId: '1026475770254',
     projectId: 'route-mint-app-2026',
     storageBucket: 'route-mint-app-2026.firebasestorage.app',
-    iosBundleId: 'com.example.routeMintApp',
+    iosBundleId: 'com.marvroute.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
