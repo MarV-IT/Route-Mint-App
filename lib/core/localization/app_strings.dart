@@ -3030,12 +3030,12 @@ class AppStrings {
   );
 
   String get notificationTestHint => _value(
-    en: 'If nothing appears, enable notifications for MarV Route in Android settings.',
-    es: 'Si no aparece nada, activa las notificaciones de MarV Route en los ajustes de Android.',
-    fr: "Si rien n'apparaît, activez les notifications de MarV Route dans les réglages Android.",
-    ru: 'Если ничего не появилось, включите уведомления MarV Route в настройках Android.',
-    uk: 'Якщо нічого не зʼявилося, увімкніть сповіщення MarV Route в налаштуваннях Android.',
-    fa: 'اگر چیزی نمایش داده نشد، اعلان‌های MarV Route را در تنظیمات Android فعال کنید.',
+    en: 'If nothing appears, enable notifications for MarV Route in your device settings.',
+    es: 'Si no aparece nada, activa las notificaciones de MarV Route en los ajustes del dispositivo.',
+    fr: "Si rien n'apparaît, activez les notifications de MarV Route dans les réglages de l'appareil.",
+    ru: 'Если ничего не появилось, включите уведомления MarV Route в настройках устройства.',
+    uk: 'Якщо нічого не зʼявилося, увімкніть сповіщення MarV Route в налаштуваннях пристрою.',
+    fa: 'اگر چیزی نمایش داده نشد، اعلان‌های MarV Route را در تنظیمات دستگاه فعال کنید.',
   );
 
   String get trackingSetupWarningTitle => _value(

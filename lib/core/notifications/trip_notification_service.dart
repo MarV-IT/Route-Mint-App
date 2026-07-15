@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart' show Geolocator;
 
 import '../../shared/utils/distance_utils.dart';
 import '../localization/app_strings.dart';
@@ -40,6 +41,10 @@ class TripNotificationService {
     await _ensureAndroidChannel();
   }
 
+  bool get _isApple =>
+      defaultTargetPlatform == TargetPlatform.iOS ||
+      defaultTargetPlatform == TargetPlatform.macOS;
+
   /// Requests the OS notification permission.
   ///
   /// Must be called from within the widget tree (after [runApp]) so the
@@ -48,6 +53,18 @@ class TripNotificationService {
     if (kIsWeb) return null;
     try {
       await initialize();
+      if (_isApple) {
+        return await _plugin
+                .resolvePlatformSpecificImplementation<
+                  IOSFlutterLocalNotificationsPlugin
+                >()
+                ?.requestPermissions(alert: true, badge: true, sound: true) ??
+            await _plugin
+                .resolvePlatformSpecificImplementation<
+                  MacOSFlutterLocalNotificationsPlugin
+                >()
+                ?.requestPermissions(alert: true, badge: true, sound: true);
+      }
       return await _plugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
@@ -65,6 +82,21 @@ class TripNotificationService {
     if (kIsWeb) return null;
     try {
       await initialize();
+      if (_isApple) {
+        final ios = await _plugin
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >()
+            ?.checkPermissions();
+        if (ios != null) return ios.isEnabled;
+        final macos = await _plugin
+            .resolvePlatformSpecificImplementation<
+              MacOSFlutterLocalNotificationsPlugin
+            >()
+            ?.checkPermissions();
+        return macos?.isEnabled;
+      }
+
       final nativeEnabled = await _nativeNotificationsEnabled();
       if (nativeEnabled != null) return nativeEnabled;
 
@@ -84,6 +116,12 @@ class TripNotificationService {
   Future<void> openNotificationSettings() async {
     if (kIsWeb) return;
     try {
+      if (_isApple) {
+        // iOS has no dedicated notification-settings intent; the app's own
+        // settings page contains the notification toggles.
+        await Geolocator.openAppSettings();
+        return;
+      }
       await _settingsChannel.invokeMethod<void>('openNotificationSettings');
     } catch (e) {
       if (kDebugMode) {

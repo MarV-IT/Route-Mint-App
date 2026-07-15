@@ -284,7 +284,8 @@ class _TrackingDiagnosticsScreenState extends State<TrackingDiagnosticsScreen> {
                           Icons.notifications_off_outlined,
                           s.tripSavedNotifications,
                         ),
-                      if (_batteryUnrestricted != true)
+                      if (BatteryOptimizationService.isSupported &&
+                          _batteryUnrestricted != true)
                         _issueLine(
                           Icons.battery_alert_outlined,
                           s.batteryOptimization,
@@ -370,21 +371,24 @@ class _TrackingDiagnosticsScreenState extends State<TrackingDiagnosticsScreen> {
                         label: Text(s.sendTestNotification),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    _statusTile(
-                      icon: Icons.battery_saver_outlined,
-                      label: s.batteryOptimization,
-                      value: _batteryUnrestricted == true
-                          ? s.unrestricted
-                          : s.requiredForScreenOffTracking,
-                      ok: _batteryUnrestricted == true,
-                      trailing: _batteryUnrestricted == true
-                          ? null
-                          : TextButton(
-                              onPressed: _openBatterySettings,
-                              child: Text(s.fixNow),
-                            ),
-                    ),
+                    // Battery optimization exemptions only exist on Android.
+                    if (BatteryOptimizationService.isSupported) ...[
+                      const SizedBox(height: 8),
+                      _statusTile(
+                        icon: Icons.battery_saver_outlined,
+                        label: s.batteryOptimization,
+                        value: _batteryUnrestricted == true
+                            ? s.unrestricted
+                            : s.requiredForScreenOffTracking,
+                        ok: _batteryUnrestricted == true,
+                        trailing: _batteryUnrestricted == true
+                            ? null
+                            : TextButton(
+                                onPressed: _openBatterySettings,
+                                child: Text(s.fixNow),
+                              ),
+                      ),
+                    ],
                   ],
                 ),
               ),
