@@ -796,30 +796,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
                           },
                         ),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: _isDeletingAccount
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Icon(
-                                  Icons.delete_forever_outlined,
-                                  color: Theme.of(context).colorScheme.error,
-                                ),
-                          title: Text(
-                            s.deleteAccount,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                          onTap: _isDeletingAccount
-                              ? null
-                              : _confirmDeleteAccount,
-                        ),
                       ],
                     );
                   }
@@ -1532,6 +1508,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 dense: true,
                 leading: const Icon(Icons.radar_outlined),
                 title: Text(s.foregroundTrackingExplanation),
+              ),
+              // Account deletion lives here rather than next to Sign out: it
+              // is a data right, and this section is collapsed by default so
+              // the destructive action is not one stray tap away.
+              StreamBuilder<User?>(
+                stream: _authService.authStateChanges(),
+                initialData: _authService.currentUser,
+                builder: (context, snapshot) {
+                  final user = snapshot.data ?? _authService.currentUser;
+                  if (user == null) return const SizedBox.shrink();
+                  final errorColor = Theme.of(context).colorScheme.error;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Divider(height: 24),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: _isDeletingAccount
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(
+                                Icons.delete_forever_outlined,
+                                color: errorColor,
+                              ),
+                        title: Text(
+                          s.deleteAccount,
+                          style: TextStyle(color: errorColor),
+                        ),
+                        subtitle: Text(s.deleteAccountSubtitle),
+                        onTap: _isDeletingAccount
+                            ? null
+                            : _confirmDeleteAccount,
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),

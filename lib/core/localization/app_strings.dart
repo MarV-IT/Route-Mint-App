@@ -2726,6 +2726,15 @@ class AppStrings {
     fa: 'حذف حساب کاربری',
   );
 
+  String get deleteAccountSubtitle => _value(
+    en: 'Removes your account, cloud backup and data on this device',
+    es: 'Elimina tu cuenta, la copia en la nube y los datos de este dispositivo',
+    fr: "Supprime votre compte, la sauvegarde cloud et les données de cet appareil",
+    ru: 'Удаляет аккаунт, копию в облаке и данные на этом устройстве',
+    uk: 'Видаляє акаунт, копію в хмарі та дані на цьому пристрої',
+    fa: 'حساب کاربری، نسخه پشتیبان ابری و داده‌های این دستگاه را حذف می‌کند',
+  );
+
   String get deleteAccountConfirmTitle => _value(
     en: 'Delete account permanently?',
     es: '¿Eliminar la cuenta definitivamente?',
