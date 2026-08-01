@@ -243,6 +243,13 @@ class CloudBackupService {
     );
   }
 
+  /// Removes the user's cloud backup. Must run while still signed in, since
+  /// the Firestore rules key the document on the caller's uid.
+  Future<void> deleteBackupForCurrentUser() async {
+    if (_uid == null) throw StateError('Not signed in');
+    await _backupRef.delete();
+  }
+
   Future<bool> hasCloudBackup() async {
     if (_uid == null) return false;
     try {

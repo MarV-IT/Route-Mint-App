@@ -2715,6 +2715,62 @@ class AppStrings {
     fa: 'از سیستم خارج شدید',
   );
 
+  // ─── Account deletion ─────────────────────────────────────────────────────
+
+  String get deleteAccount => _value(
+    en: 'Delete account',
+    es: 'Eliminar cuenta',
+    fr: 'Supprimer le compte',
+    ru: 'Удалить аккаунт',
+    uk: 'Видалити акаунт',
+    fa: 'حذف حساب کاربری',
+  );
+
+  String get deleteAccountConfirmTitle => _value(
+    en: 'Delete account permanently?',
+    es: '¿Eliminar la cuenta definitivamente?',
+    fr: 'Supprimer définitivement le compte ?',
+    ru: 'Удалить аккаунт навсегда?',
+    uk: 'Видалити акаунт назавжди?',
+    fa: 'حساب کاربری برای همیشه حذف شود؟',
+  );
+
+  String get deleteAccountConfirmBody => _value(
+    en: 'This deletes your account, the cloud backup, and every trip, expense and fuel record on this device. This cannot be undone.',
+    es: 'Se eliminarán tu cuenta, la copia de seguridad en la nube y todos los viajes, gastos y registros de combustible de este dispositivo. Esta acción no se puede deshacer.',
+    fr: "Cela supprimera votre compte, la sauvegarde cloud et tous les trajets, dépenses et pleins enregistrés sur cet appareil. Cette action est irréversible.",
+    ru: 'Будут удалены ваш аккаунт, резервная копия в облаке и все поездки, расходы и записи о топливе на этом устройстве. Действие нельзя отменить.',
+    uk: 'Буде видалено ваш акаунт, резервну копію в хмарі та всі поїздки, витрати й записи про пальне на цьому пристрої. Дію неможливо скасувати.',
+    fa: 'با این کار حساب شما، نسخه پشتیبان ابری و همه سفرها، هزینه‌ها و سوخت ذخیره‌شده روی این دستگاه حذف می‌شود. این عمل قابل بازگشت نیست.',
+  );
+
+  String get deleteAccountCta => _value(
+    en: 'Delete permanently',
+    es: 'Eliminar definitivamente',
+    fr: 'Supprimer définitivement',
+    ru: 'Удалить навсегда',
+    uk: 'Видалити назавжди',
+    fa: 'حذف برای همیشه',
+  );
+
+  String get accountDeleted => _value(
+    en: 'Account and data deleted',
+    es: 'Cuenta y datos eliminados',
+    fr: 'Compte et données supprimés',
+    ru: 'Аккаунт и данные удалены',
+    uk: 'Акаунт і дані видалено',
+    fa: 'حساب کاربری و داده‌ها حذف شدند',
+  );
+
+  String get deleteAccountFailed => _value(
+    en: 'Could not delete the account. Sign in again, then retry.',
+    es: 'No se pudo eliminar la cuenta. Vuelve a iniciar sesión e inténtalo de nuevo.',
+    fr: 'Impossible de supprimer le compte. Reconnectez-vous puis réessayez.',
+    ru: 'Не удалось удалить аккаунт. Войдите снова и повторите попытку.',
+    uk: 'Не вдалося видалити акаунт. Увійдіть знову та повторіть спробу.',
+    fa: 'حذف حساب انجام نشد. دوباره وارد شوید و تلاش کنید.',
+  );
+
   // ─── Cloud backup ─────────────────────────────────────────────────────────
 
   String get cloudBackup => _value(

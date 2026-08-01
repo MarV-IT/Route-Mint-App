@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import '../../core/auth/account_deletion_service.dart';
 import '../../core/auth/auth_service.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/preferences/preferences_service.dart';
@@ -67,11 +68,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _cloudBackupService = CloudBackupService();
   final _prefsService = PreferencesService();
   final _authService = AuthService();
+  final _accountDeletionService = AccountDeletionService();
   User? _lastKnownUser;
   bool _isExportingBackup = false;
   bool _isImportingBackup = false;
   bool _isUploadingCloud = false;
   bool _isRestoringCloud = false;
+  bool _isDeletingAccount = false;
   int _cloudRefreshKey = 0;
 
   @override
@@ -433,6 +436,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _confirmDeleteAccount() async {
+    final s = widget.strings;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: Icon(
+          Icons.delete_forever_outlined,
+          color: Theme.of(dialogContext).colorScheme.error,
+        ),
+        title: Text(s.deleteAccountConfirmTitle),
+        content: Text(s.deleteAccountConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(s.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(s.deleteAccountCta),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    await _handleDeleteAccount();
+  }
+
+  Future<void> _handleDeleteAccount() async {
+    setState(() => _isDeletingAccount = true);
+    try {
+      await _accountDeletionService.deleteAccountAndData();
+      _lastKnownUser = null;
+      if (!mounted) return;
+      // Push the wiped state up so the app stops showing the deleted user's
+      // data; AuthGate reacts to the auth stream and returns to sign-in.
+      widget.onPreferencesChanged(UserPreferences.defaults());
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(widget.strings.accountDeleted)));
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[AccountDeletion] failed: $e');
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.strings.deleteAccountFailed)),
+      );
+    } finally {
+      if (mounted) setState(() => _isDeletingAccount = false);
+    }
+  }
+
   Future<void> _handleCloudUpload() async {
     final entitlements = EntitlementService(widget.preferences);
     if (!requireProFeature(
@@ -735,6 +795,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               SnackBar(content: Text(s.signedOut)),
                             );
                           },
+                        ),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: _isDeletingAccount
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.delete_forever_outlined,
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                          title: Text(
+                            s.deleteAccount,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                          onTap: _isDeletingAccount
+                              ? null
+                              : _confirmDeleteAccount,
                         ),
                       ],
                     );

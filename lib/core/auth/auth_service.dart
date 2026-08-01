@@ -178,6 +178,43 @@ class AuthService {
     await _setSessionExpected(false);
   }
 
+  /// Permanently deletes the signed-in Firebase account.
+  ///
+  /// Firebase rejects deletion when the sign-in is older than a few minutes,
+  /// so on `requires-recent-login` we silently re-authenticate with the
+  /// credentials kept in secure storage and retry once.
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) throw StateError('Not signed in');
+
+    try {
+      await user.delete();
+    } on FirebaseAuthException catch (e) {
+      if (e.code != 'requires-recent-login') rethrow;
+      final refreshed = await _reauthenticate();
+      if (refreshed == null) rethrow;
+      await refreshed.delete();
+    }
+
+    _cachedUser = null;
+    await _clearCredentials();
+    await _setSessionExpected(false);
+  }
+
+  Future<User?> _reauthenticate() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    final email = await _secureStorage.read(key: _storedEmailKey);
+    final password = await _secureStorage.read(key: _storedPasswordKey);
+    if (email?.isNotEmpty != true || password?.isNotEmpty != true) return null;
+
+    await user.reauthenticateWithCredential(
+      EmailAuthProvider.credential(email: email!, password: password!),
+    );
+    return _auth.currentUser;
+  }
+
   Future<void> sendPasswordResetEmail(String email) =>
       _auth.sendPasswordResetEmail(email: email);
 
