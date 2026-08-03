@@ -105,6 +105,7 @@ class AutoTripDetectionService {
     if (kDebugMode) {
       debugPrint('[AutoDetection] monitoring started — instance=$hashCode');
     }
+    await TripNotificationService.instance.showAutoDetectionState(active: true);
   }
 
   /// Stops monitoring (and finalises any active trip).
@@ -127,6 +128,8 @@ class AutoTripDetectionService {
         'trackingPoints=${_trackingPoints.length}',
       );
     }
+
+    await TripNotificationService.instance.showAutoDetectionState(active: false);
 
     if (!wasTracking) {
       final saved = await _finishTrip(fromMonitoringBuffer: true);

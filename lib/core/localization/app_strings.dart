@@ -1849,6 +1849,44 @@ class AppStrings {
     fa: 'خطا در ردیابی. لطفاً دوباره امتحان کنید.',
   );
 
+  // ─── Auto detection notifications ─────────────────────────────────────────
+
+  String get autoDetectionStartedTitle => _value(
+    en: 'Auto trip detection on',
+    es: 'Detección automática activada',
+    fr: 'Détection automatique activée',
+    ru: 'Автоопределение поездок включено',
+    uk: 'Авто-виявлення поїздок увімкнено',
+    fa: 'تشخیص خودکار سفر روشن است',
+  );
+
+  String get autoDetectionStartedBody => _value(
+    en: 'Watching for trips. You will be notified when one is saved.',
+    es: 'Buscando viajes. Te avisaremos cuando se guarde uno.',
+    fr: 'Surveillance des trajets. Vous serez averti dès qu’un trajet est enregistré.',
+    ru: 'Идёт отслеживание поездок. Вы получите уведомление, когда поездка сохранится.',
+    uk: 'Стежимо за поїздками. Ви отримаєте сповіщення, коли поїздку буде збережено.',
+    fa: 'در حال پایش سفرها. هنگام ذخیره شدن سفر به شما اطلاع داده می‌شود.',
+  );
+
+  String get autoDetectionStoppedTitle => _value(
+    en: 'Auto trip detection off',
+    es: 'Detección automática desactivada',
+    fr: 'Détection automatique désactivée',
+    ru: 'Автоопределение поездок выключено',
+    uk: 'Авто-виявлення поїздок вимкнено',
+    fa: 'تشخیص خودکار سفر خاموش است',
+  );
+
+  String get autoDetectionStoppedBody => _value(
+    en: 'Trips are no longer detected automatically.',
+    es: 'Los viajes ya no se detectan automáticamente.',
+    fr: 'Les trajets ne sont plus détectés automatiquement.',
+    ru: 'Поездки больше не определяются автоматически.',
+    uk: 'Поїздки більше не визначаються автоматично.',
+    fa: 'سفرها دیگر به‌طور خودکار تشخیص داده نمی‌شوند.',
+  );
+
   String get autoDetectionOff => _value(
     en: 'Off — tap to start watching for trips',
     es: 'Apagado — toca para empezar a detectar viajes',

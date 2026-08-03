@@ -190,6 +190,67 @@ class TripNotificationService {
     }
   }
 
+  /// Alerts the user when automatic trip detection is switched on or off.
+  ///
+  /// The foreground-service notification only says that monitoring is running;
+  /// it appears silently in the shade, so the state change itself is easy to
+  /// miss. This is a normal alert that surfaces the moment it happens.
+  Future<void> showAutoDetectionState({required bool active}) async {
+    if (kIsWeb) return;
+
+    try {
+      await initialize();
+      await _ensureNotificationPermission();
+
+      final prefs = await PreferencesService().loadPreferences();
+      final strings = AppStrings(prefs.language);
+      final title = active
+          ? strings.autoDetectionStartedTitle
+          : strings.autoDetectionStoppedTitle;
+      final body = active
+          ? strings.autoDetectionStartedBody
+          : strings.autoDetectionStoppedBody;
+
+      final nativeShown = await _showNativeNotification(title: title, body: body);
+      if (nativeShown != null) return;
+
+      await _plugin.show(
+        DateTime.now().millisecondsSinceEpoch.remainder(100000),
+        title,
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channelId,
+            _channelName,
+            channelDescription: _channelDescription,
+            importance: Importance.high,
+            priority: Priority.high,
+            channelShowBadge: true,
+            category: AndroidNotificationCategory.status,
+            visibility: NotificationVisibility.public,
+            playSound: true,
+            enableVibration: true,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+          macOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: 'auto_detection',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[TripNotification] auto-detection alert failed: $e');
+      }
+    }
+  }
+
   Future<bool> showTestNotification() async {
     if (kIsWeb) return false;
 

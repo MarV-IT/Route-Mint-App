@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/auth/account_deletion_service.dart';
 import '../../core/auth/auth_service.dart';
 import '../../core/localization/app_strings.dart';
+import '../../core/location/geolocator_tracking_provider.dart';
 import '../../core/preferences/preferences_service.dart';
 import '../../core/preferences/user_preferences.dart';
 import '../../core/subscription/entitlement_service.dart';
@@ -1251,7 +1252,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 subtitle: Text(s.autoTripDetectionDescription),
                 value: widget.preferences.autoTripDetectionEnabled,
-                onChanged: (value) {
+                onChanged: (value) async {
                   if (value &&
                       !requireProFeature(
                         context: context,
@@ -1259,6 +1260,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         allowed: entitlements.canUseAutoDetection,
                       )) {
                     return;
+                  }
+                  // Turning the setting off has to stop the running monitor as
+                  // well, otherwise its foreground-service notification keeps
+                  // claiming detection is active.
+                  if (!value && appAutoDetectionService.isMonitoring) {
+                    await appAutoDetectionService.stopMonitoring();
                   }
                   final updated = widget.preferences.copyWith(
                     autoTripDetectionEnabled: value,
