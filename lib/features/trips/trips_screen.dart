@@ -7,6 +7,7 @@ import 'edit_trip_screen.dart';
 import 'models/trip.dart';
 import 'services/trip_service.dart';
 import 'trip_insights.dart';
+import 'trip_purpose.dart';
 
 enum _PeriodFilter { all, thisMonth, lastMonth }
 
@@ -454,10 +455,10 @@ class _TripsScreenState extends State<TripsScreen> {
               ],
 
               // ── Business purpose ──────────────────────────────────────
-              if (trip.businessPurpose != null) ...[
+              if (displayBusinessPurpose(trip, s) case final purpose?) ...[
                 const SizedBox(height: 4),
                 Text(
-                  trip.businessPurpose!,
+                  purpose,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: cs.onSurfaceVariant,
                     fontStyle: FontStyle.italic,
@@ -557,12 +558,7 @@ class _TripsScreenState extends State<TripsScreen> {
     final resolved = trip.copyWith(
       category: category,
       platformName: category == 'business' ? suggestion : null,
-      businessPurpose:
-          category == 'business' &&
-              trip.businessPurpose == null &&
-              suggestion != null
-          ? widget.strings.platformBusinessTrip(suggestion)
-          : trip.businessPurpose,
+      // The purpose is derived at display time, so nothing is stored here.
       reviewStatus: TripReviewStatus.reviewed,
     );
     await _tripService.updateTrip(resolved);
@@ -677,12 +673,7 @@ class _QuickReviewScreenState extends State<_QuickReviewScreen> {
     final updated = trip.copyWith(
       category: category,
       platformName: category == 'business' ? suggestion : null,
-      businessPurpose:
-          category == 'business' &&
-              trip.businessPurpose == null &&
-              suggestion != null
-          ? widget.strings.platformBusinessTrip(suggestion)
-          : trip.businessPurpose,
+      // The purpose is derived at display time, so nothing is stored here.
       reviewStatus: TripReviewStatus.reviewed,
     );
     await widget.tripService.updateTrip(updated);

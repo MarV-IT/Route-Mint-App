@@ -10,6 +10,7 @@ import '../work_mode/models/work_shift.dart';
 import '../work_mode/models/work_mode_settings.dart';
 import '../work_mode/services/work_mode_service.dart';
 import 'trip_insights.dart';
+import 'trip_purpose.dart';
 
 const _kOtherPlatform = 'Other';
 const List<String> _kDefaultPlatforms = [
@@ -81,7 +82,14 @@ class _EditTripScreenState extends State<EditTripScreen> {
     _tollsController = TextEditingController(
       text: t.tollsExpense > 0 ? _fmtNum(t.tollsExpense) : '',
     );
-    _purposeController = TextEditingController(text: t.businessPurpose ?? '');
+    // Generated wording saved by older versions is left out of the field so
+    // editing a trip does not write that frozen translation back.
+    final storedPurpose = t.businessPurpose;
+    _purposeController = TextEditingController(
+      text: storedPurpose == null || isGeneratedPurpose(storedPurpose, t.platformName)
+          ? ''
+          : storedPurpose,
+    );
     _notesController = TextEditingController(text: t.notes ?? '');
     _customPlatformController = TextEditingController();
     _selectedCategory = t.category;

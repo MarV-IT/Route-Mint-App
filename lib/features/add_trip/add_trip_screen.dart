@@ -160,15 +160,11 @@ class _AddTripScreenState extends State<AddTripScreen> {
 
       final distanceKm = toKilometers(distance, widget.unit);
 
+      // Only the user's own wording is stored. A generated purpose would
+      // freeze the current language into the trip record, so it is derived
+      // when the trip is displayed instead.
       final purposeText = _purposeController.text.trim();
-      String? resolvedPurpose;
-      if (purposeText.isNotEmpty) {
-        resolvedPurpose = purposeText;
-      } else if (resolvedCategory == 'business') {
-        resolvedPurpose = resolvedPlatform != null
-            ? widget.strings.platformBusinessTrip(resolvedPlatform)
-            : widget.strings.businessTrip;
-      }
+      final String? resolvedPurpose = purposeText.isEmpty ? null : purposeText;
 
       final resolvedNotes = _notesController.text.trim().isEmpty
           ? null
