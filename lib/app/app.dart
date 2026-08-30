@@ -17,6 +17,19 @@ enum AppUnit { kilometers, miles }
 
 enum AppLanguage { english, spanish, french, russian, ukrainian, dari }
 
+extension AppLanguageDisplay on AppLanguage {
+  /// Name written in the language's own script. Someone who ended up in a
+  /// language they cannot read needs to spot their own to switch back.
+  String get nativeName => switch (this) {
+    AppLanguage.english => 'English',
+    AppLanguage.spanish => 'Español',
+    AppLanguage.french => 'Français',
+    AppLanguage.russian => 'Русский',
+    AppLanguage.ukrainian => 'Українська',
+    AppLanguage.dari => 'Dari',
+  };
+}
+
 enum AppThemeMode { system, light, dark }
 
 class RouteMintApp extends StatefulWidget {
@@ -217,6 +230,7 @@ class _RouteMintAppState extends State<RouteMintApp> {
       return OnboardingScreen(
         strings: strings,
         onComplete: _onOnboardingComplete,
+        onLanguageChanged: _changeLanguage,
       );
     }
 

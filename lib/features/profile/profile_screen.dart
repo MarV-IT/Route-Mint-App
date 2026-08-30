@@ -1145,34 +1145,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   labelText: s.languageLabel,
                   border: const OutlineInputBorder(),
                 ),
-                // Language names are in their own native script —
-                // a user who picked the wrong language needs their own
-                // language visible to switch back.
-                items: const [
-                  DropdownMenuItem(
-                    value: AppLanguage.english,
-                    child: Text('English'),
-                  ),
-                  DropdownMenuItem(
-                    value: AppLanguage.spanish,
-                    child: Text('Español'),
-                  ),
-                  DropdownMenuItem(
-                    value: AppLanguage.french,
-                    child: Text('Français'),
-                  ),
-                  DropdownMenuItem(
-                    value: AppLanguage.russian,
-                    child: Text('Русский'),
-                  ),
-                  DropdownMenuItem(
-                    value: AppLanguage.ukrainian,
-                    child: Text('Українська'),
-                  ),
-                  DropdownMenuItem(
-                    value: AppLanguage.dari,
-                    child: Text('Dari'),
-                  ),
+                // Names come from AppLanguage.nativeName: each is in its own
+                // script so a user who picked the wrong language can find
+                // their way back.
+                items: [
+                  for (final language in AppLanguage.values)
+                    DropdownMenuItem(
+                      value: language,
+                      child: Text(language.nativeName),
+                    ),
                 ],
                 onChanged: widget.onLanguageChanged,
               ),

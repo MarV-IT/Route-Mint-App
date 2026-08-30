@@ -8,22 +8,25 @@ import '../work_mode/models/work_shift.dart';
 import '../work_mode/models/work_mode_settings.dart';
 import '../work_mode/services/work_mode_service.dart';
 
-/// Three-step first-launch onboarding flow.
+/// Four-step first-launch onboarding flow.
 ///
-/// Step 1: Choose country (sets country + currency + unit defaults).
-/// Step 2: Confirm / change distance unit.
-/// Step 3: Add first work shift (skippable).
+/// Step 1: Choose language (the rest of onboarding follows it immediately).
+/// Step 2: Choose country (sets country + currency + unit defaults).
+/// Step 3: Confirm / change distance unit.
+/// Step 4: Add first work shift (skippable).
 ///
 /// On completion, saves [UserPreferences] with onboardingCompleted = true
 /// and calls [onComplete] so the root widget can rebuild into the main app.
 class OnboardingScreen extends StatefulWidget {
   final AppStrings strings;
   final ValueChanged<UserPreferences> onComplete;
+  final ValueChanged<AppLanguage?> onLanguageChanged;
 
   const OnboardingScreen({
     super.key,
     required this.strings,
     required this.onComplete,
+    required this.onLanguageChanged,
   });
 
   @override
@@ -41,7 +44,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _currencyCode = 'USD';
 
   int _currentPage = 0;
-  static const int _totalPages = 3;
+  static const int _totalPages = 4;
 
   @override
   void dispose() {
@@ -56,6 +59,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
     );
+  }
+
+  void _onLanguageSelected(AppLanguage language) {
+    // Applied straight away so the remaining steps are read in the language
+    // the user just picked.
+    widget.onLanguageChanged(language);
+    _nextPage();
   }
 
   void _onCountrySelected(Country country) {
@@ -137,6 +147,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (i) => setState(() => _currentPage = i),
                 children: [
+                  _LanguageStep(
+                    strings: s,
+                    selectedLanguage: s.currentLanguage,
+                    onSelected: _onLanguageSelected,
+                  ),
                   _CountryStep(strings: s, onSelected: _onCountrySelected),
                   _UnitStep(
                     strings: s,
@@ -154,7 +169,108 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-// ─── Step 1: Country ──────────────────────────────────────────────────────────
+// ─── Step 1: Language ─────────────────────────────────────────────────────────
+
+class _LanguageStep extends StatelessWidget {
+  final AppStrings strings;
+  final AppLanguage selectedLanguage;
+  final ValueChanged<AppLanguage> onSelected;
+
+  const _LanguageStep({
+    required this.strings,
+    required this.selectedLanguage,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(32, 24, 32, 32),
+      children: [
+        Icon(Icons.translate, size: 40, color: cs.primary),
+        const SizedBox(height: 20),
+        // The brand name carries the welcome here: the user has not chosen a
+        // language yet, so a translated greeting could be unreadable.
+        Text(
+          'MarV Route',
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          strings.chooseYourLanguage,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: 28),
+        for (final language in AppLanguage.values) ...[
+          _LanguageTile(
+            label: language.nativeName,
+            selected: language == selectedLanguage,
+            onTap: () => onSelected(language),
+          ),
+          const SizedBox(height: 12),
+        ],
+      ],
+    );
+  }
+}
+
+class _LanguageTile extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _LanguageTile({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: selected ? cs.primary : cs.outline,
+            width: selected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            Icon(
+              selected ? Icons.check_circle : Icons.arrow_forward_ios,
+              size: selected ? 20 : 16,
+              color: selected ? cs.primary : cs.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Step 2: Country ──────────────────────────────────────────────────────────
 
 class _CountryStep extends StatelessWidget {
   final AppStrings strings;

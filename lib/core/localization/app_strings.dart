@@ -1795,6 +1795,15 @@ class AppStrings {
     fa: 'مجوز موقعیت مکانی لازم است',
   );
 
+  String get turnOnLocation => _value(
+    en: 'Turn on location',
+    es: 'Activar ubicación',
+    fr: 'Activer la localisation',
+    ru: 'Включить геолокацию',
+    uk: 'Увімкнути геолокацію',
+    fa: 'روشن کردن موقعیت مکانی',
+  );
+
   String get locationServicesDisabled => _value(
     en: 'Location services disabled',
     es: 'Servicios de ubicación desactivados',
@@ -2288,6 +2297,15 @@ class AppStrings {
     ru: 'Добро пожаловать в MarV Route',
     uk: 'Ласкаво просимо до MarV Route',
     fa: 'به MarV Route خوش آمدید',
+  );
+
+  String get chooseYourLanguage => _value(
+    en: 'Choose your language',
+    es: 'Elige tu idioma',
+    fr: 'Choisissez votre langue',
+    ru: 'Выберите язык',
+    uk: 'Оберіть мову',
+    fa: 'زبان خود را انتخاب کنید',
   );
 
   String get chooseYourCountry => _value(
