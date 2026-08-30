@@ -24,23 +24,51 @@ class AutoDetectionCard extends StatefulWidget {
   State<AutoDetectionCard> createState() => _AutoDetectionCardState();
 }
 
-class _AutoDetectionCardState extends State<AutoDetectionCard> {
+class _AutoDetectionCardState extends State<AutoDetectionCard>
+    with WidgetsBindingObserver {
   final _permissionService = LocationPermissionService();
   bool _isBusy = false;
+  bool _servicesDisabled = false;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     appAutoDetectionService.onTripSaved = _onTripSaved;
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     if (appAutoDetectionService.onTripSaved == _onTripSaved) {
       appAutoDetectionService.onTripSaved = null;
     }
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Location services are switched on in system settings, so the stale
+    // warning has to clear when the user comes back.
+    if (state == AppLifecycleState.resumed && _servicesDisabled) {
+      _refreshServiceState();
+    }
+  }
+
+  Future<void> _refreshServiceState() async {
+    final enabled = await _permissionService.isServiceEnabled();
+    if (!mounted || !enabled) return;
+    setState(() {
+      _servicesDisabled = false;
+      _errorMessage = null;
+    });
+  }
+
+  /// Sends the user to the system location screen. Called instead of a start
+  /// attempt while services are off, since starting can only fail.
+  Future<void> _openLocationSettings() async {
+    await _permissionService.openLocationSettings();
   }
 
   void _onTripSaved() {
@@ -63,6 +91,7 @@ class _AutoDetectionCardState extends State<AutoDetectionCard> {
       if (!mounted) return;
       switch (status) {
         case LocationPermissionStatus.granted:
+          setState(() => _servicesDisabled = false);
           await TripNotificationService.instance.requestPermission();
           await appAutoDetectionService.startMonitoring();
         case LocationPermissionStatus.denied:
@@ -71,9 +100,13 @@ class _AutoDetectionCardState extends State<AutoDetectionCard> {
             () => _errorMessage = widget.strings.locationPermissionRequired,
           );
         case LocationPermissionStatus.serviceDisabled:
-          setState(
-            () => _errorMessage = widget.strings.locationServicesDisabled,
-          );
+          // Detection cannot start at all, so take the user straight to the
+          // system switch rather than leaving a dead-end warning.
+          setState(() {
+            _servicesDisabled = true;
+            _errorMessage = widget.strings.locationServicesDisabled;
+          });
+          await _openLocationSettings();
       }
     } catch (_) {
       if (mounted) setState(() => _errorMessage = widget.strings.trackingError);
@@ -135,6 +168,8 @@ class _AutoDetectionCardState extends State<AutoDetectionCard> {
         if (widget.compact) {
           final toggleAutoDetection = !autoEnabled || _isBusy
               ? null
+              : _servicesDisabled
+              ? _openLocationSettings
               : isActive
               ? _handleStop
               : _handleStart;
@@ -249,7 +284,13 @@ class _AutoDetectionCardState extends State<AutoDetectionCard> {
                   ),
                 if (autoEnabled) ...[
                   const SizedBox(height: 12),
-                  if (isActive)
+                  if (_servicesDisabled)
+                    FilledButton.icon(
+                      onPressed: _openLocationSettings,
+                      icon: const Icon(Icons.my_location),
+                      label: Text(strings.turnOnLocation),
+                    )
+                  else if (isActive)
                     FilledButton.icon(
                       onPressed: _isBusy ? null : _handleStop,
                       icon: const Icon(Icons.stop),

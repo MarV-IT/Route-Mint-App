@@ -8,6 +8,12 @@ enum LocationPermissionStatus {
 }
 
 class LocationPermissionService {
+  Future<bool> isServiceEnabled() => Geolocator.isLocationServiceEnabled();
+
+  /// Opens the system screen where location services are switched on. The app
+  /// cannot enable them itself, so this is the only way to get the user there.
+  Future<void> openLocationSettings() => Geolocator.openLocationSettings();
+
   Future<LocationPermissionStatus> checkAndRequest() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return LocationPermissionStatus.serviceDisabled;
