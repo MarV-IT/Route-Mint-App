@@ -11,6 +11,7 @@ import '../work_mode/models/work_mode_settings.dart';
 import '../work_mode/services/work_mode_service.dart';
 import 'trip_insights.dart';
 import 'trip_purpose.dart';
+import '../../shared/utils/safe_scroll_padding.dart';
 
 const _kOtherPlatform = 'Other';
 const List<String> _kDefaultPlatforms = [
@@ -86,7 +87,9 @@ class _EditTripScreenState extends State<EditTripScreen> {
     // editing a trip does not write that frozen translation back.
     final storedPurpose = t.businessPurpose;
     _purposeController = TextEditingController(
-      text: storedPurpose == null || isGeneratedPurpose(storedPurpose, t.platformName)
+      text:
+          storedPurpose == null ||
+              isGeneratedPurpose(storedPurpose, t.platformName)
           ? ''
           : storedPurpose,
     );
@@ -462,7 +465,7 @@ class _EditTripScreenState extends State<EditTripScreen> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: safeScrollPadding(context),
         children: [
           if (widget.trip.reviewStatus == TripReviewStatus.needsReview) ...[
             Container(

@@ -8,6 +8,7 @@ import '../../shared/utils/distance_utils.dart';
 import 'add_fuel_entry_screen.dart';
 import 'models/fuel_entry.dart';
 import 'services/fuel_service.dart';
+import '../../shared/utils/safe_scroll_padding.dart';
 
 const double _litersPerGallon = 3.785411784;
 
@@ -137,7 +138,7 @@ class _FuelLogScreenState extends State<FuelLogScreen> {
                       ],
                     )
                   : ListView.separated(
-                      padding: const EdgeInsets.all(16),
+                      padding: safeScrollPadding(context),
                       itemCount: _entries.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 10),
                       itemBuilder: (context, index) {

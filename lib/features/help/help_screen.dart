@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/localization/app_strings.dart';
+import '../../shared/utils/safe_scroll_padding.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key, required this.strings});
@@ -50,7 +51,7 @@ class HelpScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(strings.howItWorks)),
       body: ListView.separated(
-        padding: const EdgeInsets.all(16),
+        padding: safeScrollPadding(context),
         itemCount: sections.length,
         separatorBuilder: (_, _) => const SizedBox(height: 10),
         itemBuilder: (context, index) {

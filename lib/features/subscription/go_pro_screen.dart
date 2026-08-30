@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/localization/app_strings.dart';
+import '../../shared/utils/safe_scroll_padding.dart';
 
 class GoProScreen extends StatelessWidget {
   const GoProScreen({super.key, required this.strings});
@@ -21,7 +22,7 @@ class GoProScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(strings.goPro)),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: safeScrollPadding(context),
         children: [
           Card(
             elevation: 0,

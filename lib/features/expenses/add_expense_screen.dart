@@ -6,6 +6,7 @@ import '../../core/preferences/user_preferences.dart';
 import '../../shared/utils/currency_utils.dart';
 import 'models/expense_entry.dart';
 import 'services/expense_service.dart';
+import '../../shared/utils/safe_scroll_padding.dart';
 
 const _parking = 'parking';
 const _tolls = 'tolls';
@@ -134,7 +135,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(s.addExpense)),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: safeScrollPadding(context),
         children: [
           Text(s.expenseType, style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),

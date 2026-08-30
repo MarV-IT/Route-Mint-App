@@ -9,6 +9,7 @@ import '../../core/location/geolocator_tracking_provider.dart';
 import '../../core/notifications/trip_notification_service.dart';
 import '../trips/models/trip.dart';
 import '../trips/services/trip_service.dart';
+import '../../shared/utils/safe_scroll_padding.dart';
 
 class TrackingDiagnosticsScreen extends StatefulWidget {
   const TrackingDiagnosticsScreen({super.key, required this.strings});
@@ -194,7 +195,7 @@ class _TrackingDiagnosticsScreenState extends State<TrackingDiagnosticsScreen> {
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: safeScrollPadding(context),
           children: [
             Card(
               elevation: 0,

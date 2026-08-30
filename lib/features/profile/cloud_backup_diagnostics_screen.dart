@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/backup/cloud_backup_service.dart';
+import '../../shared/utils/safe_scroll_padding.dart';
 
 class CloudBackupDiagnosticsScreen extends StatelessWidget {
   const CloudBackupDiagnosticsScreen({super.key});
@@ -77,7 +78,7 @@ class _DiagnosticsBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: safeScrollPadding(context),
       itemCount: rows.length,
       separatorBuilder: (context, index) => const Divider(height: 1),
       itemBuilder: (context, index) {

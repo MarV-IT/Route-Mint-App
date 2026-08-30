@@ -6,6 +6,7 @@ import '../../core/preferences/user_preferences.dart';
 import '../../shared/utils/distance_utils.dart';
 import 'models/fuel_entry.dart';
 import 'services/fuel_service.dart';
+import '../../shared/utils/safe_scroll_padding.dart';
 
 const double _litersPerGallon = 3.785411784;
 
@@ -179,7 +180,7 @@ class _AddFuelEntryScreenState extends State<AddFuelEntryScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(_isEditing ? s.editFuel : s.addFuel)),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: safeScrollPadding(context),
         children: [
           OutlinedButton.icon(
             onPressed: _pickDate,

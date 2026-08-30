@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/auth/auth_service.dart';
+import '../../shared/utils/safe_scroll_padding.dart';
 
 class AuthDiagnosticsScreen extends StatefulWidget {
   const AuthDiagnosticsScreen({super.key});
@@ -48,7 +49,7 @@ class _AuthDiagnosticsScreenState extends State<AuthDiagnosticsScreen> {
           }
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: safeScrollPadding(context),
             children: [
               Text(
                 'Use this screen after closing and reopening the app. It shows whether Firebase restored the saved account.',

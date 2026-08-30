@@ -5,6 +5,7 @@ import '../../shared/utils/currency_utils.dart';
 import 'models/work_shift.dart';
 import 'models/work_mode_settings.dart';
 import 'services/work_mode_service.dart';
+import '../../shared/utils/safe_scroll_padding.dart';
 
 class WorkModeScreen extends StatefulWidget {
   final AppStrings strings;
@@ -82,7 +83,7 @@ class _WorkModeScreenState extends State<WorkModeScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: safeScrollPadding(context),
               children: [
                 // ── Enable toggle ──────────────────────────────────────────
                 Card(
