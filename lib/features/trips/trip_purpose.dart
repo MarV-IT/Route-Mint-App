@@ -16,7 +16,9 @@ String? displayBusinessPurpose(Trip trip, AppStrings strings) {
   final stored = trip.businessPurpose?.trim();
   final platform = trip.platformName?.trim();
 
-  if (stored != null && stored.isNotEmpty && !isGeneratedPurpose(stored, platform)) {
+  if (stored != null &&
+      stored.isNotEmpty &&
+      !isGeneratedPurpose(stored, platform)) {
     return stored;
   }
 

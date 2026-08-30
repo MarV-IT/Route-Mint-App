@@ -17,9 +17,7 @@ class TripTile extends StatelessWidget {
     return Card(
       elevation: 0,
       child: ListTile(
-        leading: const CircleAvatar(
-          child: Icon(Icons.map),
-        ),
+        leading: const CircleAvatar(child: Icon(Icons.map)),
         title: Text(title),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),

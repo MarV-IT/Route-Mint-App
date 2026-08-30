@@ -63,7 +63,9 @@ class _AddressAutocompleteFieldState extends State<AddressAutocompleteField> {
       if (permission == LocationPermission.always ||
           permission == LocationPermission.whileInUse) {
         final pos = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.low,
+          ),
         ).timeout(const Duration(seconds: 5));
         _userLatitude = pos.latitude;
         _userLongitude = pos.longitude;
@@ -125,8 +127,7 @@ class _AddressAutocompleteFieldState extends State<AddressAutocompleteField> {
     widget.controller.removeListener(_onTextChanged);
     widget.controller.value = TextEditingValue(
       text: suggestion.fullAddress,
-      selection:
-          TextSelection.collapsed(offset: suggestion.fullAddress.length),
+      selection: TextSelection.collapsed(offset: suggestion.fullAddress.length),
     );
     setState(() {
       _suggestions = [];
@@ -171,8 +172,8 @@ class _AddressAutocompleteFieldState extends State<AddressAutocompleteField> {
             child: Text(
               widget.strings.noAddressSuggestions,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         if (_suggestions.isNotEmpty)
@@ -209,8 +210,9 @@ class _AddressAutocompleteFieldState extends State<AddressAutocompleteField> {
                                 children: [
                                   Text(
                                     s.title,
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
                                   ),
                                   if (s.subtitle != null) ...[
                                     const SizedBox(height: 2),

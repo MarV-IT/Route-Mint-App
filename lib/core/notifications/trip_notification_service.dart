@@ -211,7 +211,10 @@ class TripNotificationService {
           ? strings.autoDetectionStartedBody
           : strings.autoDetectionStoppedBody;
 
-      final nativeShown = await _showNativeNotification(title: title, body: body);
+      final nativeShown = await _showNativeNotification(
+        title: title,
+        body: body,
+      );
       if (nativeShown != null) return;
 
       await _plugin.show(

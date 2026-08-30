@@ -45,11 +45,13 @@ class TripMapPreview extends StatelessWidget {
         .toList(growable: false);
     final useTrackedRoute = validRoute.length >= 2;
 
-    final polylinePoints =
-        useTrackedRoute ? validRoute : (anchorPoints.length >= 2 ? anchorPoints : <LatLng>[]);
+    final polylinePoints = useTrackedRoute
+        ? validRoute
+        : (anchorPoints.length >= 2 ? anchorPoints : <LatLng>[]);
     final fitCoords = useTrackedRoute ? validRoute : anchorPoints;
 
-    final hasPolyline = polylinePoints.length >= 2 &&
+    final hasPolyline =
+        polylinePoints.length >= 2 &&
         !_samePoint(polylinePoints.first, polylinePoints.last);
 
     return ClipRRect(

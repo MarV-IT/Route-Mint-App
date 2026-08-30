@@ -477,8 +477,7 @@ class TodayScreen extends StatefulWidget {
   State<TodayScreen> createState() => _TodayScreenState();
 }
 
-class _TodayScreenState extends State<TodayScreen>
-    with WidgetsBindingObserver {
+class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
   final _taxService = TaxService();
   final _tripService = TripService();
   final _workModeService = WorkModeService();

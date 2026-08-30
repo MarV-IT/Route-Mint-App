@@ -129,7 +129,9 @@ class AutoTripDetectionService {
       );
     }
 
-    await TripNotificationService.instance.showAutoDetectionState(active: false);
+    await TripNotificationService.instance.showAutoDetectionState(
+      active: false,
+    );
 
     if (!wasTracking) {
       final saved = await _finishTrip(fromMonitoringBuffer: true);
