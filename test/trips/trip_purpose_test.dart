@@ -77,11 +77,17 @@ void main() {
     });
 
     test('shows nothing for a personal trip with no stored purpose', () {
-      expect(displayBusinessPurpose(tripWith(category: 'personal'), english), isNull);
+      expect(
+        displayBusinessPurpose(tripWith(category: 'personal'), english),
+        isNull,
+      );
     });
 
     test('keeps a user purpose on a personal trip', () {
-      final trip = tripWith(category: 'personal', businessPurpose: 'Moving day');
+      final trip = tripWith(
+        category: 'personal',
+        businessPurpose: 'Moving day',
+      );
 
       expect(displayBusinessPurpose(trip, english), 'Moving day');
     });

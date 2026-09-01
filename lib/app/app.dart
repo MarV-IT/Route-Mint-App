@@ -7,7 +7,9 @@ import 'package:flutter/material.dart';
 import '../core/backup/cloud_backup_service.dart';
 import '../core/backup/daily_cloud_backup_service.dart';
 import '../core/localization/app_strings.dart';
+import '../core/location/geolocator_tracking_provider.dart';
 import '../core/preferences/user_preferences.dart';
+import '../core/subscription/entitlement_service.dart';
 import '../core/preferences/preferences_service.dart';
 import '../features/auth/auth_gate.dart';
 import '../features/onboarding/onboarding_screen.dart';
@@ -87,6 +89,32 @@ class _RouteMintAppState extends State<RouteMintApp> {
     });
     _scheduleDailyCloudBackup(prefs);
     _checkDailyCloudBackup(prefs);
+    _restoreAutoDetection(prefs);
+  }
+
+  /// Picks up after an app kill: saves the trip that was still being recorded,
+  /// and brings monitoring back if it was running.
+  ///
+  /// The OS reclaims the app during long trips — routine while a delivery app
+  /// holds the foreground — and detection has no way back on its own.
+  Future<void> _restoreAutoDetection(UserPreferences prefs) async {
+    try {
+      final recovered = await appAutoDetectionService.recoverInterruptedTrip();
+      if (recovered && mounted) {
+        setState(() => _dataRefreshKey++);
+      }
+
+      if (!prefs.autoTripDetectionEnabled) return;
+      if (!EntitlementService(prefs).canUseAutoDetection) return;
+      if (appAutoDetectionService.isMonitoring) return;
+      if (!await appAutoDetectionService.wasMonitoringBeforeRestart()) return;
+
+      await appAutoDetectionService.startMonitoring();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[AutoDetection] restore after restart skipped: $e');
+      }
+    }
   }
 
   Future<void> _checkDailyCloudBackup([UserPreferences? preferences]) async {

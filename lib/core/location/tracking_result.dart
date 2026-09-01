@@ -26,6 +26,29 @@ class TrackingPoint {
 
   bool isAccurateEnough(double maxAccuracyMeters) =>
       accuracyMeters.isFinite && accuracyMeters <= maxAccuracyMeters;
+
+  Map<String, dynamic> toJson() => {
+    'latitude': latitude,
+    'longitude': longitude,
+    'accuracyMeters': accuracyMeters,
+    'timestamp': timestamp.toIso8601String(),
+  };
+
+  static TrackingPoint? fromJson(Map<String, dynamic> json) {
+    final latitude = json['latitude'];
+    final longitude = json['longitude'];
+    final accuracy = json['accuracyMeters'];
+    final timestamp = DateTime.tryParse(json['timestamp'] as String? ?? '');
+    if (latitude is! num || longitude is! num || timestamp == null) {
+      return null;
+    }
+    return TrackingPoint(
+      latitude: latitude.toDouble(),
+      longitude: longitude.toDouble(),
+      accuracyMeters: accuracy is num ? accuracy.toDouble() : double.infinity,
+      timestamp: timestamp,
+    );
+  }
 }
 
 class TrackingResult {
@@ -66,6 +89,11 @@ class TrackingResult {
     double minimumSegmentDistanceMeters = defaultMinimumSegmentDistanceMeters,
     int? rawPointCountOverride,
     int? droppedPointCountOverride,
+    // Distance already travelled but no longer represented in [points],
+    // because older points were dropped to cap memory use. Without it a long
+    // trip would report only the distance of the tail it still holds.
+    double carriedDistanceKm = 0,
+    DateTime? startedAtOverride,
   }) {
     final rawPoints = points.toList(growable: false);
     final validPoints = rawPoints
@@ -84,7 +112,7 @@ class TrackingResult {
       return null;
     }
 
-    final distanceKm = calculateDistanceKm(routePoints);
+    final distanceKm = calculateDistanceKm(routePoints) + carriedDistanceKm;
     if (distanceKm < minimumDistanceKm) {
       return null;
     }
@@ -92,7 +120,7 @@ class TrackingResult {
     return TrackingResult(
       points: routePoints,
       distanceKm: distanceKm,
-      startedAt: validPoints.first.timestamp,
+      startedAt: startedAtOverride ?? validPoints.first.timestamp,
       endedAt: validPoints.last.timestamp,
       rawPointCount: rawPointCountOverride ?? rawPoints.length,
       validPointCount: validPoints.length,

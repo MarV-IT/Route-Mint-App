@@ -8,6 +8,7 @@ import '../../features/trips/services/trip_service.dart';
 import '../../features/work_mode/services/work_mode_service.dart';
 import '../notifications/trip_notification_service.dart';
 import 'reverse_geocoding_service.dart';
+import 'trip_recovery_store.dart';
 
 enum AutoDetectionState { idle, monitoring, tracking }
 
@@ -87,11 +88,17 @@ class AutoTripDetectionService {
   TrackingPoint? _lastMovementPoint;
   int _tripRawPointCount = 0;
   int _tripDroppedPointCount = 0;
+  // Distance of points already dropped from _trackingPoints, and when the
+  // trip actually began — both survive buffer trimming.
+  double _carriedDistanceKm = 0;
+  DateTime? _tripStartedAt;
+  DateTime? _lastCheckpointAt;
 
   // ── Services ────────────────────────────────────────────────────────────
   final _tripService = TripService();
   final _geocodingService = ReverseGeocodingService();
   final _workModeService = WorkModeService();
+  final _recoveryStore = TripRecoveryStore();
 
   // ── Public API ──────────────────────────────────────────────────────────
 
@@ -105,8 +112,51 @@ class AutoTripDetectionService {
     if (kDebugMode) {
       debugPrint('[AutoDetection] monitoring started — instance=$hashCode');
     }
+    await _recoveryStore.setMonitoring(true);
     await TripNotificationService.instance.showAutoDetectionState(active: true);
   }
+
+  /// Saves a trip that was still being recorded when the app last stopped.
+  ///
+  /// Detection keeps the active trip in memory, so an OS kill during a long
+  /// block used to lose it silently. Call this on startup to finish it.
+  /// Returns true when such a trip was found and saved.
+  Future<bool> recoverInterruptedTrip() async {
+    final interrupted = await _recoveryStore.loadCheckpoint();
+    if (interrupted == null) return false;
+
+    // Cleared first: a checkpoint that cannot produce a trip must not be
+    // retried on every launch.
+    await _recoveryStore.clearCheckpoint();
+
+    final result = TrackingResult.fromPoints(
+      interrupted.points,
+      maxAccuracyMeters: _maxAccuracyMeters,
+      minimumDistanceKm: _minimumAutoTripDistanceKm,
+      minimumSegmentDistanceMeters: _autoRouteSegmentMeters,
+      rawPointCountOverride: interrupted.rawPointCount,
+      droppedPointCountOverride: interrupted.droppedPointCount,
+      carriedDistanceKm: interrupted.carriedDistanceKm,
+      startedAtOverride: interrupted.startedAt,
+    );
+    if (result == null) {
+      if (kDebugMode) {
+        debugPrint('[AutoDetection] interrupted trip too short to save');
+      }
+      return false;
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+        '[AutoDetection] recovering interrupted trip — '
+        '${result.distanceKm.toStringAsFixed(2)} km',
+      );
+    }
+    return _saveTripFromResult(result);
+  }
+
+  /// Whether detection was running when the app last stopped.
+  Future<bool> wasMonitoringBeforeRestart() => _recoveryStore.wasMonitoring();
 
   /// Stops monitoring (and finalises any active trip).
   Future<AutoStopOutcome> stopMonitoring() async {
@@ -121,6 +171,7 @@ class AutoTripDetectionService {
     _subscription = null;
     _stopPositionPolling();
     await sub?.cancel();
+    await _recoveryStore.setMonitoring(false);
 
     if (kDebugMode) {
       debugPrint(
@@ -405,9 +456,10 @@ class AutoTripDetectionService {
 
     _trackingPoints.add(point);
     if (_trackingPoints.length > _maxTrackingPoints) {
-      _trackingPoints.removeRange(0, _maxTrackingPoints ~/ 4);
+      _dropOldestPoints();
     }
     _publishActiveRoute();
+    unawaited(_checkpointIfDue());
 
     if (kDebugMode) {
       debugPrint(
@@ -459,6 +511,52 @@ class AutoTripDetectionService {
     }
   }
 
+  /// Frees the oldest points once the buffer is full, banking the distance
+  /// they covered first.
+  ///
+  /// The buffer holds roughly 10 km at the rate GPS fixes arrive, so a long
+  /// delivery block overruns it many times. Dropping the points outright used
+  /// to drop their mileage with them and report only the tail of the trip.
+  void _dropOldestPoints() {
+    final removeCount = _maxTrackingPoints ~/ 4;
+    // Includes the first point that survives, so the seam between the dropped
+    // stretch and the kept one is counted exactly once.
+    final dropped = _trackingPoints.sublist(0, removeCount + 1);
+    _carriedDistanceKm += TrackingResult.calculateDistanceKm(
+      dropped,
+      minimumSegmentDistanceMeters: _autoRouteSegmentMeters,
+    );
+    _trackingPoints.removeRange(0, removeCount);
+
+    if (kDebugMode) {
+      debugPrint(
+        '[AutoDetection] trimmed $removeCount points — '
+        'carried=${_carriedDistanceKm.toStringAsFixed(2)} km',
+      );
+    }
+  }
+
+  Future<void> _checkpointIfDue() async {
+    final startedAt = _tripStartedAt;
+    if (startedAt == null || state != AutoDetectionState.tracking) return;
+
+    final now = DateTime.now();
+    final last = _lastCheckpointAt;
+    if (last != null &&
+        now.difference(last) < TripRecoveryStore.checkpointInterval) {
+      return;
+    }
+    _lastCheckpointAt = now;
+
+    await _recoveryStore.saveCheckpoint(
+      points: List<TrackingPoint>.from(_trackingPoints),
+      carriedDistanceKm: _carriedDistanceKm,
+      startedAt: startedAt,
+      rawPointCount: _tripRawPointCount,
+      droppedPointCount: _tripDroppedPointCount,
+    );
+  }
+
   // ── State transitions ───────────────────────────────────────────────────
 
   void _transitionToTracking() {
@@ -476,6 +574,11 @@ class AutoTripDetectionService {
       ..addAll(_monitoringBuffer);
     _tripRawPointCount = _trackingPoints.length;
     _tripDroppedPointCount = 0;
+    _carriedDistanceKm = 0;
+    _lastCheckpointAt = null;
+    _tripStartedAt = _trackingPoints.isNotEmpty
+        ? _trackingPoints.first.timestamp
+        : DateTime.now();
     _publishActiveRoute();
     _lastMovementPoint = _trackingPoints.isNotEmpty
         ? _trackingPoints.last
@@ -529,8 +632,15 @@ class AutoTripDetectionService {
         ? _monitoringBuffer
         : _trackingPoints;
     final points = List<TrackingPoint>.from(sourcePoints);
+    final carriedDistanceKm = fromMonitoringBuffer ? 0.0 : _carriedDistanceKm;
+    final startedAt = fromMonitoringBuffer ? null : _tripStartedAt;
     _trackingPoints.clear();
+    _carriedDistanceKm = 0;
+    _tripStartedAt = null;
+    _lastCheckpointAt = null;
     activeRouteNotifier.value = const [];
+    // The trip is being written now, so the crash-recovery copy is obsolete.
+    await _recoveryStore.clearCheckpoint();
 
     if (kDebugMode) {
       debugPrint('[AutoDetection] _finishTrip — ${points.length} points');
@@ -547,6 +657,8 @@ class AutoTripDetectionService {
       droppedPointCountOverride: fromMonitoringBuffer
           ? 0
           : _tripDroppedPointCount,
+      carriedDistanceKm: carriedDistanceKm,
+      startedAtOverride: startedAt,
     );
 
     if (result == null) {
@@ -578,6 +690,11 @@ class AutoTripDetectionService {
       );
     }
 
+    return _saveTripFromResult(result);
+  }
+
+  /// Writes a finished [TrackingResult] into the trip log for review.
+  Future<bool> _saveTripFromResult(TrackingResult result) async {
     final start = result.points.first;
     final end = result.points.last;
 
@@ -656,6 +773,9 @@ class AutoTripDetectionService {
   }
 
   void _resetAll() {
+    _carriedDistanceKm = 0;
+    _tripStartedAt = null;
+    _lastCheckpointAt = null;
     _monitoringBuffer.clear();
     _consecutiveSpeedCount = 0;
     _trackingPoints.clear();
