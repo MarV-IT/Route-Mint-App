@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/localization/app_strings.dart';
 import '../../shared/utils/distance_utils.dart';
+import '../../shared/utils/number_input.dart';
 import '../../shared/widgets/address_autocomplete_field.dart';
 import '../../shared/widgets/trip_map_preview.dart';
 import '../../app/app.dart';
@@ -179,7 +180,7 @@ class _EditTripScreenState extends State<EditTripScreen> {
       value.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
 
   double _parseExpense(String text) {
-    final value = double.tryParse(text.trim()) ?? 0;
+    final value = parseDecimalInput(text) ?? 0;
     return value < 0 ? 0 : value;
   }
 
@@ -351,7 +352,7 @@ class _EditTripScreenState extends State<EditTripScreen> {
       return;
     }
 
-    final distance = double.tryParse(_distanceController.text.trim());
+    final distance = parseDecimalInput(_distanceController.text);
     if (distance == null || distance <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(widget.strings.distanceMustBePositive)),
@@ -594,6 +595,8 @@ class _EditTripScreenState extends State<EditTripScreen> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
+            isExpanded: true,
+            itemHeight: null,
             initialValue: _selectedCategory,
             items: [
               DropdownMenuItem(value: 'business', child: Text(s.business)),
@@ -614,6 +617,8 @@ class _EditTripScreenState extends State<EditTripScreen> {
           if (_selectedCategory == 'business') ...[
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
+              isExpanded: true,
+              itemHeight: null,
               initialValue: _selectedPlatform,
               hint: Text(s.selectPlatform),
               items: [

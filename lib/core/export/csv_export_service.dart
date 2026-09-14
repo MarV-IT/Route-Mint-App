@@ -1,7 +1,8 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:printing/printing.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../app/app.dart';
 import '../../features/fuel/models/fuel_entry.dart';
@@ -70,6 +71,17 @@ class CsvExportService {
     final csv = rows.map(_encodeCsvRow).join('\r\n');
     final bytes = Uint8List.fromList(utf8.encode(csv));
 
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS)) {
+      await FilePicker.platform.saveFile(
+        bytes: bytes,
+        fileName: _buildFilename(startDate, endDate),
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      );
+      return;
+    }
     await Printing.sharePdf(
       bytes: bytes,
       filename: _buildFilename(startDate, endDate),

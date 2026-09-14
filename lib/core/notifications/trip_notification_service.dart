@@ -10,6 +10,9 @@ import '../preferences/preferences_service.dart';
 class TripNotificationService {
   TripNotificationService._();
 
+  @visibleForTesting
+  TripNotificationService.forTesting();
+
   static final TripNotificationService instance = TripNotificationService._();
 
   static const _channelId = 'trip_alerts_v2';
@@ -33,12 +36,25 @@ class TripNotificationService {
   Future<void> _initialize() async {
     const settings = InitializationSettings(
       android: AndroidInitializationSettings('app_notification_icon'),
-      iOS: DarwinInitializationSettings(),
-      macOS: DarwinInitializationSettings(),
+      iOS: DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      ),
+      macOS: DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      ),
     );
 
-    await _plugin.initialize(settings);
-    await _ensureAndroidChannel();
+    try {
+      await _plugin.initialize(settings);
+      await _ensureAndroidChannel();
+    } catch (_) {
+      _initialization = null;
+      rethrow;
+    }
   }
 
   bool get _isApple =>
@@ -88,13 +104,15 @@ class TripNotificationService {
               IOSFlutterLocalNotificationsPlugin
             >()
             ?.checkPermissions();
-        if (ios != null) return ios.isEnabled;
+        if (ios != null) return ios.isEnabled || ios.isProvisionalEnabled;
         final macos = await _plugin
             .resolvePlatformSpecificImplementation<
               MacOSFlutterLocalNotificationsPlugin
             >()
             ?.checkPermissions();
-        return macos?.isEnabled;
+        return macos == null
+            ? null
+            : macos.isEnabled || macos.isProvisionalEnabled;
       }
 
       final nativeEnabled = await _nativeNotificationsEnabled();
@@ -135,7 +153,7 @@ class TripNotificationService {
 
     try {
       await initialize();
-      await _ensureNotificationPermission();
+      if (await areNotificationsEnabled() == false) return;
 
       final prefs = await PreferencesService().loadPreferences();
       final strings = AppStrings(prefs.language);
@@ -200,7 +218,7 @@ class TripNotificationService {
 
     try {
       await initialize();
-      await _ensureNotificationPermission();
+      if (await areNotificationsEnabled() == false) return;
 
       final prefs = await PreferencesService().loadPreferences();
       final strings = AppStrings(prefs.language);
@@ -259,7 +277,7 @@ class TripNotificationService {
 
     try {
       await initialize();
-      await _ensureNotificationPermission();
+      if (!await _ensureNotificationPermission()) return false;
 
       final prefs = await PreferencesService().loadPreferences();
       final strings = AppStrings(prefs.language);
@@ -332,14 +350,15 @@ class TripNotificationService {
     _channelReady = true;
   }
 
-  Future<void> _ensureNotificationPermission() async {
+  Future<bool> _ensureNotificationPermission() async {
     final enabled = await areNotificationsEnabled();
-    if (enabled == true || enabled == null) return;
+    if (enabled == true || enabled == null) return true;
 
     final granted = await requestPermission();
     if (kDebugMode && granted == false) {
-      debugPrint('[TripNotification] notifications are disabled by Android');
+      debugPrint('[TripNotification] notifications are disabled');
     }
+    return granted == true;
   }
 
   Future<bool?> _nativeNotificationsEnabled() async {
@@ -361,6 +380,7 @@ class TripNotificationService {
     required String title,
     required String body,
   }) async {
+    if (defaultTargetPlatform != TargetPlatform.android) return null;
     try {
       return await _settingsChannel.invokeMethod<bool>('showNotification', {
         'title': title,

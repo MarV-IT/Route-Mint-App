@@ -5,7 +5,7 @@
     <!-- Notifications: required on Android 13+ for trip-saved alerts -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- Location: used only for foreground trip tracking while the app is active -->
+    <!-- Location: tracking starts while visible and continues in a foreground service -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 

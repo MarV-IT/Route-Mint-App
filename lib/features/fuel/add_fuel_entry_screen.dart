@@ -4,6 +4,7 @@ import '../../app/app.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/preferences/user_preferences.dart';
 import '../../shared/utils/distance_utils.dart';
+import '../../shared/utils/number_input.dart';
 import 'models/fuel_entry.dart';
 import 'services/fuel_service.dart';
 import '../../shared/utils/safe_scroll_padding.dart';
@@ -90,7 +91,7 @@ class _AddFuelEntryScreenState extends State<AddFuelEntryScreen> {
       lastDate: DateTime.now().add(const Duration(days: 1)),
       initialDate: _date,
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     setState(() {
       _date = DateTime(
         picked.year,
@@ -116,11 +117,18 @@ class _AddFuelEntryScreenState extends State<AddFuelEntryScreen> {
     if (_isSaving) return;
 
     final volumeText = _volumeController.text.trim();
-    final volume = volumeText.isEmpty ? null : double.tryParse(volumeText);
-    final totalCost = double.tryParse(_costController.text.trim()) ?? 0;
-    final odometer = _odometerController.text.trim().isEmpty
-        ? null
-        : double.tryParse(_odometerController.text.trim());
+    final volume = parseDecimalInput(volumeText);
+    final costText = _costController.text.trim();
+    final parsedCost = parseDecimalInput(costText);
+    final totalCost = parsedCost ?? 0;
+    final odometerText = _odometerController.text.trim();
+    final odometer = parseDecimalInput(odometerText);
+
+    if ((costText.isNotEmpty && parsedCost == null) ||
+        (odometerText.isNotEmpty && odometer == null)) {
+      _showError(widget.strings.fillRequiredFields);
+      return;
+    }
 
     if (volumeText.isNotEmpty && (volume == null || volume <= 0)) {
       _showError(widget.strings.fuelAmountMustBePositive);

@@ -21,8 +21,10 @@ class AutoTripDetectionService {
   AutoTripDetectionService({
     required AutoTripStreamFactory monitoringStreamFactory,
     AutoTripPositionProvider? initialPositionProvider,
+    TripService? tripService,
   }) : _monitoringStreamFactory = monitoringStreamFactory,
-       _initialPositionProvider = initialPositionProvider;
+       _initialPositionProvider = initialPositionProvider,
+       _tripService = tripService ?? TripService();
 
   final AutoTripStreamFactory _monitoringStreamFactory;
   final AutoTripPositionProvider? _initialPositionProvider;
@@ -79,6 +81,10 @@ class AutoTripDetectionService {
   StreamSubscription<TrackingPoint>? _subscription;
   Timer? _positionPollingTimer;
   bool _isPollingPosition = false;
+  int _session = 0;
+  Future<void>? _starting;
+  Future<AutoStopOutcome>? _stopping;
+  Future<bool>? _finishingTrip;
   final List<TrackingPoint> _monitoringBuffer = [];
   int _consecutiveSpeedCount = 0;
 
@@ -95,7 +101,7 @@ class AutoTripDetectionService {
   DateTime? _lastCheckpointAt;
 
   // ── Services ────────────────────────────────────────────────────────────
-  final _tripService = TripService();
+  final TripService _tripService;
   final _geocodingService = ReverseGeocodingService();
   final _workModeService = WorkModeService();
   final _recoveryStore = TripRecoveryStore();
@@ -103,17 +109,62 @@ class AutoTripDetectionService {
   // ── Public API ──────────────────────────────────────────────────────────
 
   Future<void> startMonitoring() async {
+    final stopping = _stopping;
+    if (stopping != null) await stopping;
+    final starting = _starting;
+    if (starting != null) return starting;
     if (state != AutoDetectionState.idle) return;
+
+    final operation = _startMonitoring();
+    _starting = operation;
+    try {
+      await operation;
+    } finally {
+      if (identical(_starting, operation)) _starting = null;
+    }
+  }
+
+  Future<void> _startMonitoring() async {
     _resetAll();
-    _subscription = _monitoringStreamFactory().listen(_onPositionPoint);
+    final session = ++_session;
     stateNotifier.value = AutoDetectionState.monitoring;
-    await _addInitialMonitoringPoint();
+    try {
+      _subscription = _monitoringStreamFactory().listen(
+        (point) {
+          if (session == _session) _onPositionPoint(point);
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          if (kDebugMode) {
+            debugPrint('[AutoDetection] location stream failed: $error');
+          }
+          unawaited(_handleStreamEnd(session));
+        },
+        onDone: () => unawaited(_handleStreamEnd(session)),
+      );
+    } catch (_) {
+      stateNotifier.value = AutoDetectionState.idle;
+      rethrow;
+    }
+    await _addInitialMonitoringPoint(session);
+    if (session != _session || !isMonitoring) return;
     _startPositionPolling();
     if (kDebugMode) {
       debugPrint('[AutoDetection] monitoring started — instance=$hashCode');
     }
     await _recoveryStore.setMonitoring(true);
+    if (session != _session || !isMonitoring) return;
     await TripNotificationService.instance.showAutoDetectionState(active: true);
+  }
+
+  Future<void> _handleStreamEnd(int session) async {
+    if (session != _session || !isMonitoring) return;
+    try {
+      await stopMonitoring();
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('[AutoDetection] saving interrupted stream failed: $error');
+      }
+    }
   }
 
   /// Saves a trip that was still being recorded when the app last stopped.
@@ -122,12 +173,9 @@ class AutoTripDetectionService {
   /// block used to lose it silently. Call this on startup to finish it.
   /// Returns true when such a trip was found and saved.
   Future<bool> recoverInterruptedTrip() async {
+    if (isMonitoring) return false;
     final interrupted = await _recoveryStore.loadCheckpoint();
     if (interrupted == null) return false;
-
-    // Cleared first: a checkpoint that cannot produce a trip must not be
-    // retried on every launch.
-    await _recoveryStore.clearCheckpoint();
 
     final result = TrackingResult.fromPoints(
       interrupted.points,
@@ -140,6 +188,7 @@ class AutoTripDetectionService {
       startedAtOverride: interrupted.startedAt,
     );
     if (result == null) {
+      await _recoveryStore.clearCheckpoint(startedAt: interrupted.startedAt);
       if (kDebugMode) {
         debugPrint('[AutoDetection] interrupted trip too short to save');
       }
@@ -152,17 +201,25 @@ class AutoTripDetectionService {
         '${result.distanceKm.toStringAsFixed(2)} km',
       );
     }
-    return _saveTripFromResult(result);
+    final saved = await _saveTripFromResult(result);
+    await _recoveryStore.clearCheckpoint(startedAt: interrupted.startedAt);
+    return saved;
   }
 
   /// Whether detection was running when the app last stopped.
   Future<bool> wasMonitoringBeforeRestart() => _recoveryStore.wasMonitoring();
 
   /// Stops monitoring (and finalises any active trip).
-  Future<AutoStopOutcome> stopMonitoring() async {
+  Future<AutoStopOutcome> stopMonitoring() {
+    return _stopping ??= _stopMonitoring().whenComplete(() => _stopping = null);
+  }
+
+  Future<AutoStopOutcome> _stopMonitoring() async {
     if (state == AutoDetectionState.idle) return AutoStopOutcome.stopped;
 
     final wasTracking = state == AutoDetectionState.tracking;
+    ++_session;
+    _starting = null;
 
     // Flip state first so stale stream callbacks are ignored.
     stateNotifier.value = AutoDetectionState.idle;
@@ -172,6 +229,8 @@ class AutoTripDetectionService {
     _stopPositionPolling();
     await sub?.cancel();
     await _recoveryStore.setMonitoring(false);
+    final finishingTrip = _finishingTrip;
+    final alreadySaved = finishingTrip != null && await finishingTrip;
 
     if (kDebugMode) {
       debugPrint(
@@ -187,7 +246,9 @@ class AutoTripDetectionService {
     if (!wasTracking) {
       final saved = await _finishTrip(fromMonitoringBuffer: true);
       _resetAll();
-      return saved ? AutoStopOutcome.tripSaved : AutoStopOutcome.noMovement;
+      return saved || alreadySaved
+          ? AutoStopOutcome.tripSaved
+          : AutoStopOutcome.noMovement;
     }
 
     final saved = await _finishTrip();
@@ -198,6 +259,14 @@ class AutoTripDetectionService {
   // ── Monitoring stream handler ───────────────────────────────────────────
 
   void _onPositionPoint(TrackingPoint point) {
+    final points = state == AutoDetectionState.tracking
+        ? _trackingPoints
+        : _monitoringBuffer;
+    // Current-position polling can finish after a newer stream fix, and both
+    // mobile platforms can deliver the same cached fix more than once.
+    if (points.isNotEmpty && !point.timestamp.isAfter(points.last.timestamp)) {
+      return;
+    }
     switch (state) {
       case AutoDetectionState.monitoring:
         _onMonitoringPoint(point);
@@ -353,14 +422,18 @@ class AutoTripDetectionService {
     return outsideCount >= _startOutsideAnchorPoints;
   }
 
-  Future<void> _addInitialMonitoringPoint() async {
+  Future<void> _addInitialMonitoringPoint(int session) async {
     final provider = _initialPositionProvider;
     if (provider == null || state != AutoDetectionState.monitoring) return;
 
     try {
       final point = await provider();
-      if (point == null || state != AutoDetectionState.monitoring) return;
-      _onMonitoringPoint(point);
+      if (point == null ||
+          session != _session ||
+          state != AutoDetectionState.monitoring) {
+        return;
+      }
+      _onPositionPoint(point);
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[AutoDetection] initial getCurrentPosition failed: $e');
@@ -396,21 +469,21 @@ class AutoTripDetectionService {
     }
 
     _isPollingPosition = true;
+    final session = _session;
     try {
       final point = await provider();
-      if (point == null || state == AutoDetectionState.idle) return;
-
-      if (state == AutoDetectionState.monitoring) {
-        _onMonitoringPoint(point);
-      } else if (state == AutoDetectionState.tracking) {
-        _onTrackingPoint(point);
+      if (point == null ||
+          session != _session ||
+          state == AutoDetectionState.idle) {
+        return;
       }
+      _onPositionPoint(point);
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[AutoDetection] polling getCurrentPosition failed: $e');
       }
     } finally {
-      _isPollingPosition = false;
+      if (session == _session) _isPollingPosition = false;
     }
   }
 
@@ -586,6 +659,7 @@ class AutoTripDetectionService {
     _lastMovementTime = _lastMovementPoint?.timestamp ?? DateTime.now();
 
     stateNotifier.value = AutoDetectionState.tracking;
+    unawaited(_checkpointIfDue());
 
     // Keep the existing foreground location stream alive. Starting a new
     // location foreground service while the screen is off can be throttled by
@@ -611,16 +685,17 @@ class AutoTripDetectionService {
 
     // Flip to monitoring first to block re-entry from additional GPS points.
     stateNotifier.value = AutoDetectionState.monitoring;
-
-    await _finishTrip();
-
-    // Continue monitoring on the same foreground stream unless stopMonitoring()
-    // was called in the meantime.
-    if (state == AutoDetectionState.monitoring) {
-      _resetMonitoringBuffers();
+    _resetMonitoringBuffers();
+    final operation = _finishTrip();
+    _finishingTrip = operation;
+    try {
+      await operation;
+    } catch (error) {
       if (kDebugMode) {
-        debugPrint('[AutoDetection] resumed monitoring after auto-stop');
+        debugPrint('[AutoDetection] auto-stop save failed: $error');
       }
+    } finally {
+      if (identical(_finishingTrip, operation)) _finishingTrip = null;
     }
   }
 
@@ -634,13 +709,26 @@ class AutoTripDetectionService {
     final points = List<TrackingPoint>.from(sourcePoints);
     final carriedDistanceKm = fromMonitoringBuffer ? 0.0 : _carriedDistanceKm;
     final startedAt = fromMonitoringBuffer ? null : _tripStartedAt;
+    final rawPointCount = fromMonitoringBuffer
+        ? points.length
+        : _tripRawPointCount;
+    final droppedPointCount = fromMonitoringBuffer ? 0 : _tripDroppedPointCount;
     _trackingPoints.clear();
     _carriedDistanceKm = 0;
     _tripStartedAt = null;
     _lastCheckpointAt = null;
     activeRouteNotifier.value = const [];
-    // The trip is being written now, so the crash-recovery copy is obsolete.
-    await _recoveryStore.clearCheckpoint();
+    // Keep a final recovery copy until the trip has been persisted.
+    final checkpointStart = startedAt ?? points.firstOrNull?.timestamp;
+    if (checkpointStart != null) {
+      await _recoveryStore.saveCheckpoint(
+        points: points,
+        carriedDistanceKm: carriedDistanceKm,
+        startedAt: checkpointStart,
+        rawPointCount: rawPointCount,
+        droppedPointCount: droppedPointCount,
+      );
+    }
 
     if (kDebugMode) {
       debugPrint('[AutoDetection] _finishTrip — ${points.length} points');
@@ -651,17 +739,16 @@ class AutoTripDetectionService {
       maxAccuracyMeters: _maxAccuracyMeters,
       minimumDistanceKm: _minimumAutoTripDistanceKm,
       minimumSegmentDistanceMeters: _autoRouteSegmentMeters,
-      rawPointCountOverride: fromMonitoringBuffer
-          ? points.length
-          : _tripRawPointCount,
-      droppedPointCountOverride: fromMonitoringBuffer
-          ? 0
-          : _tripDroppedPointCount,
+      rawPointCountOverride: rawPointCount,
+      droppedPointCountOverride: droppedPointCount,
       carriedDistanceKm: carriedDistanceKm,
       startedAtOverride: startedAt,
     );
 
     if (result == null) {
+      if (checkpointStart != null) {
+        await _recoveryStore.clearCheckpoint(startedAt: checkpointStart);
+      }
       if (kDebugMode) {
         if (points.isEmpty) {
           debugPrint('[AutoDetection] result=null — no accurate points');
@@ -690,7 +777,9 @@ class AutoTripDetectionService {
       );
     }
 
-    return _saveTripFromResult(result);
+    final saved = await _saveTripFromResult(result);
+    await _recoveryStore.clearCheckpoint(startedAt: checkpointStart);
+    return saved;
   }
 
   /// Writes a finished [TrackingResult] into the trip log for review.
@@ -703,7 +792,9 @@ class AutoTripDetectionService {
       _reverseGeocodeSafely(end.latitude, end.longitude),
     ]);
 
-    final tripId = DateTime.now().millisecondsSinceEpoch.toString();
+    // A restart between saving and checkpoint cleanup must not add the trip
+    // or its odometer distance twice.
+    final tripId = 'auto_${result.startedAt.microsecondsSinceEpoch}';
     final workSettings = await _workModeService.loadSettings();
     final matchedShift = _workModeService.matchingShiftAt(
       workSettings,

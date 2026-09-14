@@ -21,12 +21,12 @@ final AutoTripDetectionService appAutoDetectionService =
 Future<TrackingPoint?> _geolocatorCurrentPosition() async {
   final pos = await Geolocator.getCurrentPosition(
     locationSettings: _currentPositionSettings(),
-  ).timeout(const Duration(seconds: 15));
+  );
   return TrackingPoint(
     latitude: pos.latitude,
     longitude: pos.longitude,
     accuracyMeters: pos.accuracy,
-    timestamp: DateTime.now(),
+    timestamp: pos.timestamp,
   );
 }
 
@@ -35,12 +35,19 @@ LocationSettings _currentPositionSettings() {
     return AndroidSettings(
       accuracy: LocationAccuracy.bestForNavigation,
       distanceFilter: 0,
+      timeLimit: const Duration(seconds: 15),
     );
   }
   if (Platform.isIOS) {
-    return AppleSettings(accuracy: LocationAccuracy.bestForNavigation);
+    return AppleSettings(
+      accuracy: LocationAccuracy.bestForNavigation,
+      timeLimit: const Duration(seconds: 15),
+    );
   }
-  return const LocationSettings(accuracy: LocationAccuracy.bestForNavigation);
+  return const LocationSettings(
+    accuracy: LocationAccuracy.bestForNavigation,
+    timeLimit: Duration(seconds: 15),
+  );
 }
 
 /// Background updates require the `location` UIBackgroundModes entry in
@@ -84,7 +91,7 @@ Stream<TrackingPoint> geolocatorMonitoringStream() {
       latitude: pos.latitude,
       longitude: pos.longitude,
       accuracyMeters: pos.accuracy,
-      timestamp: DateTime.now(),
+      timestamp: pos.timestamp,
     ),
   );
 }
@@ -119,7 +126,7 @@ Stream<TrackingPoint> geolocatorTrackingStream() {
       latitude: pos.latitude,
       longitude: pos.longitude,
       accuracyMeters: pos.accuracy,
-      timestamp: DateTime.now(),
+      timestamp: pos.timestamp,
     ),
   );
 }

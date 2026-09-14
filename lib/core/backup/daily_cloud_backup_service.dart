@@ -36,7 +36,7 @@ class DailyCloudBackupService {
       59,
     );
     if (current.isBefore(todayBackup)) return todayBackup;
-    return todayBackup.add(const Duration(days: 1));
+    return DateTime(current.year, current.month, current.day + 1, 23, 59);
   }
 
   bool isDue(UserPreferences preferences, [DateTime? now]) {
@@ -52,7 +52,7 @@ class DailyCloudBackupService {
       59,
     );
     final dueFor = current.isBefore(todayBackup)
-        ? todayBackup.subtract(const Duration(days: 1))
+        ? DateTime(current.year, current.month, current.day - 1, 23, 59)
         : todayBackup;
     final lastBackup = preferences.lastAutomaticCloudBackupAt;
     return lastBackup == null || lastBackup.isBefore(dueFor);
@@ -63,7 +63,10 @@ class DailyCloudBackupService {
 
     try {
       await _cloudBackupService.uploadBackupForCurrentUser();
-      final updated = preferences.copyWith(
+      // An upload can wait for connectivity while the user edits settings.
+      // Merge the completion time into the latest saved preferences.
+      final current = await _preferencesService.loadPreferences();
+      final updated = current.copyWith(
         lastAutomaticCloudBackupAt: DateTime.now(),
       );
       await _preferencesService.savePreferences(updated);

@@ -247,10 +247,23 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
       builder: (context, autoState, _) {
         final autoIsActive = autoState != AutoDetectionState.idle;
 
-        return ValueListenableBuilder<bool>(
-          valueListenable: appTrackingService.isTrackingNotifier,
-          builder: (context, isTracking, _) {
+        return ListenableBuilder(
+          listenable: Listenable.merge([
+            appTrackingService.isTrackingNotifier,
+            appTrackingService.hasPendingTripNotifier,
+          ]),
+          builder: (context, _) {
+            final isTracking = appTrackingService.isTracking;
+            final canStop =
+                isTracking || appTrackingService.hasPendingTripNotifier.value;
+            final stopLabel = isTracking
+                ? strings.stopTracking
+                : strings.saveTripButton;
             final (statusText, statusColor) = switch (true) {
+              _ when canStop && !isTracking => (
+                strings.trackingError,
+                colorScheme.error,
+              ),
               _ when !autoEnabled => (
                 strings.enableAutoDetectionFirst,
                 colorScheme.onSurfaceVariant,
@@ -290,23 +303,23 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
                             color: isTracking ? colorScheme.primary : null,
                           ),
                           const Spacer(),
-                          if (autoEnabled)
+                          if (autoEnabled || canStop)
                             Tooltip(
-                              message: isTracking
-                                  ? strings.stopTracking
+                              message: canStop
+                                  ? stopLabel
                                   : strings.startTracking,
                               child: IconButton.filledTonal(
                                 visualDensity: VisualDensity.compact,
                                 onPressed:
-                                    (isTracking
+                                    (canStop
                                         ? _isBusy
                                         : (autoIsActive || _isBusy))
                                     ? null
-                                    : isTracking
+                                    : canStop
                                     ? _handleStop
                                     : _handleStart,
                                 icon: Icon(
-                                  isTracking ? Icons.stop : Icons.gps_fixed,
+                                  canStop ? Icons.stop : Icons.gps_fixed,
                                   size: 18,
                                 ),
                               ),
@@ -352,9 +365,11 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
                           color: isTracking ? colorScheme.primary : null,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          strings.foregroundTracking,
-                          style: Theme.of(context).textTheme.titleMedium,
+                        Expanded(
+                          child: Text(
+                            strings.foregroundTracking,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                         ),
                       ],
                     ),
@@ -365,13 +380,13 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
                         context,
                       ).textTheme.bodyMedium?.copyWith(color: statusColor),
                     ),
-                    if (autoEnabled) ...[
+                    if (autoEnabled || canStop) ...[
                       const SizedBox(height: 12),
-                      if (isTracking)
+                      if (canStop)
                         FilledButton.icon(
                           onPressed: _isBusy ? null : _handleStop,
                           icon: const Icon(Icons.stop),
-                          label: Text(strings.stopTracking),
+                          label: Text(stopLabel),
                           style: FilledButton.styleFrom(
                             backgroundColor: colorScheme.error,
                             foregroundColor: colorScheme.onError,

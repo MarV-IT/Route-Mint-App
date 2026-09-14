@@ -32,9 +32,17 @@ class ForegroundTripTrackingService {
   bool _isPollingPosition = false;
   int _rawPointCount = 0;
   int _droppedPointCount = 0;
+  double _carriedDistanceKm = 0;
+  DateTime? _startedAt;
+  int _session = 0;
+  Future<bool>? _starting;
+  Future<(TrackingResult?, TrackingFailureReason?)>? _stopping;
 
   // Listenable so the UI (card, cross-tab banner) can react without polling.
   final ValueNotifier<bool> isTrackingNotifier = ValueNotifier(false);
+  // Kept true if the OS ends the GPS stream, so the UI can still save the
+  // recorded route instead of offering to start over and discard it.
+  final ValueNotifier<bool> hasPendingTripNotifier = ValueNotifier(false);
   final ValueNotifier<List<TrackingPoint>> activeRouteNotifier = ValueNotifier(
     const [],
   );
@@ -46,8 +54,25 @@ class ForegroundTripTrackingService {
   Future<bool> startTracking({
     TrackingPointStreamFactory? pointStreamFactory,
   }) async {
+    final stopping = _stopping;
+    if (stopping != null) await stopping;
+    final starting = _starting;
+    if (starting != null) return starting;
     if (isTracking) return true;
+    if (hasPendingTripNotifier.value) return false;
 
+    final operation = _startTracking(pointStreamFactory: pointStreamFactory);
+    _starting = operation;
+    try {
+      return await operation;
+    } finally {
+      if (identical(_starting, operation)) _starting = null;
+    }
+  }
+
+  Future<bool> _startTracking({
+    TrackingPointStreamFactory? pointStreamFactory,
+  }) async {
     final factory = pointStreamFactory ?? _pointStreamFactory;
     if (factory == null) {
       if (kDebugMode) {
@@ -67,7 +92,35 @@ class ForegroundTripTrackingService {
     _points.clear();
     _rawPointCount = 0;
     _droppedPointCount = 0;
+    _carriedDistanceKm = 0;
+    _startedAt = null;
     activeRouteNotifier.value = const [];
+    final session = ++_session;
+
+    // Subscribe while the app is still in the foreground. Waiting for the
+    // first fix before starting Android's foreground service can miss that
+    // opportunity if the user immediately locks the screen.
+    try {
+      _subscription = factory().listen(
+        (point) {
+          if (session == _session && isTracking) _recordPoint(point);
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          if (kDebugMode) {
+            debugPrint('[ForegroundTracking] stream error: $error');
+          }
+          _streamEnded(session);
+        },
+        onDone: () => _streamEnded(session),
+      );
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('[ForegroundTracking] stream start failed: $error');
+      }
+      return false;
+    }
+    isTrackingNotifier.value = true;
+    _startPositionPolling();
 
     // Seed the session with the current position immediately so we have at
     // least one point even before the stream's distanceFilter threshold fires.
@@ -75,30 +128,9 @@ class ForegroundTripTrackingService {
     if (positionProvider != null) {
       try {
         final initial = await positionProvider();
+        if (session != _session || !isTracking) return false;
         if (initial != null) {
-          _rawPointCount++;
-          if (initial.isAccurateEnough(maxAccuracyMeters)) {
-            _points.add(initial);
-            activeRouteNotifier.value = List<TrackingPoint>.unmodifiable(
-              _points,
-            );
-            if (kDebugMode) {
-              debugPrint(
-                '[ForegroundTracking] initial point added — '
-                'lat=${initial.latitude.toStringAsFixed(5)}, '
-                'lon=${initial.longitude.toStringAsFixed(5)}, '
-                'accuracy=${initial.accuracyMeters.toStringAsFixed(1)} m',
-              );
-            }
-          } else {
-            _droppedPointCount++;
-            if (kDebugMode) {
-              debugPrint(
-                '[ForegroundTracking] initial point accuracy too low — '
-                '${initial.accuracyMeters.toStringAsFixed(1)} m (max=$maxAccuracyMeters m)',
-              );
-            }
-          }
+          _recordPoint(initial);
         }
       } catch (e) {
         // Initial position failure is non-fatal; the stream will still
@@ -111,36 +143,30 @@ class ForegroundTripTrackingService {
       }
     }
 
-    _subscription = factory().listen(
-      _recordPoint,
-      onError: (Object error, StackTrace stackTrace) {
-        if (kDebugMode) {
-          debugPrint('[ForegroundTracking] stream error: $error');
-        }
-      },
-    );
-    _startPositionPolling();
-
-    isTrackingNotifier.value = true;
     if (kDebugMode) {
       debugPrint(
         '[ForegroundTracking] tracking started — stream subscription created',
       );
     }
-    return true;
+    return session == _session && isTracking;
   }
 
-  Future<(TrackingResult?, TrackingFailureReason?)> stopTracking() async {
+  Future<(TrackingResult?, TrackingFailureReason?)> stopTracking() {
+    return _stopping ??= _stopTracking().whenComplete(() => _stopping = null);
+  }
+
+  Future<(TrackingResult?, TrackingFailureReason?)> _stopTracking() async {
     final subscription = _subscription;
+    ++_session;
+    _starting = null;
     _subscription = null;
     _stopPositionPolling();
     isTrackingNotifier.value = false; // update UI immediately, before await
 
-    await _addStopPosition();
-
     if (subscription != null) {
       await subscription.cancel();
     }
+    if (subscription != null || _points.isNotEmpty) await _addStopPosition();
 
     if (kDebugMode) {
       debugPrint(
@@ -154,6 +180,8 @@ class ForegroundTripTrackingService {
       maxAccuracyMeters: maxAccuracyMeters,
       rawPointCountOverride: _rawPointCount,
       droppedPointCountOverride: _droppedPointCount,
+      carriedDistanceKm: _carriedDistanceKm,
+      startedAtOverride: _startedAt,
     );
 
     TrackingFailureReason? reason;
@@ -179,7 +207,17 @@ class ForegroundTripTrackingService {
 
     _points.clear();
     activeRouteNotifier.value = const [];
+    hasPendingTripNotifier.value = false;
     return (result, reason);
+  }
+
+  void _streamEnded(int session) {
+    if (session != _session) return;
+    final subscription = _subscription;
+    _subscription = null;
+    _stopPositionPolling();
+    isTrackingNotifier.value = false;
+    if (subscription != null) unawaited(subscription.cancel());
   }
 
   void _startPositionPolling() {
@@ -204,9 +242,10 @@ class ForegroundTripTrackingService {
     if (provider == null || !isTracking || _isPollingPosition) return;
 
     _isPollingPosition = true;
+    final session = _session;
     try {
       final point = await provider();
-      if (point == null || !isTracking) return;
+      if (point == null || session != _session || !isTracking) return;
       _recordPoint(point);
     } catch (e) {
       if (kDebugMode) {
@@ -215,16 +254,25 @@ class ForegroundTripTrackingService {
         );
       }
     } finally {
-      _isPollingPosition = false;
+      if (session == _session) _isPollingPosition = false;
     }
   }
 
   void _recordPoint(TrackingPoint point) {
     _rawPointCount++;
-    if (point.isAccurateEnough(maxAccuracyMeters)) {
+    if (point.isAccurateEnough(maxAccuracyMeters) &&
+        (_points.isEmpty || point.timestamp.isAfter(_points.last.timestamp))) {
+      _startedAt ??= point.timestamp;
       _points.add(point);
+      hasPendingTripNotifier.value = true;
       if (_points.length > _maxStoredPoints) {
-        _points.removeRange(0, _maxStoredPoints ~/ 4);
+        final removeCount = _maxStoredPoints ~/ 4;
+        _carriedDistanceKm += TrackingResult.calculateDistanceKm(
+          _points.sublist(0, removeCount + 1),
+          minimumSegmentDistanceMeters:
+              TrackingResult.defaultMinimumSegmentDistanceMeters,
+        );
+        _points.removeRange(0, removeCount);
       }
       activeRouteNotifier.value = List<TrackingPoint>.unmodifiable(_points);
       if (kDebugMode) {

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import '../core/backup/cloud_backup_service.dart';
 import '../core/backup/daily_cloud_backup_service.dart';
 import '../core/localization/app_strings.dart';
@@ -41,7 +42,8 @@ class RouteMintApp extends StatefulWidget {
   State<RouteMintApp> createState() => _RouteMintAppState();
 }
 
-class _RouteMintAppState extends State<RouteMintApp> {
+class _RouteMintAppState extends State<RouteMintApp>
+    with WidgetsBindingObserver {
   final _prefsService = PreferencesService();
   final _cloudBackupService = CloudBackupService();
   final _dailyCloudBackupService = DailyCloudBackupService();
@@ -54,11 +56,14 @@ class _RouteMintAppState extends State<RouteMintApp> {
   StreamSubscription<User?>? _authSubscription;
   bool _dailyCloudBackupRunning = false;
   bool _cloudRestoreRunning = false;
+  bool _autoDetectionRestoreRunning = false;
+  bool _autoDetectionRecoveryCompleted = false;
   int _dataRefreshKey = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (Firebase.apps.isNotEmpty) {
       _authSubscription = FirebaseAuth.instance.authStateChanges().listen((
         user,
@@ -75,9 +80,21 @@ class _RouteMintAppState extends State<RouteMintApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _dailyCloudBackupTimer?.cancel();
     _authSubscription?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Mobile operating systems suspend Dart timers in the background.
+      _scheduleDailyCloudBackup();
+      _checkDailyCloudBackup();
+      final prefs = _preferences;
+      if (prefs != null) _restoreAutoDetection(prefs);
+    }
   }
 
   Future<void> _loadPreferences() async {
@@ -98,22 +115,49 @@ class _RouteMintAppState extends State<RouteMintApp> {
   /// The OS reclaims the app during long trips — routine while a delivery app
   /// holds the foreground — and detection has no way back on its own.
   Future<void> _restoreAutoDetection(UserPreferences prefs) async {
+    if (_autoDetectionRestoreRunning) return;
+    _autoDetectionRestoreRunning = true;
     try {
-      final recovered = await appAutoDetectionService.recoverInterruptedTrip();
-      if (recovered && mounted) {
-        setState(() => _dataRefreshKey++);
+      if (!_autoDetectionRecoveryCompleted) {
+        // A preferences refresh or resume must never finish a live trip.
+        final recovered =
+            !appAutoDetectionService.isMonitoring &&
+            await appAutoDetectionService.recoverInterruptedTrip();
+        _autoDetectionRecoveryCompleted = true;
+        if (recovered && mounted) {
+          setState(() => _dataRefreshKey++);
+        }
       }
 
       if (!prefs.autoTripDetectionEnabled) return;
       if (!EntitlementService(prefs).canUseAutoDetection) return;
       if (appAutoDetectionService.isMonitoring) return;
       if (!await appAutoDetectionService.wasMonitoringBeforeRestart()) return;
+      if (!await Geolocator.isLocationServiceEnabled()) return;
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        return;
+      }
+      // Starting Android's location service requires a visible activity.
+      // Resume retries this check without opening permission dialogs.
+      final current = _preferences;
+      if (!mounted ||
+          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed ||
+          appTrackingService.isTracking ||
+          current == null ||
+          !current.autoTripDetectionEnabled ||
+          !EntitlementService(current).canUseAutoDetection) {
+        return;
+      }
 
       await appAutoDetectionService.startMonitoring();
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[AutoDetection] restore after restart skipped: $e');
       }
+    } finally {
+      _autoDetectionRestoreRunning = false;
     }
   }
 
@@ -123,15 +167,18 @@ class _RouteMintAppState extends State<RouteMintApp> {
     if (prefs == null) return;
 
     _dailyCloudBackupRunning = true;
-    final updated = await _dailyCloudBackupService.runIfDue(prefs);
-    _dailyCloudBackupRunning = false;
-    if (updated == null || !mounted) return;
+    try {
+      final updated = await _dailyCloudBackupService.runIfDue(prefs);
+      if (updated == null || !mounted) return;
 
-    setState(() {
-      _preferences = updated;
-      _selectedLanguage = updated.language;
-    });
-    _scheduleDailyCloudBackup(updated);
+      setState(() {
+        _preferences = updated;
+        _selectedLanguage = updated.language;
+      });
+      _scheduleDailyCloudBackup(updated);
+    } finally {
+      _dailyCloudBackupRunning = false;
+    }
   }
 
   Future<void> _restoreCloudBackupOnFreshInstall() async {

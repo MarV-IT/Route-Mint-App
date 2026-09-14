@@ -4,6 +4,7 @@ import '../../app/app.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/preferences/user_preferences.dart';
 import '../../shared/utils/currency_utils.dart';
+import '../../shared/utils/number_input.dart';
 import 'models/expense_entry.dart';
 import 'services/expense_service.dart';
 import '../../shared/utils/safe_scroll_padding.dart';
@@ -74,7 +75,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   Future<void> _saveExpense() async {
     if (_isSaving) return;
-    final amount = double.tryParse(_amountController.text.trim());
+    final amount = parseDecimalInput(_amountController.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(widget.strings.expenseAmountMustBePositive)),

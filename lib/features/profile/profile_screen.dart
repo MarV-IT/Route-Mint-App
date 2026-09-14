@@ -18,6 +18,7 @@ import '../../core/backup/backup_service.dart';
 import '../../core/backup/cloud_backup_service.dart';
 import '../../app/app.dart';
 import '../../shared/utils/distance_utils.dart';
+import '../../shared/utils/number_input.dart';
 import '../auth/auth_screen.dart';
 import '../help/help_screen.dart';
 import '../work_mode/work_mode_screen.dart';
@@ -177,8 +178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   double? _parseOptionalDouble(String text) {
-    final t = text.trim();
-    return t.isEmpty ? null : double.tryParse(t);
+    return parseDecimalInput(text);
   }
 
   String get _unitSuffix => unitLabel(widget.selectedUnit);
@@ -371,8 +371,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _handleExportBackup() async {
     setState(() => _isExportingBackup = true);
     try {
-      await _backupService.exportBackup();
-      if (!mounted) return;
+      final exported = await _backupService.exportBackup();
+      if (!mounted || !exported) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(widget.strings.backupExported)));
@@ -1122,6 +1122,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               // ── Distance unit ──────────────────────────────────────────────
               DropdownButtonFormField<AppUnit>(
+                isExpanded: true,
+                itemHeight: null,
                 initialValue: widget.selectedUnit,
                 decoration: InputDecoration(
                   labelText: s.units,
@@ -1140,6 +1142,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               // ── Language ───────────────────────────────────────────────────
               DropdownButtonFormField<AppLanguage>(
+                isExpanded: true,
+                itemHeight: null,
                 initialValue: widget.selectedLanguage,
                 decoration: InputDecoration(
                   labelText: s.languageLabel,
@@ -1161,6 +1165,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               // ── Appearance ─────────────────────────────────────────────────
               DropdownButtonFormField<AppThemeMode>(
+                isExpanded: true,
+                itemHeight: null,
                 initialValue: widget.preferences.themeMode,
                 decoration: InputDecoration(
                   labelText: s.appearance,

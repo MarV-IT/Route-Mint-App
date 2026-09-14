@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/localization/app_strings.dart';
 import '../../shared/utils/currency_utils.dart';
+import '../../shared/utils/number_input.dart';
 import 'models/work_shift.dart';
 import 'models/work_mode_settings.dart';
 import 'services/work_mode_service.dart';
@@ -376,7 +377,7 @@ class _AddShiftSheetState extends State<_AddShiftSheet> {
       '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
 
   double _parseExpense(String text) {
-    final v = double.tryParse(text.trim()) ?? 0;
+    final v = parseDecimalInput(text) ?? 0;
     return v < 0 ? 0 : v;
   }
 
@@ -450,6 +451,8 @@ class _AddShiftSheetState extends State<_AddShiftSheet> {
             const SizedBox(height: 8),
             if (!_isCustomPlatform)
               DropdownButtonFormField<String>(
+                isExpanded: true,
+                itemHeight: null,
                 initialValue: _platformName,
                 items: _presets
                     .map((p) => DropdownMenuItem(value: p, child: Text(p)))

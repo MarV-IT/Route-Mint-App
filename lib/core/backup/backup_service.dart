@@ -1,7 +1,8 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:printing/printing.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 
 import '../preferences/preferences_service.dart';
 import '../preferences/user_preferences.dart';
@@ -28,7 +29,7 @@ class BackupService {
 
   // ─── Export ───────────────────────────────────────────────────────────────
 
-  Future<void> exportBackup() async {
+  Future<bool> exportBackup() async {
     final preferences = await _prefsService.loadPreferences();
     final trips = await _tripService.loadTrips();
     final expenseEntries = await _expenseService.loadExpenseEntries();
@@ -55,7 +56,18 @@ class BackupService {
         '${now.month.toString().padLeft(2, '0')}_'
         '${now.day.toString().padLeft(2, '0')}';
 
-    await Printing.sharePdf(
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS)) {
+      final path = await FilePicker.platform.saveFile(
+        bytes: bytes,
+        fileName: 'marv_route_backup_$slug.json',
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+      return path != null;
+    }
+    return Printing.sharePdf(
       bytes: bytes,
       filename: 'marv_route_backup_$slug.json',
     );

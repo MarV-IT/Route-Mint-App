@@ -25,10 +25,12 @@ class LocationPermissionService {
 
     switch (permission) {
       case LocationPermission.denied:
+      case LocationPermission.unableToDetermine:
         return LocationPermissionStatus.denied;
       case LocationPermission.deniedForever:
         return LocationPermissionStatus.permanentlyDenied;
-      default:
+      case LocationPermission.whileInUse:
+      case LocationPermission.always:
         return LocationPermissionStatus.granted;
     }
   }

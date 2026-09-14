@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/preferences/user_preferences.dart';
 import '../../shared/utils/distance_utils.dart';
+import '../../shared/utils/number_input.dart';
 import '../../shared/widgets/address_autocomplete_field.dart';
 import '../../app/app.dart';
 import '../trips/models/trip.dart';
@@ -139,7 +140,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
       return;
     }
 
-    final distance = double.tryParse(_distanceController.text.trim());
+    final distance = parseDecimalInput(_distanceController.text);
     if (distance == null || distance <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(widget.strings.distanceMustBePositive)),
@@ -289,6 +290,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
             const SizedBox(height: 12),
           ],
           DropdownButtonFormField<String>(
+            isExpanded: true,
+            itemHeight: null,
             initialValue: _selectedCategory,
             items: [
               DropdownMenuItem(value: 'business', child: Text(s.business)),
@@ -309,6 +312,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
           if (showPlatformSelector) ...[
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
+              isExpanded: true,
+              itemHeight: null,
               initialValue: _selectedPlatform,
               hint: Text(s.selectPlatform),
               items: [
@@ -375,8 +380,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          SizedBox(
-            height: 52,
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 52),
             child: ElevatedButton(
               onPressed: _isSaving ? null : _handleSave,
               child: Text(s.saveTripButton),

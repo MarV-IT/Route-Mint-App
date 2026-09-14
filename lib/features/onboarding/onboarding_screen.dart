@@ -702,6 +702,8 @@ class _OnboardingShiftSheetState extends State<_OnboardingShiftSheet> {
             const SizedBox(height: 8),
             if (!_isCustomPlatform)
               DropdownButtonFormField<String>(
+                isExpanded: true,
+                itemHeight: null,
                 initialValue: _platformName,
                 items: _presets
                     .map((p) => DropdownMenuItem(value: p, child: Text(p)))

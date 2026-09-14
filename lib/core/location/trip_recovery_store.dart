@@ -31,6 +31,13 @@ class InterruptedTrip {
 class TripRecoveryStore {
   static const _tripKey = 'auto_detection_active_trip';
   static const _monitoringKey = 'auto_detection_monitoring';
+  static Future<void> _pendingMutation = Future.value();
+
+  Future<void> _mutate(Future<void> Function() action) {
+    final operation = _pendingMutation.then((_) => action());
+    _pendingMutation = operation.catchError((Object _) {});
+    return operation;
+  }
 
   /// Points are written at most this often; a checkpoint on every GPS fix
   /// would mean disk writes every few metres.
@@ -42,25 +49,28 @@ class TripRecoveryStore {
     required DateTime startedAt,
     required int rawPointCount,
     required int droppedPointCount,
-  }) async {
-    if (points.isEmpty) return;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        _tripKey,
-        jsonEncode({
-          'startedAt': startedAt.toIso8601String(),
-          'carriedDistanceKm': carriedDistanceKm,
-          'rawPointCount': rawPointCount,
-          'droppedPointCount': droppedPointCount,
-          'points': points.map((p) => p.toJson()).toList(),
-        }),
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[TripRecovery] checkpoint failed: $e');
+  }) {
+    if (points.isEmpty) return Future.value();
+    final snapshot = List<TrackingPoint>.of(points);
+    return _mutate(() async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(
+          _tripKey,
+          jsonEncode({
+            'startedAt': startedAt.toIso8601String(),
+            'carriedDistanceKm': carriedDistanceKm,
+            'rawPointCount': rawPointCount,
+            'droppedPointCount': droppedPointCount,
+            'points': snapshot.map((p) => p.toJson()).toList(),
+          }),
+        );
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[TripRecovery] checkpoint failed: $e');
+        }
       }
-    }
+    });
   }
 
   Future<InterruptedTrip?> loadCheckpoint() async {
@@ -107,16 +117,20 @@ class TripRecoveryStore {
     }
   }
 
-  Future<void> clearCheckpoint() async {
+  Future<void> clearCheckpoint({DateTime? startedAt}) => _mutate(() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      if (startedAt != null) {
+        final current = await loadCheckpoint();
+        if (current == null || current.startedAt != startedAt) return;
+      }
       await prefs.remove(_tripKey);
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[TripRecovery] clear failed: $e');
       }
     }
-  }
+  });
 
   /// Whether detection was running when the app last stopped. Used to bring
   /// monitoring back after a restart the user did not ask for.

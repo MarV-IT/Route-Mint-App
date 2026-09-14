@@ -14,6 +14,7 @@ import '../../core/subscription/pro_feature_gate.dart';
 import '../../core/tax/tax_service.dart';
 import '../../shared/utils/currency_utils.dart';
 import '../../shared/utils/distance_utils.dart';
+import '../../shared/utils/number_input.dart';
 import '../../shared/widgets/quick_actions_card.dart';
 import '../../shared/widgets/summary_card.dart';
 import '../../app/app.dart';
@@ -628,7 +629,7 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
   );
 
   Future<void> _saveWeeklyOdometer() async {
-    final value = double.tryParse(_odometerReminderController.text.trim());
+    final value = parseDecimalInput(_odometerReminderController.text);
     if (value == null || value < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(widget.strings.odometerCannotBeNegative)),
@@ -712,7 +713,7 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
     if (_trackingActionBusy) return;
 
     final isTracking = appTrackingService.isTrackingNotifier.value;
-    if (isTracking) {
+    if (isTracking || appTrackingService.hasPendingTripNotifier.value) {
       await _stopQuickTrip();
     } else {
       await _startQuickTrip();
@@ -944,15 +945,20 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
               const SizedBox(height: 12),
             ],
             LiveTripMapCard(strings: widget.strings, bottomSpacing: 12),
-            ValueListenableBuilder<bool>(
-              valueListenable: appTrackingService.isTrackingNotifier,
-              builder: (context, isTracking, _) {
+            ListenableBuilder(
+              listenable: Listenable.merge([
+                appTrackingService.isTrackingNotifier,
+                appTrackingService.hasPendingTripNotifier,
+              ]),
+              builder: (context, _) {
                 return QuickActionsCard(
                   strings: widget.strings,
                   onStartTrip: _handleQuickStartTrip,
                   onAddManually: widget.onAddManually,
                   onAddExpense: widget.onAddExpense,
-                  isTripTracking: isTracking,
+                  isTripTracking: appTrackingService.isTracking,
+                  hasPendingTrip:
+                      appTrackingService.hasPendingTripNotifier.value,
                   isStartTripBusy: _trackingActionBusy,
                 );
               },

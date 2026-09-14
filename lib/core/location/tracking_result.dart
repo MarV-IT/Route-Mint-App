@@ -25,7 +25,15 @@ class TrackingPoint {
   final DateTime timestamp;
 
   bool isAccurateEnough(double maxAccuracyMeters) =>
-      accuracyMeters.isFinite && accuracyMeters <= maxAccuracyMeters;
+      latitude.isFinite &&
+      longitude.isFinite &&
+      latitude >= -90 &&
+      latitude <= 90 &&
+      longitude >= -180 &&
+      longitude <= 180 &&
+      accuracyMeters.isFinite &&
+      accuracyMeters >= 0 &&
+      accuracyMeters <= maxAccuracyMeters;
 
   Map<String, dynamic> toJson() => {
     'latitude': latitude,
@@ -38,7 +46,10 @@ class TrackingPoint {
     final latitude = json['latitude'];
     final longitude = json['longitude'];
     final accuracy = json['accuracyMeters'];
-    final timestamp = DateTime.tryParse(json['timestamp'] as String? ?? '');
+    final rawTimestamp = json['timestamp'];
+    final timestamp = rawTimestamp is String
+        ? DateTime.tryParse(rawTimestamp)
+        : null;
     if (latitude is! num || longitude is! num || timestamp == null) {
       return null;
     }
@@ -193,7 +204,8 @@ class TrackingResult {
             math.cos(lat2) *
             math.sin(deltaLon / 2) *
             math.sin(deltaLon / 2);
-    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    final boundedA = a.clamp(0.0, 1.0);
+    final c = 2 * math.atan2(math.sqrt(boundedA), math.sqrt(1 - boundedA));
 
     return earthRadiusKm * c;
   }
