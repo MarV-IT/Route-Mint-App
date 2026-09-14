@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+env:
+  # Keep every job on the same version as the local toolchain.
+  FLUTTER_VERSION: 3.47.2
+
 jobs:
   check:
     name: Analyze & test
@@ -17,8 +24,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          # Keep in sync with the local toolchain (flutter --version).
-          flutter-version: 3.47.2
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Install dependencies
@@ -29,3 +35,56 @@ jobs:
 
       - name: Test
         run: flutter test
+
+  android:
+    name: Build Android release
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release --no-pub
+
+  ios:
+    name: Build iOS release (unsigned)
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      # macos-15 otherwise defaults to Xcode 16.4 and the iOS 18 SDK.
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      # The hosted macOS image supplies CocoaPods for plugins that still need it.
+      # Flutter runs pod install after preparing its native plugin integration.
+      - name: Check Apple build tools
+        run: |
+          xcodebuild -version
+          pod --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS app without signing credentials
+        run: flutter build ios --release --no-codesign --no-pub
