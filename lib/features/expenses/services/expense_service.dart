@@ -1,15 +1,19 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/storage/account_data_store.dart';
 
 import '../models/expense_entry.dart';
 
 class ExpenseService {
+  ExpenseService({AccountDataScope? scope})
+    : _scope = scope ?? AccountDataStore.current;
+
+  final AccountDataScope _scope;
   static const _storageKey = 'expense_entries';
 
   Future<List<ExpenseEntry>> loadExpenseEntries() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _scope.getPreferences();
     final raw = prefs.getString(_storageKey);
     if (raw == null || raw.isEmpty) return [];
 
@@ -38,7 +42,7 @@ class ExpenseService {
   }
 
   Future<void> saveExpenseEntries(List<ExpenseEntry> entries) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _scope.getPreferences();
     await prefs.setString(
       _storageKey,
       jsonEncode(entries.map((entry) => entry.toJson()).toList()),

@@ -44,6 +44,7 @@ class _AuthGateState extends State<AuthGate> {
     if (_authService.currentUser != null) {
       await _authService.markSessionExpected();
     }
+    if (!mounted) return;
     setState(() => _isRestoringSession = false);
     _startSessionRestorePoller();
   }

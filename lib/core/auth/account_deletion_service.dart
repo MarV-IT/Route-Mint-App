@@ -2,6 +2,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../backup/cloud_backup_service.dart';
+import '../location/geolocator_tracking_provider.dart';
+import '../storage/account_data_store.dart';
 import 'auth_service.dart';
 
 /// Deletes the signed-in account together with every trace of its data: the
@@ -15,13 +17,16 @@ class AccountDeletionService {
     AuthService? authService,
     CloudBackupService? cloudBackupService,
     FlutterSecureStorage? secureStorage,
+    AccountDataScope? scope,
   }) : _authServiceOverride = authService,
        _cloudBackupServiceOverride = cloudBackupService,
-       _secureStorage = secureStorage ?? const FlutterSecureStorage();
+       _secureStorage = secureStorage ?? const FlutterSecureStorage(),
+       _scope = scope ?? AccountDataStore.current;
 
   final AuthService? _authServiceOverride;
   final CloudBackupService? _cloudBackupServiceOverride;
   final FlutterSecureStorage _secureStorage;
+  final AccountDataScope _scope;
 
   // Built lazily so [clearLocalData] works without an initialized Firebase.
   late final AuthService _authService = _authServiceOverride ?? AuthService();
@@ -32,14 +37,7 @@ class AccountDeletionService {
   /// that persists user data must add its key here, otherwise that data
   /// would survive an account deletion.
   static const localDataKeys = <String>[
-    'user_preferences',
-    'trips',
-    'expense_entries',
-    'fuel_entries',
-    'work_mode_settings',
-    'app_unit',
-    'app_language',
-    'app_country',
+    ...accountDataKeys,
     'firebase_auth_session_expected',
   ];
 
@@ -48,16 +46,36 @@ class AccountDeletionService {
   /// permission. Local data is wiped last so a failed account deletion
   /// leaves the user's records intact.
   Future<void> deleteAccountAndData() async {
-    await _cloudBackupService.deleteBackupForCurrentUser();
-    await _authService.deleteAccount();
-    await clearLocalData();
+    void requireOwner() {
+      if (!identical(_scope, AccountDataStore.current) ||
+          _scope.uid == null ||
+          _authService.rawCurrentUser?.uid != _scope.uid) {
+        throw StateError('The account changed before deletion completed');
+      }
+    }
+
+    requireOwner();
+    try {
+      await prepareTrackingForAccountChange();
+      requireOwner();
+      await _cloudBackupService.deleteBackupForCurrentUser();
+      requireOwner();
+      await _authService.deleteAccount();
+      await clearLocalData();
+    } finally {
+      completeTrackingAccountChange();
+    }
   }
 
   Future<void> clearLocalData() async {
-    final prefs = await SharedPreferences.getInstance();
-    for (final key in localDataKeys) {
-      await prefs.remove(key);
+    await _scope.clear();
+    await AccountDataStore.clearLegacyDataForOwner(_scope);
+    // Deletion may complete after Firebase has already selected the guest
+    // scope; never clear another account's credentials or data.
+    if (_scope.namespace == AccountDataStore.current.namespace) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('firebase_auth_session_expected');
+      await _secureStorage.deleteAll();
     }
-    await _secureStorage.deleteAll();
   }
 }

@@ -1,13 +1,17 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/storage/account_data_store.dart';
 import '../models/work_shift.dart';
 import '../models/work_mode_settings.dart';
 
 class WorkModeService {
+  WorkModeService({AccountDataScope? scope})
+    : _scope = scope ?? AccountDataStore.current;
+
+  final AccountDataScope _scope;
   static const String _key = 'work_mode_settings';
 
   Future<WorkModeSettings> loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _scope.getPreferences();
     final jsonString = prefs.getString(_key);
 
     if (jsonString == null) {
@@ -25,7 +29,7 @@ class WorkModeService {
   }
 
   Future<void> saveSettings(WorkModeSettings settings) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _scope.getPreferences();
     await prefs.setString(_key, jsonEncode(settings.toJson()));
   }
 

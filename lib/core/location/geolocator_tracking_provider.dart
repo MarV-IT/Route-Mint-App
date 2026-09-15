@@ -1,5 +1,9 @@
 import 'dart:io' show Platform;
 import 'package:geolocator/geolocator.dart';
+import '../../features/trips/models/trip.dart';
+import '../../features/trips/services/trip_service.dart';
+import '../../features/work_mode/services/work_mode_service.dart';
+import '../storage/account_data_store.dart';
 import 'auto_trip_detection_service.dart';
 import 'foreground_trip_tracking_service.dart';
 import 'tracking_result.dart';
@@ -17,6 +21,81 @@ final AutoTripDetectionService appAutoDetectionService =
       monitoringStreamFactory: geolocatorMonitoringStream,
       initialPositionProvider: _geolocatorCurrentPosition,
     );
+
+/// Called before changing the active account or deleting its local data.
+/// Both start gates close synchronously, and all final writes keep the scope
+/// captured when the route began. No geocoding is needed to preserve the trip.
+Future<void> prepareTrackingForAccountChange({
+  ForegroundTripTrackingService? trackingService,
+  AutoTripDetectionService? autoDetectionService,
+}) async {
+  final manual = trackingService ?? appTrackingService;
+  final automatic = autoDetectionService ?? appAutoDetectionService;
+  final owner = manual.ownerScope ?? AccountDataStore.current;
+  final stoppingManual = manual.prepareForAccountChange();
+  await Future.wait([
+    automatic.prepareForAccountChange(),
+    () async {
+      final (result, _) = await stoppingManual;
+      if (result == null) return;
+      final start = result.points.first;
+      final end = result.points.last;
+      final workMode = WorkModeService(scope: owner);
+      final workSettings = await workMode.loadSettings();
+      final shift = workMode.matchingShiftAt(workSettings, result.startedAt);
+      await TripService(scope: owner).addTrip(
+        Trip(
+          // The Stop button uses this same ID so simultaneous stop/logout
+          // saves update one route instead of incrementing mileage twice.
+          id: 'manual_${result.startedAt.microsecondsSinceEpoch}',
+          from: 'Detected start',
+          to: 'Detected end',
+          distance: result.distanceKm,
+          category: shift == null ? 'personal' : 'business',
+          date: result.startedAt.toLocal(),
+          platformName: shift?.platformName,
+          detectionMode: TripDetectionMode.automatic,
+          reviewStatus: TripReviewStatus.needsReview,
+          startTime: result.startedAt.toLocal(),
+          endTime: result.endedAt.toLocal(),
+          startLatitude: start.latitude,
+          startLongitude: start.longitude,
+          endLatitude: end.latitude,
+          endLongitude: end.longitude,
+          routePoints: result.points
+              .map(
+                (point) => TripRoutePoint(
+                  latitude: point.latitude,
+                  longitude: point.longitude,
+                  timestamp: point.timestamp.toLocal(),
+                ),
+              )
+              .toList(growable: false),
+          trackingDiagnostics: TripTrackingDiagnostics(
+            rawPointCount: result.rawPointCount,
+            validPointCount: result.validPointCount,
+            droppedPointCount: result.droppedPointCount,
+            averageAccuracyMeters: result.averageAccuracyMeters,
+            maxGapSeconds: result.maxGapSeconds,
+            durationSeconds: result.endedAt
+                .difference(result.startedAt)
+                .inSeconds,
+          ),
+        ),
+      );
+      manual.acknowledgeAccountChangeTrip(result);
+    }(),
+  ]);
+}
+
+/// Release the gates after the coordinator activates the next account scope.
+void completeTrackingAccountChange({
+  ForegroundTripTrackingService? trackingService,
+  AutoTripDetectionService? autoDetectionService,
+}) {
+  (trackingService ?? appTrackingService).completeAccountChange();
+  (autoDetectionService ?? appAutoDetectionService).completeAccountChange();
+}
 
 Future<TrackingPoint?> _geolocatorCurrentPosition() async {
   final pos = await Geolocator.getCurrentPosition(

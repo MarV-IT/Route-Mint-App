@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../preferences/preferences_service.dart';
 import '../preferences/user_preferences.dart';
+import '../storage/account_data_store.dart';
 import '../subscription/entitlement_service.dart';
 import 'cloud_backup_service.dart';
 
@@ -12,12 +13,13 @@ class DailyCloudBackupService {
     CloudBackupService? cloudBackupService,
     PreferencesService? preferencesService,
     FirebaseAuth? auth,
-  }) : _cloudBackupService = cloudBackupService ?? CloudBackupService(),
-       _preferencesService = preferencesService ?? PreferencesService(),
+  }) : _cloudBackupService =
+           cloudBackupService ?? CloudBackupService(auth: auth),
+       _preferencesServiceOverride = preferencesService,
        _auth = auth;
 
   final CloudBackupService _cloudBackupService;
-  final PreferencesService _preferencesService;
+  final PreferencesService? _preferencesServiceOverride;
   final FirebaseAuth? _auth;
 
   User? get _currentUser {
@@ -60,16 +62,27 @@ class DailyCloudBackupService {
 
   Future<UserPreferences?> runIfDue(UserPreferences preferences) async {
     if (!isDue(preferences)) return null;
+    final uid = _currentUser?.uid;
+    final scope = AccountDataStore.current;
+    if (uid == null || scope.uid != uid) return null;
+    final preferencesService =
+        _preferencesServiceOverride ?? PreferencesService(scope: scope);
+
+    bool isCurrent() =>
+        _currentUser?.uid == uid && identical(AccountDataStore.current, scope);
 
     try {
       await _cloudBackupService.uploadBackupForCurrentUser();
+      if (!isCurrent()) return null;
       // An upload can wait for connectivity while the user edits settings.
       // Merge the completion time into the latest saved preferences.
-      final current = await _preferencesService.loadPreferences();
+      final current = await preferencesService.loadPreferences();
+      if (!isCurrent()) return null;
       final updated = current.copyWith(
         lastAutomaticCloudBackupAt: DateTime.now(),
       );
-      await _preferencesService.savePreferences(updated);
+      await preferencesService.savePreferences(updated);
+      if (!isCurrent()) return null;
       if (kDebugMode) {
         debugPrint('[DailyCloudBackup] automatic cloud backup completed');
       }

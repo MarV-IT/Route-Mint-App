@@ -8,6 +8,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import '../storage/account_data_store.dart';
 import '../preferences/preferences_service.dart';
 import '../preferences/user_preferences.dart';
 import '../../features/expenses/models/expense_entry.dart';
@@ -60,22 +61,54 @@ class CloudRestoreResult {
 }
 
 class CloudBackupService {
+  CloudBackupService({FirebaseAuth? auth, FirebaseFirestore? firestore})
+    : _auth = auth,
+      _firestore = firestore;
+
   static const _appName = 'MarV Route';
   static const _backupVersion = 1;
+  static const _serverReadTimeout = Duration(seconds: 10);
 
-  final _prefsService = PreferencesService();
-  final _tripService = TripService();
-  final _expenseService = ExpenseService();
-  final _fuelService = FuelService();
-  final _workModeService = WorkModeService();
+  final FirebaseAuth? _auth;
+  final FirebaseFirestore? _firestore;
 
-  FirebaseFirestore get _db => FirebaseFirestore.instance;
-  String? get _uid => FirebaseAuth.instance.currentUser?.uid;
+  FirebaseFirestore get _db => _firestore ?? FirebaseFirestore.instance;
+  String? get _uid => (_auth ?? FirebaseAuth.instance).currentUser?.uid;
 
-  DocumentReference<Map<String, dynamic>> get _backupRef {
+  _CloudBackupOperation _captureOperation() {
     final uid = _uid;
     if (uid == null) throw StateError('Not signed in');
-    return _db.collection('users').doc(uid).collection('backups').doc('latest');
+    final scope = AccountDataStore.current;
+    if (scope.uid != uid) {
+      throw StateError('Account data is not ready for this user');
+    }
+    return _CloudBackupOperation(
+      uid: uid,
+      scope: scope,
+      reference: _db
+          .collection('users')
+          .doc(uid)
+          .collection('backups')
+          .doc('latest'),
+    );
+  }
+
+  void _ensureCurrent(_CloudBackupOperation operation) {
+    if (_uid != operation.uid ||
+        !identical(AccountDataStore.current, operation.scope)) {
+      throw StateError('Account changed during cloud backup');
+    }
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>> _readServerBackup(
+    _CloudBackupOperation operation,
+  ) async {
+    _ensureCurrent(operation);
+    final document = await operation.reference
+        .get(const GetOptions(source: Source.server))
+        .timeout(_serverReadTimeout);
+    _ensureCurrent(operation);
+    return document;
   }
 
   /// Serializes a trip for the cloud backup with its per-point GPS route
@@ -88,13 +121,13 @@ class CloudBackupService {
       trip.copyWith(routePoints: const []).toJson();
 
   Future<void> uploadBackupForCurrentUser() async {
-    if (_uid == null) throw StateError('Not signed in');
+    final operation = _captureOperation();
 
-    final preferences = await _prefsService.loadPreferences();
-    final trips = await _tripService.loadTrips();
-    final expenseEntries = await _expenseService.loadExpenseEntries();
-    final fuelEntries = await _fuelService.loadFuelEntries();
-    final workModeSettings = await _workModeService.loadSettings();
+    final preferences = await operation.preferences.loadPreferences();
+    final trips = await operation.trips.loadTrips();
+    final expenseEntries = await operation.expenses.loadExpenseEntries();
+    final fuelEntries = await operation.fuel.loadFuelEntries();
+    final workModeSettings = await operation.workMode.loadSettings();
 
     final payload = {
       'appName': _appName,
@@ -108,8 +141,11 @@ class CloudBackupService {
       'workModeSettings': workModeSettings.toJson(),
     };
 
-    await _backupRef.set(payload);
+    _ensureCurrent(operation);
+    await operation.reference.set(payload);
+    _ensureCurrent(operation);
     await _verifyServerBackup(
+      operation: operation,
       tripCount: trips.length,
       expenseCount: expenseEntries.length,
       fuelCount: fuelEntries.length,
@@ -117,11 +153,12 @@ class CloudBackupService {
   }
 
   Future<void> _verifyServerBackup({
+    required _CloudBackupOperation operation,
     required int tripCount,
     required int expenseCount,
     required int fuelCount,
   }) async {
-    final doc = await _backupRef.get(const GetOptions(source: Source.server));
+    final doc = await _readServerBackup(operation);
     if (!doc.exists) throw StateError('Cloud backup was not saved');
 
     final data = doc.data();
@@ -142,9 +179,16 @@ class CloudBackupService {
   }
 
   Future<CloudRestoreResult> restoreBackupForCurrentUser() async {
-    if (_uid == null) throw StateError('Not signed in');
+    return _restore(_captureOperation());
+  }
 
-    final doc = await _backupRef.get(const GetOptions(source: Source.server));
+  Future<CloudRestoreResult> _restore(
+    _CloudBackupOperation operation, {
+    DocumentSnapshot<Map<String, dynamic>>? document,
+  }) async {
+    _ensureCurrent(operation);
+    final doc = document ?? await _readServerBackup(operation);
+    _ensureCurrent(operation);
     if (!doc.exists) throw StateError('No cloud backup found');
 
     final data = doc.data()!;
@@ -156,7 +200,8 @@ class CloudBackupService {
 
     final prefsJson = data['preferences'];
     if (prefsJson is Map) {
-      await _prefsService.savePreferences(
+      _ensureCurrent(operation);
+      await operation.preferences.savePreferences(
         UserPreferences.fromJson(Map<String, dynamic>.from(prefsJson)),
       );
     }
@@ -178,13 +223,15 @@ class CloudBackupService {
           // Skip malformed entries without aborting the restore.
         }
       }
-      await _tripService.saveTrips(trips);
+      _ensureCurrent(operation);
+      await operation.trips.saveTrips(trips);
       restoredTrips = trips.length;
     }
 
     final workJson = data['workModeSettings'];
     if (workJson is Map) {
-      await _workModeService.saveSettings(
+      _ensureCurrent(operation);
+      await operation.workMode.saveSettings(
         WorkModeSettings.fromJson(Map<String, dynamic>.from(workJson)),
       );
     }
@@ -206,7 +253,8 @@ class CloudBackupService {
           // Skip malformed entries without aborting the restore.
         }
       }
-      await _fuelService.saveFuelEntries(fuelEntries);
+      _ensureCurrent(operation);
+      await operation.fuel.saveFuelEntries(fuelEntries);
       restoredFuel = fuelEntries.length;
     }
 
@@ -229,10 +277,12 @@ class CloudBackupService {
           // Skip malformed entries without aborting the restore.
         }
       }
-      await _expenseService.saveExpenseEntries(expenseEntries);
+      _ensureCurrent(operation);
+      await operation.expenses.saveExpenseEntries(expenseEntries);
       restoredExpenses = expenseEntries.length;
     }
 
+    _ensureCurrent(operation);
     return CloudRestoreResult(
       tripCount: restoredTrips,
       expenseCount: restoredExpenses,
@@ -246,49 +296,57 @@ class CloudBackupService {
   /// Removes the user's cloud backup. Must run while still signed in, since
   /// the Firestore rules key the document on the caller's uid.
   Future<void> deleteBackupForCurrentUser() async {
-    if (_uid == null) throw StateError('Not signed in');
-    await _backupRef.delete();
+    final operation = _captureOperation();
+    await operation.reference.delete();
+    _ensureCurrent(operation);
   }
 
   Future<bool> hasCloudBackup() async {
     if (_uid == null) return false;
     try {
-      return (await _backupRef.get(
-        const GetOptions(source: Source.server),
-      )).exists;
+      return await hasCloudBackupOrThrow();
     } catch (_) {
       return false;
     }
   }
 
   Future<bool> hasCloudBackupOrThrow() async {
-    if (_uid == null) throw StateError('Not signed in');
-    return (await _backupRef.get(
-      const GetOptions(source: Source.server),
-    )).exists;
+    final operation = _captureOperation();
+    final doc = await _readServerBackup(operation);
+    return doc.exists;
   }
 
   Future<bool> restoreIfLocalDataIsEmpty() async {
     if (_uid == null) return false;
+    final operation = _captureOperation();
+    if (!await _isLocalDataEmpty(operation)) return false;
 
-    final trips = await _tripService.loadTrips();
-    final expenses = await _expenseService.loadExpenseEntries();
-    final fuelEntries = await _fuelService.loadFuelEntries();
-    if (trips.isNotEmpty || expenses.isNotEmpty || fuelEntries.isNotEmpty) {
-      return false;
-    }
+    // The caller must distinguish a verified absence from an offline failure:
+    // uploading empty local data after a failed read could erase a cloud copy.
+    final doc = await _readServerBackup(operation);
+    _ensureCurrent(operation);
+    if (!doc.exists) return false;
+    // A resumed connection may return after the user has created local records.
+    // Automatic recovery must not replace work saved while the read was pending.
+    if (!await _isLocalDataEmpty(operation)) return false;
 
-    final hasBackup = await hasCloudBackup();
-    if (!hasBackup) return false;
-
-    await restoreBackupForCurrentUser();
+    await _restore(operation, document: doc);
     return true;
+  }
+
+  Future<bool> _isLocalDataEmpty(_CloudBackupOperation operation) async {
+    final trips = await operation.trips.loadTrips();
+    final expenses = await operation.expenses.loadExpenseEntries();
+    final fuelEntries = await operation.fuel.loadFuelEntries();
+    _ensureCurrent(operation);
+    return trips.isEmpty && expenses.isEmpty && fuelEntries.isEmpty;
   }
 
   Future<DateTime?> getLastCloudBackupTime() async {
     if (_uid == null) return null;
     try {
-      final doc = await _backupRef.get(const GetOptions(source: Source.server));
+      final operation = _captureOperation();
+      final doc = await _readServerBackup(operation);
       if (!doc.exists) return null;
       final data = doc.data()!;
       final ts = data['updatedAt'];
@@ -303,12 +361,11 @@ class CloudBackupService {
   }
 
   Future<CloudBackupStatus> getServerBackupStatus() async {
-    final uid = _uid;
-    if (uid == null) throw StateError('Not signed in');
+    final operation = _captureOperation();
 
-    final doc = await _backupRef.get(const GetOptions(source: Source.server));
+    final doc = await _readServerBackup(operation);
     if (!doc.exists) {
-      return CloudBackupStatus(uid: uid, exists: false);
+      return CloudBackupStatus(uid: operation.uid, exists: false);
     }
 
     final data = doc.data() ?? <String, dynamic>{};
@@ -320,7 +377,7 @@ class CloudBackupService {
     final version = data['backupVersion'];
 
     return CloudBackupStatus(
-      uid: uid,
+      uid: operation.uid,
       exists: true,
       updatedAt: updatedAt is Timestamp ? updatedAt.toDate() : null,
       exportedAt: exportedAt is String ? DateTime.tryParse(exportedAt) : null,
@@ -330,4 +387,27 @@ class CloudBackupService {
       backupVersion: version is int ? version : null,
     );
   }
+}
+
+// A service can live longer than a sign-in session. Each operation must keep
+// both its local storage and remote document bound to the same account.
+class _CloudBackupOperation {
+  _CloudBackupOperation({
+    required this.uid,
+    required this.scope,
+    required this.reference,
+  }) : preferences = PreferencesService(scope: scope),
+       trips = TripService(scope: scope),
+       expenses = ExpenseService(scope: scope),
+       fuel = FuelService(scope: scope),
+       workMode = WorkModeService(scope: scope);
+
+  final String uid;
+  final AccountDataScope scope;
+  final DocumentReference<Map<String, dynamic>> reference;
+  final PreferencesService preferences;
+  final TripService trips;
+  final ExpenseService expenses;
+  final FuelService fuel;
+  final WorkModeService workMode;
 }

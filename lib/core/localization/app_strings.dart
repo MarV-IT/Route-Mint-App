@@ -2762,6 +2762,15 @@ class AppStrings {
     fa: 'ورود ناموفق بود. دوباره تلاش کنید.',
   );
 
+  String get retry => _value(
+    en: 'Try again',
+    es: 'Reintentar',
+    fr: 'Réessayer',
+    ru: 'Повторить',
+    uk: 'Спробувати знову',
+    fa: 'دوباره تلاش کنید',
+  );
+
   String get signedOut => _value(
     en: 'Signed out',
     es: 'Sesión cerrada',

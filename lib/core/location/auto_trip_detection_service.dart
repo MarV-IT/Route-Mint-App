@@ -7,6 +7,7 @@ import '../../features/trips/models/trip.dart';
 import '../../features/trips/services/trip_service.dart';
 import '../../features/work_mode/services/work_mode_service.dart';
 import '../notifications/trip_notification_service.dart';
+import '../storage/account_data_store.dart';
 import 'reverse_geocoding_service.dart';
 import 'trip_recovery_store.dart';
 
@@ -24,7 +25,7 @@ class AutoTripDetectionService {
     TripService? tripService,
   }) : _monitoringStreamFactory = monitoringStreamFactory,
        _initialPositionProvider = initialPositionProvider,
-       _tripService = tripService ?? TripService();
+       _tripServiceOverride = tripService;
 
   final AutoTripStreamFactory _monitoringStreamFactory;
   final AutoTripPositionProvider? _initialPositionProvider;
@@ -85,6 +86,8 @@ class AutoTripDetectionService {
   Future<void>? _starting;
   Future<AutoStopOutcome>? _stopping;
   Future<bool>? _finishingTrip;
+  Future<bool>? _recovering;
+  bool _changingAccount = false;
   final List<TrackingPoint> _monitoringBuffer = [];
   int _consecutiveSpeedCount = 0;
 
@@ -101,16 +104,26 @@ class AutoTripDetectionService {
   DateTime? _lastCheckpointAt;
 
   // ── Services ────────────────────────────────────────────────────────────
-  final TripService _tripService;
+  final TripService? _tripServiceOverride;
   final _geocodingService = ReverseGeocodingService();
-  final _workModeService = WorkModeService();
-  final _recoveryStore = TripRecoveryStore();
+  _AutoTripAccount? _account;
+
+  _AutoTripAccount _captureAccount() => _AutoTripAccount(
+    AccountDataStore.current,
+    tripService: _tripServiceOverride,
+  );
 
   // ── Public API ──────────────────────────────────────────────────────────
 
   Future<void> startMonitoring() async {
+    if (_changingAccount) return;
+    final requestedScope = AccountDataStore.current;
     final stopping = _stopping;
     if (stopping != null) await stopping;
+    if (_changingAccount ||
+        !identical(requestedScope, AccountDataStore.current)) {
+      return;
+    }
     final starting = _starting;
     if (starting != null) return starting;
     if (state != AutoDetectionState.idle) return;
@@ -125,6 +138,8 @@ class AutoTripDetectionService {
   }
 
   Future<void> _startMonitoring() async {
+    final account = _captureAccount();
+    _account = account;
     _resetAll();
     final session = ++_session;
     stateNotifier.value = AutoDetectionState.monitoring;
@@ -151,7 +166,7 @@ class AutoTripDetectionService {
     if (kDebugMode) {
       debugPrint('[AutoDetection] monitoring started — instance=$hashCode');
     }
-    await _recoveryStore.setMonitoring(true);
+    await account.recoveryStore.setMonitoring(true);
     if (session != _session || !isMonitoring) return;
     await TripNotificationService.instance.showAutoDetectionState(active: true);
   }
@@ -172,9 +187,15 @@ class AutoTripDetectionService {
   /// Detection keeps the active trip in memory, so an OS kill during a long
   /// block used to lose it silently. Call this on startup to finish it.
   /// Returns true when such a trip was found and saved.
-  Future<bool> recoverInterruptedTrip() async {
-    if (isMonitoring) return false;
-    final interrupted = await _recoveryStore.loadCheckpoint();
+  Future<bool> recoverInterruptedTrip() {
+    if (_changingAccount || isMonitoring) return Future.value(false);
+    return _recovering ??= _recoverInterruptedTrip(
+      _captureAccount(),
+    ).whenComplete(() => _recovering = null);
+  }
+
+  Future<bool> _recoverInterruptedTrip(_AutoTripAccount account) async {
+    final interrupted = await account.recoveryStore.loadCheckpoint();
     if (interrupted == null) return false;
 
     final result = TrackingResult.fromPoints(
@@ -188,7 +209,9 @@ class AutoTripDetectionService {
       startedAtOverride: interrupted.startedAt,
     );
     if (result == null) {
-      await _recoveryStore.clearCheckpoint(startedAt: interrupted.startedAt);
+      await account.recoveryStore.clearCheckpoint(
+        startedAt: interrupted.startedAt,
+      );
       if (kDebugMode) {
         debugPrint('[AutoDetection] interrupted trip too short to save');
       }
@@ -201,13 +224,32 @@ class AutoTripDetectionService {
         '${result.distanceKm.toStringAsFixed(2)} km',
       );
     }
-    final saved = await _saveTripFromResult(result);
-    await _recoveryStore.clearCheckpoint(startedAt: interrupted.startedAt);
+    final saved = await _saveTripFromResult(result, account);
+    await account.recoveryStore.clearCheckpoint(
+      startedAt: interrupted.startedAt,
+    );
     return saved;
   }
 
   /// Whether detection was running when the app last stopped.
-  Future<bool> wasMonitoringBeforeRestart() => _recoveryStore.wasMonitoring();
+  Future<bool> wasMonitoringBeforeRestart() =>
+      _captureAccount().recoveryStore.wasMonitoring();
+
+  /// Stops the old session before another account becomes visible.
+  /// [completeAccountChange] releases the start gate after scope activation.
+  Future<void> prepareForAccountChange() async {
+    _changingAccount = true;
+    onTripSaved = null;
+    await stopMonitoring();
+    final recovering = _recovering;
+    if (recovering != null) await recovering;
+    final finishing = _finishingTrip;
+    if (finishing != null) await finishing;
+    _account = null;
+    _resetAll();
+  }
+
+  void completeAccountChange() => _changingAccount = false;
 
   /// Stops monitoring (and finalises any active trip).
   Future<AutoStopOutcome> stopMonitoring() {
@@ -217,6 +259,7 @@ class AutoTripDetectionService {
   Future<AutoStopOutcome> _stopMonitoring() async {
     if (state == AutoDetectionState.idle) return AutoStopOutcome.stopped;
 
+    final account = _account ?? _captureAccount();
     final wasTracking = state == AutoDetectionState.tracking;
     ++_session;
     _starting = null;
@@ -228,7 +271,7 @@ class AutoTripDetectionService {
     _subscription = null;
     _stopPositionPolling();
     await sub?.cancel();
-    await _recoveryStore.setMonitoring(false);
+    await account.recoveryStore.setMonitoring(false);
     final finishingTrip = _finishingTrip;
     final alreadySaved = finishingTrip != null && await finishingTrip;
 
@@ -621,7 +664,9 @@ class AutoTripDetectionService {
     }
     _lastCheckpointAt = now;
 
-    await _recoveryStore.saveCheckpoint(
+    final account = _account;
+    if (account == null) return;
+    await account.recoveryStore.saveCheckpoint(
       points: List<TrackingPoint>.from(_trackingPoints),
       carriedDistanceKm: _carriedDistanceKm,
       startedAt: startedAt,
@@ -703,6 +748,7 @@ class AutoTripDetectionService {
 
   /// Returns true if a trip meeting the minimum distance threshold was saved.
   Future<bool> _finishTrip({bool fromMonitoringBuffer = false}) async {
+    final account = _account ?? _captureAccount();
     final sourcePoints = fromMonitoringBuffer
         ? _monitoringBuffer
         : _trackingPoints;
@@ -721,7 +767,7 @@ class AutoTripDetectionService {
     // Keep a final recovery copy until the trip has been persisted.
     final checkpointStart = startedAt ?? points.firstOrNull?.timestamp;
     if (checkpointStart != null) {
-      await _recoveryStore.saveCheckpoint(
+      await account.recoveryStore.saveCheckpoint(
         points: points,
         carriedDistanceKm: carriedDistanceKm,
         startedAt: checkpointStart,
@@ -747,7 +793,7 @@ class AutoTripDetectionService {
 
     if (result == null) {
       if (checkpointStart != null) {
-        await _recoveryStore.clearCheckpoint(startedAt: checkpointStart);
+        await account.recoveryStore.clearCheckpoint(startedAt: checkpointStart);
       }
       if (kDebugMode) {
         if (points.isEmpty) {
@@ -777,13 +823,16 @@ class AutoTripDetectionService {
       );
     }
 
-    final saved = await _saveTripFromResult(result);
-    await _recoveryStore.clearCheckpoint(startedAt: checkpointStart);
+    final saved = await _saveTripFromResult(result, account);
+    await account.recoveryStore.clearCheckpoint(startedAt: checkpointStart);
     return saved;
   }
 
   /// Writes a finished [TrackingResult] into the trip log for review.
-  Future<bool> _saveTripFromResult(TrackingResult result) async {
+  Future<bool> _saveTripFromResult(
+    TrackingResult result,
+    _AutoTripAccount account,
+  ) async {
     final start = result.points.first;
     final end = result.points.last;
 
@@ -795,8 +844,8 @@ class AutoTripDetectionService {
     // A restart between saving and checkpoint cleanup must not add the trip
     // or its odometer distance twice.
     final tripId = 'auto_${result.startedAt.microsecondsSinceEpoch}';
-    final workSettings = await _workModeService.loadSettings();
-    final matchedShift = _workModeService.matchingShiftAt(
+    final workSettings = await account.workModeService.loadSettings();
+    final matchedShift = account.workModeService.matchingShiftAt(
       workSettings,
       result.startedAt,
     );
@@ -807,7 +856,7 @@ class AutoTripDetectionService {
       );
     }
 
-    await _tripService.addTrip(
+    await account.tripService.addTrip(
       Trip(
         id: tripId,
         from: addresses[0] ?? 'Detected start',
@@ -845,14 +894,20 @@ class AutoTripDetectionService {
         ),
       ),
     );
-    await TripNotificationService.instance.showTripSavedForReview(
-      distanceKm: result.distanceKm,
-    );
+    if (!_changingAccount &&
+        identical(account.scope, AccountDataStore.current)) {
+      await TripNotificationService.instance.showTripSavedForReview(
+        distanceKm: result.distanceKm,
+      );
+    }
 
     if (kDebugMode) {
       debugPrint('[AutoDetection] trip saved id=$tripId');
     }
-    onTripSaved?.call();
+    if (!_changingAccount &&
+        identical(account.scope, AccountDataStore.current)) {
+      onTripSaved?.call();
+    }
     return true;
   }
 
@@ -898,4 +953,17 @@ class AutoTripDetectionService {
       return null;
     }
   }
+}
+
+/// Immutable dependencies carried through geocoding, disk writes and cleanup.
+class _AutoTripAccount {
+  _AutoTripAccount(this.scope, {TripService? tripService})
+    : tripService = tripService ?? TripService(scope: scope),
+      workModeService = WorkModeService(scope: scope),
+      recoveryStore = TripRecoveryStore(scope: scope);
+
+  final AccountDataScope scope;
+  final TripService tripService;
+  final WorkModeService workModeService;
+  final TripRecoveryStore recoveryStore;
 }

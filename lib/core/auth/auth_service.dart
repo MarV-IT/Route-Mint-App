@@ -2,43 +2,29 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'account_session_service.dart';
 
 class AuthService {
   static const _sessionExpectedKey = 'firebase_auth_session_expected';
   static const _storedEmailKey = 'auth_email';
   static const _storedPasswordKey = 'auth_password';
   static const _secureStorage = FlutterSecureStorage();
-  static User? _cachedUser;
-  static Stream<User?>? _cachedAuthStateChanges;
-  static bool _cacheListenerStarted = false;
 
   final _auth = FirebaseAuth.instance;
 
-  AuthService() {
-    _ensureCacheListener();
-  }
+  final _session = AccountSessionService.instance;
 
-  User? get currentUser => _auth.currentUser ?? _cachedUser;
+  User? get currentUser =>
+      _session.isReady && _session.user?.uid == _auth.currentUser?.uid
+      ? _auth.currentUser
+      : null;
 
   User? get rawCurrentUser => _auth.currentUser;
 
-  User? get cachedUser => _cachedUser;
+  User? get cachedUser => _session.user;
 
   Stream<User?> authStateChanges() {
-    _cachedAuthStateChanges ??= _auth.authStateChanges().asBroadcastStream();
-    return _cachedAuthStateChanges!;
-  }
-
-  void _ensureCacheListener() {
-    if (_cacheListenerStarted) return;
-    _cacheListenerStarted = true;
-    _cachedUser = _auth.currentUser;
-    authStateChanges().listen((user) async {
-      if (user != null) {
-        _cachedUser = user;
-        await _setSessionExpected(true);
-      }
-    });
+    return _session.changes;
   }
 
   Future<bool> isSessionExpected() async {
@@ -51,7 +37,15 @@ class AuthService {
     await prefs.setBool(_sessionExpectedKey, expected);
   }
 
-  Future<void> markSessionExpected() => _setSessionExpected(true);
+  Future<void> markSessionExpected() async {
+    final user = currentUser;
+    final revision = _session.revision;
+    if (user == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    if (currentUser?.uid == user.uid && revision == _session.revision) {
+      await prefs.setBool(_sessionExpectedKey, true);
+    }
+  }
 
   Future<void> _saveCredentials(String email, String password) async {
     await _secureStorage.write(key: _storedEmailKey, value: email);
@@ -80,7 +74,7 @@ class AuthService {
       final credential = await _auth
           .signInWithEmailAndPassword(email: email!, password: password!)
           .timeout(const Duration(seconds: 6));
-      _cachedUser = credential.user;
+      await _session.synchronize();
       await _setSessionExpected(true);
       return credential.user;
     } on FirebaseAuthException catch (e) {
@@ -103,7 +97,10 @@ class AuthService {
     Duration secureFallbackDelay = const Duration(milliseconds: 800),
   }) async {
     final existing = _auth.currentUser;
-    if (existing != null) return existing;
+    if (existing != null) {
+      await _session.synchronize();
+      return currentUser;
+    }
 
     final expectedSession = await isSessionExpected();
     final storedCredentials = expectedSession && await hasStoredCredentials();
@@ -117,8 +114,8 @@ class AuthService {
     while (DateTime.now().isBefore(deadline)) {
       final current = _auth.currentUser;
       if (current != null) {
-        _cachedUser = current;
-        return current;
+        await _session.synchronize();
+        return currentUser;
       }
 
       try {
@@ -126,8 +123,8 @@ class AuthService {
           const Duration(milliseconds: 500),
         );
         if (user != null) {
-          _cachedUser = user;
-          return user;
+          await _session.synchronize();
+          return currentUser;
         }
       } catch (_) {
         // Firebase Auth can need a brief moment to restore persisted Android
@@ -138,15 +135,17 @@ class AuthService {
     }
 
     var current = _auth.currentUser;
-    if (current != null) _cachedUser = current;
-    if (current != null) return current;
+    if (current != null) {
+      await _session.synchronize();
+      return currentUser;
+    }
 
     if (expectedSession) {
       current = await _restoreWithStoredCredentials();
       if (current != null) return current;
     }
 
-    return _cachedUser;
+    return currentUser;
   }
 
   Future<UserCredential> signUpWithEmail(String email, String password) async {
@@ -156,7 +155,7 @@ class AuthService {
     );
     await _setSessionExpected(true);
     await _saveCredentials(email.trim(), password);
-    _cachedUser = credential.user;
+    await _session.synchronize();
     return credential;
   }
 
@@ -167,15 +166,16 @@ class AuthService {
     );
     await _setSessionExpected(true);
     await _saveCredentials(email.trim(), password);
-    _cachedUser = credential.user;
+    await _session.synchronize();
     return credential;
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
-    _cachedUser = null;
+    // Finish credential cleanup before Firebase can expose the sign-in screen.
     await _clearCredentials();
     await _setSessionExpected(false);
+    await _auth.signOut();
+    await _session.synchronize();
   }
 
   /// Permanently deletes the signed-in Firebase account.
@@ -186,33 +186,34 @@ class AuthService {
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
     if (user == null) throw StateError('Not signed in');
+    final revision = _session.revision;
 
     try {
       await user.delete();
     } on FirebaseAuthException catch (e) {
       if (e.code != 'requires-recent-login') rethrow;
-      final refreshed = await _reauthenticate();
-      if (refreshed == null) rethrow;
+      final refreshed = await _reauthenticate(user);
+      if (refreshed == null || revision != _session.revision) rethrow;
       await refreshed.delete();
     }
 
-    _cachedUser = null;
-    await _clearCredentials();
-    await _setSessionExpected(false);
+    if (_auth.currentUser == null) {
+      await _clearCredentials();
+      await _setSessionExpected(false);
+    }
+    await _session.synchronize();
   }
 
-  Future<User?> _reauthenticate() async {
-    final user = _auth.currentUser;
-    if (user == null) return null;
-
+  Future<User?> _reauthenticate(User user) async {
     final email = await _secureStorage.read(key: _storedEmailKey);
     final password = await _secureStorage.read(key: _storedPasswordKey);
     if (email?.isNotEmpty != true || password?.isNotEmpty != true) return null;
+    if (_auth.currentUser?.uid != user.uid) return null;
 
     await user.reauthenticateWithCredential(
       EmailAuthProvider.credential(email: email!, password: password!),
     );
-    return _auth.currentUser;
+    return _auth.currentUser?.uid == user.uid ? user : null;
   }
 
   Future<void> sendPasswordResetEmail(String email) =>
@@ -220,7 +221,7 @@ class AuthService {
 
   Future<Map<String, String>> diagnostics() async {
     final raw = _auth.currentUser;
-    final cached = _cachedUser;
+    final cached = cachedUser;
     final expected = await isSessionExpected();
     final storedCredentials = await hasStoredCredentials();
     final values = <String, String>{

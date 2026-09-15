@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import '../preferences/preferences_service.dart';
 import '../preferences/user_preferences.dart';
+import '../storage/account_data_store.dart';
 import '../../features/trips/models/trip.dart';
 import '../../features/trips/services/trip_service.dart';
 import '../../features/expenses/models/expense_entry.dart';
@@ -16,25 +17,37 @@ import '../../features/work_mode/models/work_mode_settings.dart';
 import '../../features/work_mode/services/work_mode_service.dart';
 
 class BackupService {
+  BackupService({AccountDataScope? scope})
+    : _scope = scope ?? AccountDataStore.current;
+
   static const _appName = 'MarV Route';
   // Legacy name accepted on import for backward compatibility.
   static const _appNameLegacy = 'Route Mint';
   static const _backupVersion = 1;
 
-  final _prefsService = PreferencesService();
-  final _tripService = TripService();
-  final _expenseService = ExpenseService();
-  final _fuelService = FuelService();
-  final _workModeService = WorkModeService();
+  final AccountDataScope _scope;
+  late final _prefsService = PreferencesService(scope: _scope);
+  late final _tripService = TripService(scope: _scope);
+  late final _expenseService = ExpenseService(scope: _scope);
+  late final _fuelService = FuelService(scope: _scope);
+  late final _workModeService = WorkModeService(scope: _scope);
+
+  void _ensureCurrent() {
+    if (!identical(AccountDataStore.current, _scope)) {
+      throw StateError('Account changed during local backup');
+    }
+  }
 
   // ─── Export ───────────────────────────────────────────────────────────────
 
   Future<bool> exportBackup() async {
+    _ensureCurrent();
     final preferences = await _prefsService.loadPreferences();
     final trips = await _tripService.loadTrips();
     final expenseEntries = await _expenseService.loadExpenseEntries();
     final fuelEntries = await _fuelService.loadFuelEntries();
     final workModeSettings = await _workModeService.loadSettings();
+    _ensureCurrent();
 
     final data = <String, dynamic>{
       'appName': _appName,
@@ -65,12 +78,15 @@ class BackupService {
         type: FileType.custom,
         allowedExtensions: ['json'],
       );
+      _ensureCurrent();
       return path != null;
     }
-    return Printing.sharePdf(
+    final shared = await Printing.sharePdf(
       bytes: bytes,
       filename: 'marv_route_backup_$slug.json',
     );
+    _ensureCurrent();
+    return shared;
   }
 
   // ─── Import ───────────────────────────────────────────────────────────────
@@ -78,10 +94,12 @@ class BackupService {
   /// Decodes, validates, and restores a backup JSON string.
   /// Throws [FormatException] for invalid/unsupported files.
   Future<void> importBackup(String jsonString) async {
+    _ensureCurrent();
     final decoded = decodeAndValidateBackupJson(jsonString);
 
     final prefsJson = decoded['preferences'];
     if (prefsJson is Map) {
+      _ensureCurrent();
       await _prefsService.savePreferences(
         UserPreferences.fromJson(Map<String, dynamic>.from(prefsJson)),
       );
@@ -98,11 +116,13 @@ class BackupService {
           // Skip malformed entries without aborting the restore.
         }
       }
+      _ensureCurrent();
       await _tripService.saveTrips(trips);
     }
 
     final workJson = decoded['workModeSettings'];
     if (workJson is Map) {
+      _ensureCurrent();
       await _workModeService.saveSettings(
         WorkModeSettings.fromJson(Map<String, dynamic>.from(workJson)),
       );
@@ -119,6 +139,7 @@ class BackupService {
           // Skip malformed entries without aborting the restore.
         }
       }
+      _ensureCurrent();
       await _fuelService.saveFuelEntries(fuelEntries);
     }
 
@@ -135,8 +156,10 @@ class BackupService {
           // Skip malformed entries without aborting the restore.
         }
       }
+      _ensureCurrent();
       await _expenseService.saveExpenseEntries(expenseEntries);
     }
+    _ensureCurrent();
   }
 
   static Map<String, dynamic> decodeAndValidateBackupJson(String jsonString) {

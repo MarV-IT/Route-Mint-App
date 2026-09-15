@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../storage/account_data_store.dart';
 import 'tracking_result.dart';
 
 typedef TrackingPointStreamFactory = Stream<TrackingPoint> Function();
@@ -37,6 +38,11 @@ class ForegroundTripTrackingService {
   int _session = 0;
   Future<bool>? _starting;
   Future<(TrackingResult?, TrackingFailureReason?)>? _stopping;
+  AccountDataScope? _ownerScope;
+  bool _changingAccount = false;
+  TrackingResult? _accountChangeResult;
+
+  AccountDataScope? get ownerScope => _ownerScope;
 
   // Listenable so the UI (card, cross-tab banner) can react without polling.
   final ValueNotifier<bool> isTrackingNotifier = ValueNotifier(false);
@@ -54,8 +60,14 @@ class ForegroundTripTrackingService {
   Future<bool> startTracking({
     TrackingPointStreamFactory? pointStreamFactory,
   }) async {
+    if (_changingAccount || _accountChangeResult != null) return false;
+    final requestedScope = AccountDataStore.current;
     final stopping = _stopping;
     if (stopping != null) await stopping;
+    if (_changingAccount ||
+        !identical(requestedScope, AccountDataStore.current)) {
+      return false;
+    }
     final starting = _starting;
     if (starting != null) return starting;
     if (isTracking) return true;
@@ -90,6 +102,7 @@ class ForegroundTripTrackingService {
     }
 
     _points.clear();
+    _ownerScope = AccountDataStore.current;
     _rawPointCount = 0;
     _droppedPointCount = 0;
     _carriedDistanceKm = 0;
@@ -154,6 +167,24 @@ class ForegroundTripTrackingService {
   Future<(TrackingResult?, TrackingFailureReason?)> stopTracking() {
     return _stopping ??= _stopTracking().whenComplete(() => _stopping = null);
   }
+
+  /// Retains the old owner while the coordinator persists the final result.
+  Future<(TrackingResult?, TrackingFailureReason?)> prepareForAccountChange() {
+    _changingAccount = true;
+    final pending = _accountChangeResult;
+    if (pending != null) return Future.value((pending, null));
+    return stopTracking().then((stopped) {
+      _accountChangeResult = stopped.$1;
+      return stopped;
+    });
+  }
+
+  /// Keep the final route available for retry if local persistence fails.
+  void acknowledgeAccountChangeTrip(TrackingResult result) {
+    if (identical(_accountChangeResult, result)) _accountChangeResult = null;
+  }
+
+  void completeAccountChange() => _changingAccount = false;
 
   Future<(TrackingResult?, TrackingFailureReason?)> _stopTracking() async {
     final subscription = _subscription;

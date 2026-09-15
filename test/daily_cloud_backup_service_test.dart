@@ -7,12 +7,19 @@ import 'package:route_mint_app/core/backup/cloud_backup_service.dart';
 import 'package:route_mint_app/core/backup/daily_cloud_backup_service.dart';
 import 'package:route_mint_app/core/preferences/preferences_service.dart';
 import 'package:route_mint_app/core/preferences/user_preferences.dart';
+import 'package:route_mint_app/core/storage/account_data_store.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class _User extends Fake implements User {}
+class _User extends Fake implements User {
+  _User(this.uid);
+
+  @override
+  final String uid;
+}
 
 class _Auth extends Fake implements FirebaseAuth {
   @override
-  User? get currentUser => _User();
+  User? currentUser = _User('account-a');
 }
 
 class _Preferences extends PreferencesService {
@@ -40,6 +47,16 @@ class _Backup extends CloudBackupService {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    AccountDataStore.resetForTesting();
+    await AccountDataStore.activate('account-a');
+  });
+
+  tearDown(AccountDataStore.resetForTesting);
+
   test('backup completion preserves settings changed during upload', () async {
     final original = UserPreferences.defaults().copyWith(
       subscriptionStatus: SubscriptionStatus.pro,
@@ -99,4 +116,71 @@ void main() {
       );
     }
   });
+
+  for (final nextUid in ['account-b', 'account-a']) {
+    test('late upload cannot update a new session for $nextUid', () async {
+      final original = UserPreferences.defaults().copyWith(
+        subscriptionStatus: SubscriptionStatus.pro,
+      );
+      final accountA = PreferencesService();
+      await accountA.savePreferences(original);
+      final backup = _Backup();
+      final auth = _Auth();
+      final service = DailyCloudBackupService(
+        auth: auth,
+        cloudBackupService: backup,
+      );
+      final saving = service.runIfDue(original);
+      await backup.started.future;
+
+      auth.currentUser = null;
+      await AccountDataStore.activate(null);
+      auth.currentUser = _User(nextUid);
+      await AccountDataStore.activate(nextUid);
+      final nextAccount = PreferencesService();
+      final second = original.copyWith(vehicleOdometerKm: 900.0);
+      await nextAccount.savePreferences(second);
+      backup.finished.complete();
+
+      expect(await saving, isNull);
+      expect(
+        (await accountA.loadPreferences()).lastAutomaticCloudBackupAt,
+        isNull,
+      );
+      final saved = await nextAccount.loadPreferences();
+      expect(saved.lastAutomaticCloudBackupAt, isNull);
+      expect(saved.vehicleOdometerKm, 900);
+    });
+  }
+
+  test(
+    'long-lived daily service uses storage of the current account',
+    () async {
+      await AccountDataStore.activate(null);
+      final backup = _Backup();
+      final auth = _Auth();
+      final service = DailyCloudBackupService(
+        auth: auth,
+        cloudBackupService: backup,
+      );
+      await AccountDataStore.activate('account-a');
+      final preferences = PreferencesService();
+      final original = UserPreferences.defaults().copyWith(
+        subscriptionStatus: SubscriptionStatus.pro,
+        vehicleOdometerKm: 12345.0,
+      );
+      await preferences.savePreferences(original);
+
+      final saving = service.runIfDue(original);
+      await backup.started.future;
+      backup.finished.complete();
+
+      final updated = await saving;
+      expect(updated!.vehicleOdometerKm, 12345);
+      expect(
+        (await preferences.loadPreferences()).lastAutomaticCloudBackupAt,
+        updated.lastAutomaticCloudBackupAt,
+      );
+    },
+  );
 }

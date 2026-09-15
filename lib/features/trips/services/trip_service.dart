@@ -1,14 +1,21 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/preferences/preferences_service.dart';
+import '../../../core/storage/account_data_store.dart';
 import '../models/trip.dart';
 
 class TripService {
+  TripService({AccountDataScope? scope})
+    : _scope = scope ?? AccountDataStore.current {
+    _preferencesService = PreferencesService(scope: _scope);
+  }
+
+  final AccountDataScope _scope;
   static const String _tripsKey = 'trips';
-  final _preferencesService = PreferencesService();
+  static final Map<String, Future<void>> _pendingMutations = {};
+  late final PreferencesService _preferencesService;
 
   Future<List<Trip>> loadTrips() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _scope.getPreferences();
     final jsonString = prefs.getString(_tripsKey);
     if (jsonString == null) return [];
 
@@ -33,42 +40,64 @@ class TripService {
     }
   }
 
-  Future<void> saveTrips(List<Trip> trips) async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> saveTrips(List<Trip> trips) => _mutate(() => _saveTrips(trips));
+
+  Future<void> _saveTrips(List<Trip> trips) async {
+    final prefs = await _scope.getPreferences();
     final jsonString = jsonEncode(trips.map((t) => t.toJson()).toList());
     await prefs.setString(_tripsKey, jsonString);
   }
 
-  Future<void> addTrip(Trip trip) async {
+  Future<void> addTrip(Trip trip) => _mutate(() async {
     final trips = await loadTrips();
     final existing = _findById(trips, trip.id);
 
     trips.removeWhere((t) => t.id == trip.id);
     trips.add(trip);
 
-    await saveTrips(trips);
+    await _saveTrips(trips);
     await _adjustOdometerBy(trip.distance - (existing?.distance ?? 0));
-  }
+  });
 
-  Future<void> updateTrip(Trip updatedTrip) async {
+  Future<void> updateTrip(Trip updatedTrip) => _mutate(() async {
     final trips = await loadTrips();
     final index = trips.indexWhere((t) => t.id == updatedTrip.id);
     if (index != -1) {
       final previousDistance = trips[index].distance;
       trips[index] = updatedTrip;
-      await saveTrips(trips);
+      await _saveTrips(trips);
       await _adjustOdometerBy(updatedTrip.distance - previousDistance);
     }
-  }
+  });
 
-  Future<void> deleteTrip(String id) async {
+  Future<void> deleteTrip(String id) => _mutate(() async {
     final trips = await loadTrips();
     final existing = _findById(trips, id);
     trips.removeWhere((t) => t.id == id);
-    await saveTrips(trips);
+    await _saveTrips(trips);
     if (existing != null) {
       await _adjustOdometerBy(-existing.distance);
     }
+  });
+
+  // Manual Stop and logout can both finish the same trip. Serialize across
+  // service instances for this owner so deduplication and odometer changes
+  // observe the preceding save, without blocking other accounts.
+  Future<void> _mutate(Future<void> Function() operation) {
+    final previous =
+        _pendingMutations[_scope.namespace] ?? Future<void>.value();
+    final next = previous.then((_) => operation());
+    final settled = next.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    _pendingMutations[_scope.namespace] = settled;
+    settled.then((_) {
+      if (identical(_pendingMutations[_scope.namespace], settled)) {
+        _pendingMutations.remove(_scope.namespace);
+      }
+    });
+    return next;
   }
 
   Future<void> _adjustOdometerBy(double distanceDeltaKm) async {

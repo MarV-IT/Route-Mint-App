@@ -1,14 +1,18 @@
 import 'dart:convert';
 
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/storage/account_data_store.dart';
 
 import '../models/fuel_entry.dart';
 
 class FuelService {
+  FuelService({AccountDataScope? scope})
+    : _scope = scope ?? AccountDataStore.current;
+
+  final AccountDataScope _scope;
   static const String _fuelEntriesKey = 'fuel_entries';
 
   Future<List<FuelEntry>> loadFuelEntries() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _scope.getPreferences();
     final jsonString = prefs.getString(_fuelEntriesKey);
     if (jsonString == null) return [];
 
@@ -32,7 +36,7 @@ class FuelService {
   }
 
   Future<void> saveFuelEntries(List<FuelEntry> entries) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _scope.getPreferences();
     final jsonString = jsonEncode(entries.map((e) => e.toJson()).toList());
     await prefs.setString(_fuelEntriesKey, jsonString);
   }

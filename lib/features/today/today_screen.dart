@@ -823,7 +823,7 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
     final start = result.points.first;
     final end = result.points.last;
     return Trip(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: 'manual_${result.startedAt.microsecondsSinceEpoch}',
       from: from ?? widget.strings.detectedStart,
       to: to ?? widget.strings.detectedEnd,
       distance: result.distanceKm,

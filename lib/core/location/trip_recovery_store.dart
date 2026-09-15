@@ -1,7 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../storage/account_data_store.dart';
 
 import 'tracking_result.dart';
 
@@ -29,6 +30,12 @@ class InterruptedTrip {
 /// front — hours of tracking disappeared with no error and no trace. The
 /// checkpoint written here lets the next launch finish that trip instead.
 class TripRecoveryStore {
+  TripRecoveryStore({AccountDataScope? scope})
+    : _scope = scope ?? AccountDataStore.current;
+
+  // A queued checkpoint must stay with the account that recorded it, even
+  // when it reaches disk after authentication has changed.
+  final AccountDataScope _scope;
   static const _tripKey = 'auto_detection_active_trip';
   static const _monitoringKey = 'auto_detection_monitoring';
   static Future<void> _pendingMutation = Future.value();
@@ -54,7 +61,7 @@ class TripRecoveryStore {
     final snapshot = List<TrackingPoint>.of(points);
     return _mutate(() async {
       try {
-        final prefs = await SharedPreferences.getInstance();
+        final prefs = await _scope.getPreferences();
         await prefs.setString(
           _tripKey,
           jsonEncode({
@@ -75,7 +82,7 @@ class TripRecoveryStore {
 
   Future<InterruptedTrip?> loadCheckpoint() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _scope.getPreferences();
       final raw = prefs.getString(_tripKey);
       if (raw == null || raw.isEmpty) return null;
 
@@ -119,7 +126,7 @@ class TripRecoveryStore {
 
   Future<void> clearCheckpoint({DateTime? startedAt}) => _mutate(() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _scope.getPreferences();
       if (startedAt != null) {
         final current = await loadCheckpoint();
         if (current == null || current.startedAt != startedAt) return;
@@ -134,20 +141,20 @@ class TripRecoveryStore {
 
   /// Whether detection was running when the app last stopped. Used to bring
   /// monitoring back after a restart the user did not ask for.
-  Future<void> setMonitoring(bool monitoring) async {
+  Future<void> setMonitoring(bool monitoring) => _mutate(() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _scope.getPreferences();
       await prefs.setBool(_monitoringKey, monitoring);
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[TripRecovery] monitoring flag not saved: $e');
       }
     }
-  }
+  });
 
   Future<bool> wasMonitoring() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _scope.getPreferences();
       return prefs.getBool(_monitoringKey) ?? false;
     } catch (e) {
       if (kDebugMode) {
