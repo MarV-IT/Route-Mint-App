@@ -27,6 +27,8 @@ import 'foreground_tracking_card.dart';
 import 'live_trip_map_card.dart';
 import 'odometer_reminder.dart';
 import 'oil_change_card.dart';
+import '../../core/help/help_catalog.dart';
+import '../../shared/widgets/help_hint.dart';
 
 enum _DashboardPeriod { today, thisWeek, thisMonth, thisYear }
 
@@ -930,7 +932,10 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
         : widget.strings.canada;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.strings.home)),
+      appBar: AppBar(
+        title: Text(widget.strings.home),
+        actions: const [HelpHint(HelpTopic.home)],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

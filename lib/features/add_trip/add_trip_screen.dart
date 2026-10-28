@@ -10,6 +10,8 @@ import '../trips/services/trip_service.dart';
 import '../work_mode/models/work_shift.dart';
 import '../work_mode/models/work_mode_settings.dart';
 import '../work_mode/services/work_mode_service.dart';
+import '../../core/help/help_catalog.dart';
+import '../../shared/widgets/help_hint.dart';
 
 const _kOtherPlatform = 'Other';
 const List<String> _kDefaultPlatforms = [
@@ -222,7 +224,10 @@ class _AddTripScreenState extends State<AddTripScreen> {
         _selectedCategory == 'business' && _activeShift == null;
 
     return Scaffold(
-      appBar: AppBar(title: Text(s.addTrip)),
+      appBar: AppBar(
+        title: Text(s.addTrip),
+        actions: const [HelpHint(HelpTopic.addTrip)],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

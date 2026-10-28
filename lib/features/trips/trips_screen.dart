@@ -8,6 +8,8 @@ import 'models/trip.dart';
 import 'services/trip_service.dart';
 import 'trip_insights.dart';
 import 'trip_purpose.dart';
+import '../../core/help/help_catalog.dart';
+import '../../shared/widgets/help_hint.dart';
 
 enum _PeriodFilter { all, thisMonth, lastMonth }
 
@@ -143,7 +145,10 @@ class _TripsScreenState extends State<TripsScreen> {
 
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: Text(s.trips)),
+        appBar: AppBar(
+          title: Text(s.trips),
+          actions: const [HelpHint(HelpTopic.trips)],
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -161,6 +166,8 @@ class _TripsScreenState extends State<TripsScreen> {
               icon: const Icon(Icons.rate_review_outlined, size: 18),
               label: Text('${_pendingTrips.length}'),
             ),
+          // Always last, so "?" sits in the same corner on every screen.
+          const HelpHint(HelpTopic.trips),
         ],
       ),
       body: RefreshIndicator(

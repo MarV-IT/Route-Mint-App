@@ -8,6 +8,7 @@ import '../core/auth/account_session_service.dart';
 import '../core/backup/cloud_backup_service.dart';
 import '../core/backup/daily_cloud_backup_service.dart';
 import '../core/localization/app_strings.dart';
+import '../core/localization/app_strings_scope.dart';
 import '../core/location/geolocator_tracking_provider.dart';
 import '../core/preferences/user_preferences.dart';
 import '../core/subscription/entitlement_service.dart';
@@ -371,6 +372,10 @@ class _RouteMintAppState extends State<RouteMintApp>
         ),
         useMaterial3: true,
       ),
+      // Above the Navigator, so help sheets and other routes see the
+      // active language too.
+      builder: (context, child) =>
+          AppStringsScope(strings: strings, child: child!),
       home: _buildHome(strings),
     );
   }

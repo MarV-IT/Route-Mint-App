@@ -10,11 +10,18 @@ import '../../shared/widgets/summary_card.dart';
 import '../../shared/utils/distance_utils.dart';
 import '../../shared/utils/currency_utils.dart';
 import '../../app/app.dart';
+import '../expenses/models/expense_entry.dart';
+import '../expenses/services/expense_service.dart';
 import '../fuel/models/fuel_entry.dart';
 import '../fuel/services/fuel_service.dart';
 import '../trips/models/trip.dart';
 import '../trips/services/trip_service.dart';
 import '../../core/export/csv_export_service.dart';
+import 'expense_breakdown.dart';
+import 'platform_breakdown.dart';
+import 'widgets/platform_charts_section.dart';
+import '../../core/help/help_catalog.dart';
+import '../../shared/widgets/help_hint.dart';
 
 enum ReportPeriodType { thisMonth, lastMonth, custom }
 
@@ -23,6 +30,10 @@ class ReportsScreen extends StatefulWidget {
   final AppUnit unit;
   final UserPreferences preferences;
   final VoidCallback? onReviewDetectedTrips;
+  final VoidCallback? onAddTrip;
+
+  /// Opens the add-expense screen; Reports reloads once it closes.
+  final Future<void> Function()? onAddExpense;
 
   const ReportsScreen({
     super.key,
@@ -30,6 +41,8 @@ class ReportsScreen extends StatefulWidget {
     required this.unit,
     required this.preferences,
     this.onReviewDetectedTrips,
+    this.onAddTrip,
+    this.onAddExpense,
   });
 
   @override
@@ -39,6 +52,7 @@ class ReportsScreen extends StatefulWidget {
 class _ReportsScreenState extends State<ReportsScreen> {
   final _tripService = TripService();
   final _fuelService = FuelService();
+  final _expenseService = ExpenseService();
   final _pdfService = ReportPdfService();
   final _taxService = TaxService();
   final _csvService = CsvExportService();
@@ -47,6 +61,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   // ─── All trips (raw, unfiltered) ─────────────────────────────────────────
   List<Trip> _allTrips = [];
   List<FuelEntry> _allFuelEntries = [];
+  List<ExpenseEntry> _allExpenseEntries = [];
 
   // ─── Period selection ─────────────────────────────────────────────────────
   ReportPeriodType _selectedPeriod = ReportPeriodType.thisMonth;
@@ -71,13 +86,27 @@ class _ReportsScreenState extends State<ReportsScreen> {
   double _totalFuelVolumeLiters = 0;
   DateTime? _lastCloudBackupTime;
 
+  // ─── Platform charts ──────────────────────────────────────────────────────
+  ChartPeriod _chartPeriod = ChartPeriod.month;
+  PlatformColorAssignment _platformColors = PlatformColorAssignment.fromTrips(
+    const [],
+  );
+  // Aggregated once per period and reused until the data reloads, so
+  // flipping between periods on a long history does not re-walk every record.
+  final Map<ChartPeriod, PlatformBreakdown> _chartCache = {};
+  final Map<ChartPeriod, ExpenseBreakdown> _expenseChartCache = {};
+
   bool _isLoading = true;
   bool _isExportingSimple = false;
   bool _isExportingDetailed = false;
   bool _isExportingCsv = false;
+  bool _isExportingCharts = false;
 
   bool get _isExportingAny =>
-      _isExportingSimple || _isExportingDetailed || _isExportingCsv;
+      _isExportingSimple ||
+      _isExportingDetailed ||
+      _isExportingCsv ||
+      _isExportingCharts;
 
   String get _currencyCode => widget.preferences.currencyCode;
   int get _needsReviewCount => _reportTrips
@@ -133,6 +162,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Future<void> _loadData() async {
     final trips = await _tripService.loadTrips();
     final fuelEntries = await _fuelService.loadFuelEntries();
+    final expenseEntries = await _expenseService.loadExpenseEntries();
     DateTime? lastCloudBackupTime;
     try {
       lastCloudBackupTime = await _cloudBackupService.getLastCloudBackupTime();
@@ -142,6 +172,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     _allTrips = trips;
     _allFuelEntries = fuelEntries;
+    _allExpenseEntries = expenseEntries;
+    _platformColors = PlatformColorAssignment.fromTrips(trips);
+    _chartCache.clear();
+    _expenseChartCache.clear();
     final range = _currentReportRange();
     final reportTrips = _filterTrips(range);
     final reportFuelEntries = _filterFuelEntries(range);
@@ -231,7 +265,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   // ─── Export ───────────────────────────────────────────────────────────────
 
-  Future<void> _handleExport(PdfReportType type) async {
+  /// Exports a PDF for the report period, or — when [chartPeriod] is given —
+  /// for exactly the period the charts are showing, so "Create report" under
+  /// the charts never produces a report for different dates than the reader
+  /// was just looking at.
+  Future<void> _handleExport(
+    PdfReportType type, {
+    ChartPeriod? chartPeriod,
+  }) async {
     final entitlements = EntitlementService(widget.preferences);
     if (!requireProFeature(
       context: context,
@@ -241,30 +282,53 @@ class _ReportsScreenState extends State<ReportsScreen> {
       return;
     }
 
-    final isSimple = type == PdfReportType.simple;
-    setState(() {
-      if (isSimple) {
-        _isExportingSimple = true;
+    void setBusy(bool busy) {
+      if (chartPeriod != null) {
+        _isExportingCharts = busy;
+      } else if (type == PdfReportType.simple) {
+        _isExportingSimple = busy;
       } else {
-        _isExportingDetailed = true;
+        _isExportingDetailed = busy;
       }
-    });
+    }
+
+    setState(() => setBusy(true));
 
     try {
       final country = widget.preferences.country;
-      final tax = _taxService.calculateTaxFromKm(_businessDistance, country);
-      final range = _currentReportRange();
+      final DateTimeRange range;
+      final List<Trip> trips;
+      final List<FuelEntry> fuelEntries;
+      if (chartPeriod == null) {
+        range = _currentReportRange();
+        trips = _reportTrips;
+        fuelEntries = _reportFuelEntries;
+      } else {
+        range = chartPeriodRange(
+          chartPeriod,
+          DateTime.now(),
+          earliest: _earliestRecordDate(),
+        );
+        trips = tripsInPeriod(_allTrips, chartPeriod, DateTime.now());
+        fuelEntries = chartPeriod == ChartPeriod.allTime
+            ? _allFuelEntries
+            : _filterFuelEntries(range);
+      }
+      final totalDistance = trips.fold(0.0, (s, t) => s + t.distance);
+      final businessDistance = trips
+          .where((t) => t.category == 'business')
+          .fold(0.0, (s, t) => s + t.distance);
 
       await _pdfService.generateReport(
-        trips: _reportTrips,
-        totalDistance: _totalDistance,
-        businessDistance: _businessDistance,
-        tax: tax,
-        platformBreakdown: _buildPlatformBreakdown(_reportTrips),
+        trips: trips,
+        totalDistance: totalDistance,
+        businessDistance: businessDistance,
+        tax: _taxService.calculateTaxFromKm(businessDistance, country),
+        platformBreakdown: _buildPlatformBreakdown(trips),
         country: country,
         unit: widget.unit,
         currencyCode: _currencyCode,
-        fuelEntries: _reportFuelEntries,
+        fuelEntries: fuelEntries,
         shifts: const [],
         reportType: type,
         startDate: range.start,
@@ -279,16 +343,50 @@ class _ReportsScreenState extends State<ReportsScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text(widget.strings.exportFailed)));
     } finally {
-      if (mounted) {
-        setState(() {
-          if (isSimple) {
-            _isExportingSimple = false;
-          } else {
-            _isExportingDetailed = false;
-          }
-        });
-      }
+      if (mounted) setState(() => setBusy(false));
     }
+  }
+
+  DateTime? _earliestRecordDate() {
+    DateTime? earliest;
+    for (final date in [
+      for (final t in _allTrips) t.date,
+      for (final e in _allFuelEntries) e.date,
+      for (final e in _allExpenseEntries) e.date,
+    ]) {
+      if (earliest == null || date.isBefore(earliest)) earliest = date;
+    }
+    return earliest;
+  }
+
+  PlatformBreakdown _chartBreakdown(ChartPeriod period) =>
+      _chartCache.putIfAbsent(
+        period,
+        () => buildPlatformBreakdown(
+          trips: tripsInPeriod(_allTrips, period, DateTime.now()),
+          colors: _platformColors,
+        ),
+      );
+
+  ExpenseBreakdown _expenseBreakdown(ChartPeriod period) {
+    return _expenseChartCache.putIfAbsent(period, () {
+      final now = DateTime.now();
+      return buildExpenseBreakdown(
+        trips: tripsInPeriod(_allTrips, period, now),
+        fuelEntries: inChartPeriod(_allFuelEntries, (e) => e.date, period, now),
+        expenseEntries: inChartPeriod(
+          _allExpenseEntries,
+          (e) => e.date,
+          period,
+          now,
+        ),
+      );
+    });
+  }
+
+  Future<void> _addExpenseFromCharts() async {
+    await widget.onAddExpense?.call();
+    if (mounted) await _loadData();
   }
 
   Future<void> _handleCsvExport() async {
@@ -390,7 +488,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final totalExpenses = _totalFuel + _totalParking + _totalTolls;
 
     return Scaffold(
-      appBar: AppBar(title: Text(s.reports)),
+      appBar: AppBar(
+        title: Text(s.reports),
+        actions: const [HelpHint(HelpTopic.reports)],
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -398,6 +499,37 @@ class _ReportsScreenState extends State<ReportsScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  // ── Platform charts ────────────────────────────────────
+                  PlatformChartsSection(
+                    strings: s,
+                    period: _chartPeriod,
+                    onPeriodChanged: (period) =>
+                        setState(() => _chartPeriod = period),
+                    breakdown: _chartBreakdown(_chartPeriod),
+                    expenses: _expenseBreakdown(_chartPeriod),
+                    hasAnyRecords:
+                        _allTrips.isNotEmpty ||
+                        _allFuelEntries.isNotEmpty ||
+                        _allExpenseEntries.isNotEmpty,
+                    currencyCode: _currencyCode,
+                    onAddTrip: widget.onAddTrip,
+                    onAddExpense: widget.onAddExpense == null
+                        ? null
+                        : _addExpenseFromCharts,
+                    isCreatingReport: _isExportingCharts,
+                    // The detailed PDF is the one with the platform table,
+                    // which is what these charts preview.
+                    onCreateReport: _isExportingAny
+                        ? null
+                        : () => _handleExport(
+                            PdfReportType.detailed,
+                            chartPeriod: _chartPeriod,
+                          ),
+                  ),
+                  const SizedBox(height: 28),
+                  const Divider(),
+                  const SizedBox(height: 16),
+
                   // ── Report period selector ─────────────────────────────
                   Text(
                     s.reportPeriod,

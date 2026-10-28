@@ -258,7 +258,7 @@ class AppStrings {
     en: 'Distance',
     es: 'Distancia',
     fr: 'Distance',
-    ru: 'Дистанція',
+    ru: 'Дистанция',
     uk: 'Дистанція',
     fa: 'مسافت',
   );
@@ -3858,6 +3858,188 @@ class AppStrings {
     uk: 'Розбивка за платформами',
     fa: 'تفکیک بر اساس پلتفرم',
   );
+
+  // ─── Help hints ───────────────────────────────────────────────────────────
+
+  /// Screen-reader label for a "?" button, e.g. "Help: Reports".
+  String helpFor(String title) => _value(
+    en: 'Help: $title',
+    es: 'Ayuda: $title',
+    fr: 'Aide : $title',
+    ru: 'Пояснение: $title',
+    uk: 'Пояснення: $title',
+    fa: 'راهنما: $title',
+  );
+
+  String get close => _value(
+    en: 'Close',
+    es: 'Cerrar',
+    fr: 'Fermer',
+    ru: 'Закрыть',
+    uk: 'Закрити',
+    fa: 'بستن',
+  );
+
+  /// Lead-in before a help example, punctuation included.
+  String get helpExampleLead => _value(
+    en: 'For example: ',
+    es: 'Por ejemplo: ',
+    fr: 'Par exemple : ',
+    ru: 'Например: ',
+    uk: 'Наприклад: ',
+    fa: 'مثال: ',
+  );
+
+  // ─── Report charts ────────────────────────────────────────────────────────
+
+  String get platformOverview => _value(
+    en: 'Platform overview',
+    es: 'Resumen por plataforma',
+    fr: 'Aperçu par plateforme',
+    ru: 'Обзор по платформам',
+    uk: 'Огляд за платформами',
+    fa: 'نمای کلی پلتفرم‌ها',
+  );
+
+  String get periodWeek => _value(
+    en: 'Week',
+    es: 'Semana',
+    fr: 'Semaine',
+    ru: 'Неделя',
+    uk: 'Тиждень',
+    fa: 'هفته',
+  );
+
+  String get periodMonth => _value(
+    en: 'Month',
+    es: 'Mes',
+    fr: 'Mois',
+    ru: 'Месяц',
+    uk: 'Місяць',
+    fa: 'ماه',
+  );
+
+  String get periodAllTime => _value(
+    en: 'All time',
+    es: 'Todo',
+    fr: 'Tout',
+    ru: 'Всё время',
+    uk: 'Весь час',
+    fa: 'همه زمان‌ها',
+  );
+
+  String get tripShareByPlatform => _value(
+    en: 'Share of trips',
+    es: 'Reparto de viajes',
+    fr: 'Répartition des trajets',
+    ru: 'Доля поездок',
+    uk: 'Частка поїздок',
+    fa: 'سهم سفرها',
+  );
+
+  String get expensesByType => _value(
+    en: 'Expenses by type',
+    es: 'Gastos por tipo',
+    fr: 'Dépenses par type',
+    ru: 'Расходы по видам',
+    uk: 'Витрати за видами',
+    fa: 'هزینه‌ها بر اساس نوع',
+  );
+
+  String expensesTotal(String amount) => _value(
+    en: 'Total: $amount',
+    es: 'Total: $amount',
+    fr: 'Total : $amount',
+    ru: 'Всего: $amount',
+    uk: 'Разом: $amount',
+    fa: 'مجموع: $amount',
+  );
+
+  String get otherWork => _value(
+    en: 'Other work',
+    es: 'Otro trabajo',
+    fr: 'Autre travail',
+    ru: 'Другая работа',
+    uk: 'Інша робота',
+    fa: 'کار دیگر',
+  );
+
+  String get personalTrips => _value(
+    en: 'Personal',
+    es: 'Personales',
+    fr: 'Personnels',
+    ru: 'Личные',
+    uk: 'Особисті',
+    fa: 'شخصی',
+  );
+
+  /// The word for "trip" in the grammatical form [count] needs, without the
+  /// number — e.g. under a large total in the centre of a chart.
+  String tripCountWord(int count) => _value(
+    en: count == 1 ? 'trip' : 'trips',
+    es: count == 1 ? 'viaje' : 'viajes',
+    fr: count <= 1 ? 'trajet' : 'trajets',
+    ru: _slavicPlural(count, 'поездка', 'поездки', 'поездок'),
+    uk: _slavicPlural(count, 'поїздка', 'поїздки', 'поїздок'),
+    fa: 'سفر',
+  );
+
+  String tripCount(int count) => '$count ${tripCountWord(count)}';
+
+  String get chartsEmptyMessage => _value(
+    en: 'Add your first trip — the split by platform will appear here.',
+    es: 'Añade tu primer viaje: aquí verás el reparto por plataforma.',
+    fr: 'Ajoutez votre premier trajet : la répartition par plateforme apparaîtra ici.',
+    ru: 'Добавьте первую поездку — и здесь появится распределение по платформам.',
+    uk: 'Додайте першу поїздку — і тут зʼявиться розподіл за платформами.',
+    fa: 'اولین سفر خود را اضافه کنید — تفکیک بر اساس پلتفرم اینجا نمایش داده می‌شود.',
+  );
+
+  String get noTripsInPeriod => _value(
+    en: 'No trips in this period',
+    es: 'No hay viajes en este periodo',
+    fr: 'Aucun trajet sur cette période',
+    ru: 'За этот период поездок нет',
+    uk: 'За цей період поїздок немає',
+    fa: 'در این بازه سفری نیست',
+  );
+
+  String get showAllTime => _value(
+    en: 'Show all time',
+    es: 'Ver todo',
+    fr: 'Voir tout',
+    ru: 'Показать всё время',
+    uk: 'Показати весь час',
+    fa: 'نمایش همه زمان‌ها',
+  );
+
+  String get noExpensesInPeriod => _value(
+    en: 'No expenses in this period',
+    es: 'No hay gastos en este periodo',
+    fr: 'Aucune dépense sur cette période',
+    ru: 'За этот период расходов нет',
+    uk: 'За цей період витрат немає',
+    fa: 'در این بازه هزینه‌ای نیست',
+  );
+
+  String get createReport => _value(
+    en: 'Create report',
+    es: 'Crear informe',
+    fr: 'Créer un rapport',
+    ru: 'Создать отчёт',
+    uk: 'Створити звіт',
+    fa: 'ایجاد گزارش',
+  );
+
+  /// Ukrainian and Russian pick the noun form from the last digits:
+  /// 1 поїздка, 2–4 поїздки, 5–20 поїздок, 21 поїздка, 22 поїздки…
+  static String _slavicPlural(int n, String one, String few, String many) {
+    final mod10 = n % 10;
+    final mod100 = n % 100;
+    if (mod10 == 1 && mod100 != 11) return one;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+    return many;
+  }
 
   String platformCount(int count) => _value(
     en: '$count platforms',

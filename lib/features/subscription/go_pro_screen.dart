@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/localization/app_strings.dart';
 import '../../shared/utils/safe_scroll_padding.dart';
+import '../../core/help/help_catalog.dart';
+import '../../shared/widgets/help_hint.dart';
 
 class GoProScreen extends StatelessWidget {
   const GoProScreen({super.key, required this.strings});
@@ -20,7 +22,10 @@ class GoProScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(strings.goPro)),
+      appBar: AppBar(
+        title: Text(strings.goPro),
+        actions: const [HelpHint(HelpTopic.premium)],
+      ),
       body: ListView(
         padding: safeScrollPadding(context),
         children: [

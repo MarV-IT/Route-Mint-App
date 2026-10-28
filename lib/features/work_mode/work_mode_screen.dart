@@ -7,6 +7,8 @@ import 'models/work_shift.dart';
 import 'models/work_mode_settings.dart';
 import 'services/work_mode_service.dart';
 import '../../shared/utils/safe_scroll_padding.dart';
+import '../../core/help/help_catalog.dart';
+import '../../shared/widgets/help_hint.dart';
 
 class WorkModeScreen extends StatefulWidget {
   final AppStrings strings;
@@ -80,7 +82,10 @@ class _WorkModeScreenState extends State<WorkModeScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(s.workMode)),
+      appBar: AppBar(
+        title: Text(s.workMode),
+        actions: const [HelpHint(HelpTopic.platforms)],
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(

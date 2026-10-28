@@ -133,6 +133,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         unit: widget.unit,
         preferences: widget.preferences,
         onReviewDetectedTrips: _navigateToTripsForReview,
+        onAddTrip: () => _selectTab(2),
+        onAddExpense: _openAddExpense,
       ),
       ProfileScreen(
         strings: strings,
