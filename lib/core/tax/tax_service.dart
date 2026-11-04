@@ -1,49 +1,105 @@
 enum Country { usa, canada }
 
+/// A business distance on a given day, the unit the deduction is worked out
+/// from.
+typedef DatedDistance = ({DateTime date, double km});
+
+/// Mileage deduction at the official per-distance rates.
+///
+/// Rates change by date — the IRS even changed its 2026 rate in July — so a
+/// deduction is worked out from each trip's date, not from today's rate.
+/// When a new rate is announced, add it to the tables below; dates after the
+/// newest entry keep using it until then.
 class TaxService {
-  // ─── Constants ────────────────────────────────────────────────────────────
+  // ─── Rate tables ──────────────────────────────────────────────────────────
 
-  static const double _usaRatePerMile = 0.725;
+  /// IRS business standard mileage rates, oldest first, each in force from
+  /// [from] until the next entry.
+  /// https://www.irs.gov/tax-professionals/standard-mileage-rates
+  static final List<({DateTime from, double perMile})> _usaRates = [
+    (from: DateTime(2023), perMile: 0.655), // IR-2022-234
+    (from: DateTime(2024), perMile: 0.67), // IR-2023-239
+    (from: DateTime(2025), perMile: 0.70), // IR-2024-312
+    (from: DateTime(2026), perMile: 0.725), // IR-2025-128
+    (from: DateTime(2026, 7), perMile: 0.76), // IR-2026-29, mid-year rise
+  ];
 
-  static const double _canadaRateTier1 = 0.73; // first 5000 km
-  static const double _canadaRateTier2 = 0.67; // beyond 5000 km
+  /// CRA per-kilometre allowance limits for the provinces, by calendar year:
+  /// one rate for the first 5,000 km of the year and a lower one after.
+  /// https://www.canada.ca/en/department-finance/news/2026/01/government-announces-the-2026-automobile-deduction-limits-and-expense-benefit-rates-for-businesses.html
+  static const Map<int, ({double firstTier, double afterTier})> _canadaRates = {
+    2023: (firstTier: 0.68, afterTier: 0.62),
+    2024: (firstTier: 0.70, afterTier: 0.64),
+    2025: (firstTier: 0.72, afterTier: 0.66),
+    2026: (firstTier: 0.73, afterTier: 0.67),
+  };
+
   static const double _canadaTier1LimitKm = 5000;
 
   // ─── Public API ───────────────────────────────────────────────────────────
 
-  /// Calculates tax reimbursement for a given distance in kilometres.
+  /// The IRS business rate per mile in force on [date].
+  double usaRatePerMile(DateTime date) {
+    var rate = _usaRates.first.perMile;
+    for (final entry in _usaRates) {
+      if (date.isBefore(entry.from)) break;
+      rate = entry.perMile;
+    }
+    return rate;
+  }
+
+  /// The CRA rates for [year], or the nearest year on record.
+  ({double firstTier, double afterTier}) canadaRates(int year) {
+    final years = _canadaRates.keys.toList()..sort();
+    var chosen = years.first;
+    for (final y in years) {
+      if (y > year) break;
+      chosen = y;
+    }
+    return _canadaRates[chosen]!;
+  }
+
+  /// Deduction for [km] kilometres all driven on [on] (today if omitted).
   ///
-  /// [km] — trip distance in kilometres (must be ≥ 0).
-  /// [country] — jurisdiction that determines the rate schedule.
-  ///
-  /// Returns the reimbursement amount in local currency.
-  double calculateTaxFromKm(double km, Country country) {
+  /// For a set of trips use [calculateTaxForTrips], which applies each
+  /// trip's own rate.
+  double calculateTaxFromKm(double km, Country country, {DateTime? on}) {
     assert(km >= 0, 'Distance must be non-negative');
     if (km <= 0) return 0;
+    final date = on ?? DateTime.now();
+    return calculateTaxForTrips([(date: date, km: km)], country);
+  }
 
+  /// Deduction for business [distances], each at the rate of its own date.
+  ///
+  /// Canada's lower rate starts after 5,000 km in a calendar year, so
+  /// kilometres are added up per year before the tiers are applied.
+  double calculateTaxForTrips(
+    Iterable<DatedDistance> distances,
+    Country country,
+  ) {
     switch (country) {
       case Country.usa:
-        return _calculateUsa(km);
+        var total = 0.0;
+        for (final d in distances) {
+          if (d.km <= 0) continue;
+          total += _kmToMiles(d.km) * usaRatePerMile(d.date);
+        }
+        return total;
       case Country.canada:
-        return _calculateCanada(km);
+        final kmByYear = <int, double>{};
+        for (final d in distances) {
+          if (d.km <= 0) continue;
+          kmByYear[d.date.year] = (kmByYear[d.date.year] ?? 0) + d.km;
+        }
+        var total = 0.0;
+        kmByYear.forEach((year, km) {
+          final rates = canadaRates(year);
+          final firstKm = km < _canadaTier1LimitKm ? km : _canadaTier1LimitKm;
+          total += firstKm * rates.firstTier + (km - firstKm) * rates.afterTier;
+        });
+        return total;
     }
-  }
-
-  // ─── Private calculations ─────────────────────────────────────────────────
-
-  double _calculateUsa(double km) {
-    final miles = _kmToMiles(km);
-    return miles * _usaRatePerMile;
-  }
-
-  double _calculateCanada(double km) {
-    if (km <= _canadaTier1LimitKm) {
-      return km * _canadaRateTier1;
-    }
-
-    final tier1Amount = _canadaTier1LimitKm * _canadaRateTier1;
-    final tier2Amount = (km - _canadaTier1LimitKm) * _canadaRateTier2;
-    return tier1Amount + tier2Amount;
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────

@@ -20,6 +20,7 @@ import '../../shared/widgets/summary_card.dart';
 import '../../app/app.dart';
 import '../trips/models/trip.dart';
 import '../trips/services/trip_service.dart';
+import '../trips/trip_deduction.dart';
 import '../work_mode/services/work_mode_service.dart';
 import 'auto_detection_card.dart';
 import 'brake_pad_card.dart';
@@ -535,8 +536,8 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.preferences.country != widget.preferences.country) {
       setState(() {
-        _taxPeriod = _taxService.calculateTaxFromKm(
-          _businessDistance,
+        _taxPeriod = _taxService.calculateTaxForTrips(
+          businessDistances(_periodTrips),
           widget.preferences.country,
         );
       });
@@ -698,8 +699,8 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
       _periodTrips = periodTrips;
       _totalDistance = total;
       _businessDistance = business;
-      _taxPeriod = _taxService.calculateTaxFromKm(
-        business,
+      _taxPeriod = _taxService.calculateTaxForTrips(
+        businessDistances(periodTrips),
         widget.preferences.country,
       );
       _needsReviewCount = needsReview;

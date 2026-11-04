@@ -15,6 +15,7 @@ import '../expenses/services/expense_service.dart';
 import '../fuel/models/fuel_entry.dart';
 import '../fuel/services/fuel_service.dart';
 import '../trips/models/trip.dart';
+import '../trips/trip_deduction.dart';
 import '../trips/services/trip_service.dart';
 import '../../core/export/csv_export_service.dart';
 import 'expense_breakdown.dart';
@@ -323,7 +324,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
         trips: trips,
         totalDistance: totalDistance,
         businessDistance: businessDistance,
-        tax: _taxService.calculateTaxFromKm(businessDistance, country),
+        tax: _taxService.calculateTaxForTrips(
+          businessDistances(trips),
+          country,
+        ),
         platformBreakdown: _buildPlatformBreakdown(trips),
         country: country,
         unit: widget.unit,
