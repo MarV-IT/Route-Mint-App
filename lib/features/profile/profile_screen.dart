@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -20,7 +21,10 @@ import '../../app/app.dart';
 import '../../shared/utils/distance_utils.dart';
 import '../../shared/utils/number_input.dart';
 import '../auth/auth_screen.dart';
+import '../guide/feature_guide_screen.dart';
 import '../help/help_screen.dart';
+import '../whats_new/whats_new_content.dart';
+import '../whats_new/whats_new_dialog.dart';
 import '../work_mode/work_mode_screen.dart';
 import 'tracking_diagnostics_screen.dart';
 
@@ -51,11 +55,15 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late final TextEditingController _driverController;
   late final TextEditingController _businessController;
-  late final TextEditingController _vehicleController;
+  late final TextEditingController _vehicleMakeController;
+  late final TextEditingController _vehicleModelController;
+  late final TextEditingController _vehicleYearController;
+  late final TextEditingController _vehiclePlateController;
   late final TextEditingController _accountantNameController;
   late final TextEditingController _accountantPhoneController;
   late final TextEditingController _accountantAddressController;
   late final TextEditingController _insuranceCompanyController;
+  late final TextEditingController _insurancePolicyNameController;
   late final TextEditingController _insurancePolicyController;
   late final TextEditingController _insuranceContactController;
   late final TextEditingController _odometerController;
@@ -85,7 +93,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final p = widget.preferences;
     _driverController = TextEditingController(text: p.driverName ?? '');
     _businessController = TextEditingController(text: p.businessName ?? '');
-    _vehicleController = TextEditingController(text: p.vehicleName ?? '');
+    _vehicleMakeController = TextEditingController(text: p.vehicleMake ?? '');
+    _vehicleModelController = TextEditingController(text: p.vehicleModel ?? '');
+    _vehicleYearController = TextEditingController(
+      text: p.vehicleYear?.toString() ?? '',
+    );
+    _vehiclePlateController = TextEditingController(
+      text: p.vehicleLicensePlate ?? '',
+    );
     _accountantNameController = TextEditingController(
       text: p.accountantName ?? '',
     );
@@ -97,6 +112,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     _insuranceCompanyController = TextEditingController(
       text: p.insuranceCompanyName ?? '',
+    );
+    _insurancePolicyNameController = TextEditingController(
+      text: p.insurancePolicyName ?? '',
     );
     _insurancePolicyController = TextEditingController(
       text: p.insurancePolicyNumber ?? '',
@@ -131,11 +149,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void dispose() {
     _driverController.dispose();
     _businessController.dispose();
-    _vehicleController.dispose();
+    _vehicleMakeController.dispose();
+    _vehicleModelController.dispose();
+    _vehicleYearController.dispose();
+    _vehiclePlateController.dispose();
     _accountantNameController.dispose();
     _accountantPhoneController.dispose();
     _accountantAddressController.dispose();
     _insuranceCompanyController.dispose();
+    _insurancePolicyNameController.dispose();
     _insurancePolicyController.dispose();
     _insuranceContactController.dispose();
     _odometerController.dispose();
@@ -185,18 +207,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   bool get _hasIdentityInfo =>
       _driverController.text.trim().isNotEmpty ||
-      _businessController.text.trim().isNotEmpty ||
-      _vehicleController.text.trim().isNotEmpty;
+      _businessController.text.trim().isNotEmpty;
 
   bool get _hasAccountantInfo =>
       _accountantNameController.text.trim().isNotEmpty ||
       _accountantPhoneController.text.trim().isNotEmpty ||
       _accountantAddressController.text.trim().isNotEmpty;
 
-  bool get _hasInsuranceInfo =>
-      _insuranceCompanyController.text.trim().isNotEmpty ||
-      _insurancePolicyController.text.trim().isNotEmpty ||
-      _insuranceContactController.text.trim().isNotEmpty;
+  List<TextEditingController> get _vehicleControllers => [
+    _vehicleMakeController,
+    _vehicleModelController,
+    _vehicleYearController,
+    _vehiclePlateController,
+    _insuranceCompanyController,
+    _insurancePolicyNameController,
+    _insurancePolicyController,
+    _insuranceContactController,
+  ];
+
+  bool get _hasVehicleInfo =>
+      _vehicleControllers.any((c) => c.text.trim().isNotEmpty);
 
   bool get _hasMaintenanceInfo =>
       _odometerController.text.trim().isNotEmpty ||
@@ -318,9 +348,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       businessName: _businessController.text.trim().isEmpty
           ? null
           : _businessController.text.trim(),
-      vehicleName: _vehicleController.text.trim().isEmpty
-          ? null
-          : _vehicleController.text.trim(),
     );
     widget.onPreferencesChanged(updated);
     setState(() {});
@@ -349,18 +376,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ).showSnackBar(SnackBar(content: Text(widget.strings.profileSaved)));
   }
 
-  void _saveInsurance() {
-    final updated = widget.preferences.copyWith(
-      insuranceCompanyName: _insuranceCompanyController.text.trim().isEmpty
-          ? null
-          : _insuranceCompanyController.text.trim(),
-      insurancePolicyNumber: _insurancePolicyController.text.trim().isEmpty
-          ? null
-          : _insurancePolicyController.text.trim(),
-      insuranceCompanyContact: _insuranceContactController.text.trim().isEmpty
-          ? null
-          : _insuranceContactController.text.trim(),
+  static const _minVehicleYear = 1950;
+
+  void _saveVehicle() {
+    final s = widget.strings;
+    String? text(TextEditingController c) {
+      final value = c.text.trim();
+      return value.isEmpty ? null : value;
+    }
+
+    final maxYear = DateTime.now().year + 1;
+    final yearText = text(_vehicleYearController);
+    final year = yearText == null ? null : int.tryParse(yearText);
+    if (yearText != null &&
+        (year == null || year < _minVehicleYear || year > maxYear)) {
+      _showValidationError(s.vehicleYearInvalid(_minVehicleYear, maxYear));
+      return;
+    }
+
+    var updated = widget.preferences.copyWith(
+      vehicleMake: text(_vehicleMakeController),
+      vehicleModel: text(_vehicleModelController),
+      vehicleYear: year,
+      vehicleLicensePlate: text(_vehiclePlateController)?.toUpperCase(),
+      insuranceCompanyName: text(_insuranceCompanyController),
+      insurancePolicyName: text(_insurancePolicyNameController),
+      insurancePolicyNumber: text(_insurancePolicyController),
+      insuranceCompanyContact: text(_insuranceContactController),
     );
+    // Keep the older free-text name in step, so anything still reading it
+    // (and the setup checklist) sees the same vehicle. A name typed before
+    // this section existed is kept until the fields replace it; one this
+    // section wrote is cleared along with the fields.
+    bool hasStructured(UserPreferences p) =>
+        p.vehicleMake != null ||
+        p.vehicleModel != null ||
+        p.vehicleYear != null ||
+        p.vehicleLicensePlate != null;
+    if (hasStructured(updated)) {
+      updated = updated.copyWith(vehicleName: updated.vehicleDescription);
+    } else if (hasStructured(widget.preferences)) {
+      updated = updated.copyWith(vehicleName: null);
+    }
+    _vehiclePlateController.text = updated.vehicleLicensePlate ?? '';
     widget.onPreferencesChanged(updated);
     setState(() {});
     ScaffoldMessenger.of(
@@ -666,6 +724,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// The free-text vehicle name from before the Vehicle section, while none
+  /// of the structured fields are filled in yet.
+  String? get _legacyVehicleName {
+    final p = widget.preferences;
+    final hasStructured =
+        p.vehicleMake != null ||
+        p.vehicleModel != null ||
+        p.vehicleYear != null ||
+        p.vehicleLicensePlate != null;
+    final legacy = p.vehicleName?.trim();
+    return hasStructured || legacy == null || legacy.isEmpty ? null : legacy;
+  }
+
+  Widget _vehicleField(
+    TextEditingController controller,
+    String label, {
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    TextCapitalization textCapitalization = TextCapitalization.words,
+    int maxLines = 1,
+    bool last = false,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: last ? 0 : 12),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        textCapitalization: textCapitalization,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: widget.strings.optional,
+          border: const OutlineInputBorder(),
+          alignLabelWithHint: maxLines > 1,
+        ),
+      ),
+    );
+  }
+
   Widget _maintenanceGroup({
     required IconData icon,
     required String title,
@@ -884,15 +982,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _vehicleController,
-                decoration: InputDecoration(
-                  labelText: s.vehicle,
-                  hintText: s.optional,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
               SizedBox(
                 height: 44,
                 child: FilledButton(
@@ -901,6 +990,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _saveOrEditLabel(
                       hasInfo: _hasIdentityInfo,
                       saveLabel: s.save,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          _profileSection(
+            icon: Icons.directions_car_outlined,
+            title: s.vehicleSection,
+            children: [
+              if (_legacyVehicleName case final legacy?) ...[
+                Text(
+                  s.vehicleLegacyName(legacy),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              _maintenanceGroup(
+                icon: Icons.directions_car_outlined,
+                title: s.vehicleDetails,
+                children: [
+                  _vehicleField(_vehicleMakeController, s.vehicleMake),
+                  _vehicleField(_vehicleModelController, s.vehicleModel),
+                  _vehicleField(
+                    _vehicleYearController,
+                    s.vehicleYear,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(4),
+                    ],
+                  ),
+                  _vehicleField(
+                    _vehiclePlateController,
+                    s.licensePlate,
+                    textCapitalization: TextCapitalization.characters,
+                    last: true,
+                  ),
+                ],
+              ),
+              _maintenanceGroup(
+                icon: Icons.policy_outlined,
+                title: s.insurance,
+                children: [
+                  _vehicleField(
+                    _insuranceCompanyController,
+                    s.insuranceCompanyName,
+                  ),
+                  _vehicleField(
+                    _insurancePolicyNameController,
+                    s.insurancePolicyName,
+                  ),
+                  _vehicleField(
+                    _insurancePolicyController,
+                    s.insurancePolicyNumber,
+                  ),
+                  _vehicleField(
+                    _insuranceContactController,
+                    s.insuranceCompanyContact,
+                    maxLines: 3,
+                    last: true,
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 44,
+                child: FilledButton(
+                  onPressed: _saveVehicle,
+                  child: Text(
+                    _saveOrEditLabel(
+                      hasInfo: _hasVehicleInfo,
+                      saveLabel: s.saveVehicleInfo,
                     ),
                   ),
                 ),
@@ -951,55 +1115,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _saveOrEditLabel(
                       hasInfo: _hasAccountantInfo,
                       saveLabel: s.saveAccountantInfo,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          _profileSection(
-            icon: Icons.policy_outlined,
-            title: s.insurance,
-            children: [
-              // ── Vehicle Maintenance ────────────────────────────────────────
-              TextField(
-                controller: _insuranceCompanyController,
-                decoration: InputDecoration(
-                  labelText: s.insuranceCompanyName,
-                  hintText: s.optional,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _insurancePolicyController,
-                decoration: InputDecoration(
-                  labelText: s.insurancePolicyNumber,
-                  hintText: s.optional,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _insuranceContactController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: s.insuranceCompanyContact,
-                  hintText: s.optional,
-                  border: const OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 44,
-                child: FilledButton(
-                  onPressed: _saveInsurance,
-                  child: Text(
-                    _saveOrEditLabel(
-                      hasInfo: _hasInsuranceInfo,
-                      saveLabel: s.saveInsuranceInfo,
                     ),
                   ),
                 ),
@@ -1431,6 +1546,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   context,
                   MaterialPageRoute(builder: (_) => HelpScreen(strings: s)),
                 ),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.tour_outlined),
+                title: Text(s.featureGuide),
+                subtitle: Text(s.featureGuideSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (guideContext) => FeatureGuideScreen(
+                      strings: s,
+                      onDone: () => Navigator.of(guideContext).pop(),
+                    ),
+                  ),
+                ),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.new_releases_outlined),
+                title: Text(s.whatsNew),
+                subtitle: Text(whatsNewVersion),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => showWhatsNewDialog(context, s),
               ),
             ],
           ),

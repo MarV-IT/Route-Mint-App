@@ -15,7 +15,10 @@ import '../core/subscription/entitlement_service.dart';
 import '../core/preferences/preferences_service.dart';
 import '../core/storage/account_data_store.dart';
 import '../features/auth/auth_gate.dart';
+import '../features/guide/feature_guide_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
+import '../features/whats_new/whats_new_content.dart';
+import '../features/whats_new/whats_new_dialog.dart';
 import 'navigation.dart';
 
 enum AppUnit { kilometers, miles }
@@ -424,30 +427,62 @@ class _RouteMintAppState extends State<RouteMintApp>
       );
     }
 
+    final guidePending = !_preferences!.featureGuideCompleted;
     return AuthGate(
       strings: strings,
-      child: MainNavigationScreen(
-        key: ValueKey(_dataRefreshKey),
-        unit: _preferences!.unit,
-        preferences: _preferences!,
-        selectedLanguage: _selectedLanguage,
-        onUnitChanged: (unit) {
-          if (_isCurrentAccount(scope, revision)) _changeUnit(unit);
-        },
-        onLanguageChanged: (language) {
-          if (_isCurrentAccount(scope, revision)) _changeLanguage(language);
-        },
-        onPreferencesChanged: (prefs) {
-          if (_isCurrentAccount(scope, revision)) _changePreferences(prefs);
-        },
-        onPreferencesRefresh: () async {
-          if (_isCurrentAccount(scope, revision)) await _loadPreferences();
-        },
-        selectedIndex: _selectedNavigationIndex,
-        onSelectedIndexChanged: (index) =>
-            setState(() => _selectedNavigationIndex = index),
-        strings: strings,
-      ),
+      child: guidePending
+          ? FeatureGuideScreen(
+              strings: strings,
+              onDone: () {
+                if (!_isCurrentAccount(scope, revision)) return;
+                // The guide already shows what this version can do, so a
+                // new user is not shown the update notes on top of it.
+                _changePreferences(
+                  _preferences!.copyWith(
+                    featureGuideCompleted: true,
+                    whatsNewSeenVersion: whatsNewVersion,
+                  ),
+                );
+              },
+            )
+          : WhatsNewGate(
+              preferences: _preferences!,
+              strings: strings,
+              onSeen: () {
+                if (!_isCurrentAccount(scope, revision)) return;
+                _changePreferences(
+                  _preferences!.copyWith(whatsNewSeenVersion: whatsNewVersion),
+                );
+              },
+              child: MainNavigationScreen(
+                key: ValueKey(_dataRefreshKey),
+                unit: _preferences!.unit,
+                preferences: _preferences!,
+                selectedLanguage: _selectedLanguage,
+                onUnitChanged: (unit) {
+                  if (_isCurrentAccount(scope, revision)) _changeUnit(unit);
+                },
+                onLanguageChanged: (language) {
+                  if (_isCurrentAccount(scope, revision)) {
+                    _changeLanguage(language);
+                  }
+                },
+                onPreferencesChanged: (prefs) {
+                  if (_isCurrentAccount(scope, revision)) {
+                    _changePreferences(prefs);
+                  }
+                },
+                onPreferencesRefresh: () async {
+                  if (_isCurrentAccount(scope, revision)) {
+                    await _loadPreferences();
+                  }
+                },
+                selectedIndex: _selectedNavigationIndex,
+                onSelectedIndexChanged: (index) =>
+                    setState(() => _selectedNavigationIndex = index),
+                strings: strings,
+              ),
+            ),
     );
   }
 }

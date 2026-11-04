@@ -339,7 +339,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         endDate: range.end,
         driverName: widget.preferences.driverName,
         businessName: widget.preferences.businessName,
-        vehicleName: widget.preferences.vehicleName,
+        vehicleName: widget.preferences.vehicleDescription,
       );
     } catch (e) {
       if (!mounted) return;

@@ -613,7 +613,7 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
   bool get _countryChecklistDone => widget.preferences.onboardingCompleted;
 
   bool get _vehicleChecklistDone =>
-      widget.preferences.vehicleName?.trim().isNotEmpty == true;
+      widget.preferences.vehicleDescription != null;
 
   bool get _setupChecklistComplete =>
       _countryChecklistDone &&

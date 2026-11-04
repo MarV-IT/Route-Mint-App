@@ -1192,6 +1192,96 @@ class AppStrings {
     fa: 'اطلاعات تماس شرکت',
   );
 
+  String get vehicleSection => _value(
+    en: 'Vehicle',
+    es: 'Vehículo',
+    fr: 'Véhicule',
+    ru: 'Автомобиль',
+    uk: 'Автомобіль',
+    fa: 'خودرو',
+  );
+
+  String get vehicleDetails => _value(
+    en: 'Vehicle details',
+    es: 'Datos del vehículo',
+    fr: 'Détails du véhicule',
+    ru: 'Данные автомобиля',
+    uk: 'Дані автомобіля',
+    fa: 'مشخصات خودرو',
+  );
+
+  String get vehicleMake => _value(
+    en: 'Make',
+    es: 'Marca',
+    fr: 'Marque',
+    ru: 'Марка',
+    uk: 'Марка',
+    fa: 'سازنده',
+  );
+
+  String get vehicleModel => _value(
+    en: 'Model',
+    es: 'Modelo',
+    fr: 'Modèle',
+    ru: 'Модель',
+    uk: 'Модель',
+    fa: 'مدل',
+  );
+
+  String get vehicleYear => _value(
+    en: 'Year',
+    es: 'Año',
+    fr: 'Année',
+    ru: 'Год выпуска',
+    uk: 'Рік випуску',
+    fa: 'سال ساخت',
+  );
+
+  String get licensePlate => _value(
+    en: 'License plate',
+    es: 'Placa',
+    fr: "Plaque d'immatriculation",
+    ru: 'Номерной знак',
+    uk: 'Номерний знак',
+    fa: 'شماره پلاک',
+  );
+
+  String get insurancePolicyName => _value(
+    en: 'Policy name',
+    es: 'Nombre de la póliza',
+    fr: 'Nom de la police',
+    ru: 'Название полиса',
+    uk: 'Назва поліса',
+    fa: 'نام بیمه‌نامه',
+  );
+
+  String vehicleYearInvalid(int min, int max) => _value(
+    en: 'Enter a year from $min to $max',
+    es: 'Introduce un año entre $min y $max',
+    fr: 'Saisissez une année entre $min et $max',
+    ru: 'Введите год от $min до $max',
+    uk: 'Введіть рік від $min до $max',
+    fa: 'سالی بین $min و $max وارد کنید',
+  );
+
+  String vehicleLegacyName(String name) => _value(
+    en: 'Reports now show “$name”. Fill in the fields below to replace it.',
+    es: 'Los informes muestran ahora «$name». Rellena los campos de abajo para sustituirlo.',
+    fr: 'Les rapports affichent « $name ». Remplissez les champs ci-dessous pour le remplacer.',
+    ru: 'Сейчас в отчётах: «$name». Заполните поля ниже, чтобы заменить.',
+    uk: 'Зараз у звітах: «$name». Заповніть поля нижче, щоб замінити.',
+    fa: 'گزارش‌ها اکنون «$name» را نشان می‌دهند. برای جایگزینی، فیلدهای زیر را پر کنید.',
+  );
+
+  String get saveVehicleInfo => _value(
+    en: 'Save vehicle info',
+    es: 'Guardar datos del vehículo',
+    fr: 'Enregistrer le véhicule',
+    ru: 'Сохранить данные автомобиля',
+    uk: 'Зберегти дані автомобіля',
+    fa: 'ذخیره اطلاعات خودرو',
+  );
+
   String get saveInsuranceInfo => _value(
     en: 'Save Insurance Info',
     es: 'Guardar seguro',
@@ -2378,6 +2468,60 @@ class AppStrings {
     ru: 'Далее',
     uk: 'Далі',
     fa: 'بعدی',
+  );
+
+  String whatsNewTitle(String version) => _value(
+    en: "What's new in $version",
+    es: 'Novedades de la versión $version',
+    fr: 'Nouveautés de la version $version',
+    ru: 'Что нового в версии $version',
+    uk: 'Що нового у версії $version',
+    fa: 'تازه‌های نسخه $version',
+  );
+
+  String get whatsNew => _value(
+    en: "What's new",
+    es: 'Novedades',
+    fr: 'Nouveautés',
+    ru: 'Что нового',
+    uk: 'Що нового',
+    fa: 'تازه‌ها',
+  );
+
+  String get skipGuide => _value(
+    en: 'Skip',
+    es: 'Omitir',
+    fr: 'Passer',
+    ru: 'Пропустить',
+    uk: 'Пропустити',
+    fa: 'رد کردن',
+  );
+
+  String guideStep(int step, int total) => _value(
+    en: 'Step $step of $total',
+    es: 'Paso $step de $total',
+    fr: 'Étape $step sur $total',
+    ru: 'Шаг $step из $total',
+    uk: 'Крок $step з $total',
+    fa: 'مرحله $step از $total',
+  );
+
+  String get featureGuide => _value(
+    en: 'App tour',
+    es: 'Recorrido por la app',
+    fr: "Visite de l'app",
+    ru: 'Обзор функций',
+    uk: 'Гайд по функціях',
+    fa: 'آشنایی با برنامه',
+  );
+
+  String get featureGuideSubtitle => _value(
+    en: 'The main features in six short steps',
+    es: 'Las funciones principales en seis pasos',
+    fr: 'Les fonctions principales en six étapes',
+    ru: 'Главные функции за шесть коротких шагов',
+    uk: 'Головні функції за шість коротких кроків',
+    fa: 'امکانات اصلی در شش گام کوتاه',
   );
 
   String get getStarted => _value(
