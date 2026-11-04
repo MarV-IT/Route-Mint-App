@@ -12,7 +12,12 @@
           "package_name": "com.example.route_mint_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1026475770254-icio091sapdae40mnve4k4md75lc6ns7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBXLRVyEV5XzhYr6GT_N0uefCanuug-vkc"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1026475770254-icio091sapdae40mnve4k4md75lc6ns7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1026475770254-5dpdu4j7ncjrqs3m1tnkl8sdulmufkh7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.routeMintApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -31,7 +48,52 @@
           "package_name": "com.marvroute.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1026475770254-0ect5v9jb5ormtdnk0j4ff8jevs1ka2n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.marvroute.app",
+            "certificate_hash": "4191260b8c6adafc82ddc3309eec1d13713b0261"
+          }
+        },
+        {
+          "client_id": "1026475770254-2prqjb7pnhq21aqf3umqg3a89tbc05jn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.marvroute.app",
+            "certificate_hash": "fe9b55433e5fe94b62c73f666d8e9564d7c3dd25"
+          }
+        },
+        {
+          "client_id": "1026475770254-926l64tngrdmqf235abdk2ejpn4pvpfo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.marvroute.app",
+            "certificate_hash": "5cda38023ecc76ae270f5fbeb6d67ce97dca6a0d"
+          }
+        },
+        {
+          "client_id": "1026475770254-q5104qd9a69dbr0g07kmu1ckvb1s46u1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.marvroute.app",
+            "certificate_hash": "d00ea6715d00ae84ee14650ad75437fff326531c"
+          }
+        },
+        {
+          "client_id": "1026475770254-rtevh8t09dlptrr6m3hf57nqfjgfmhth.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.marvroute.app",
+            "certificate_hash": "7b1243c3a90ec87240ad7ae2da45b627808b503b"
+          }
+        },
+        {
+          "client_id": "1026475770254-icio091sapdae40mnve4k4md75lc6ns7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBXLRVyEV5XzhYr6GT_N0uefCanuug-vkc"
@@ -39,7 +101,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1026475770254-icio091sapdae40mnve4k4md75lc6ns7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1026475770254-5dpdu4j7ncjrqs3m1tnkl8sdulmufkh7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.routeMintApp"
+              }
+            }
+          ]
         }
       }
     }

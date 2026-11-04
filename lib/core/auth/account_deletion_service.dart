@@ -55,6 +55,8 @@ class AccountDeletionService {
     }
 
     requireOwner();
+    await _authService.prepareForAccountDeletion();
+    requireOwner();
     try {
       await prepareTrackingForAccountChange();
       requireOwner();

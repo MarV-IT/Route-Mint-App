@@ -63,6 +63,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1026475770254',
     projectId: 'route-mint-app-2026',
     storageBucket: 'route-mint-app-2026.firebasestorage.app',
+    iosClientId:
+        '1026475770254-k53rdc1qdp75h7r1rk56fgbilcj146q8.apps.googleusercontent.com',
     iosBundleId: 'com.marvroute.app',
   );
 

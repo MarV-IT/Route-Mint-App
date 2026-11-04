@@ -3,16 +3,28 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'account_session_service.dart';
+import 'google_auth_client.dart';
 
 class AuthService {
+  AuthService({
+    FirebaseAuth? auth,
+    AccountSessionService? session,
+    FlutterSecureStorage? secureStorage,
+    GoogleAuthClient? googleAuth,
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _session = session ?? AccountSessionService.instance,
+       _secureStorage = secureStorage ?? const FlutterSecureStorage(),
+       _googleAuth = googleAuth ?? GoogleAuthClient();
+
   static const _sessionExpectedKey = 'firebase_auth_session_expected';
   static const _storedEmailKey = 'auth_email';
   static const _storedPasswordKey = 'auth_password';
-  static const _secureStorage = FlutterSecureStorage();
+  final FlutterSecureStorage _secureStorage;
+  final FirebaseAuth _auth;
+  final AccountSessionService _session;
+  final GoogleAuthClient _googleAuth;
 
-  final _auth = FirebaseAuth.instance;
-
-  final _session = AccountSessionService.instance;
+  bool get supportsGoogleSignIn => _googleAuth.isSupported;
 
   User? get currentUser =>
       _session.isReady && _session.user?.uid == _auth.currentUser?.uid
@@ -174,15 +186,52 @@ class AuthService {
     // Finish credential cleanup before Firebase can expose the sign-in screen.
     await _clearCredentials();
     await _setSessionExpected(false);
+    await _clearGoogleSession();
     await _auth.signOut();
     await _session.synchronize();
+  }
+
+  Future<UserCredential?> signInWithGoogle() async {
+    final googleCredential = await _googleAuth.requestCredential();
+    if (googleCredential == null) return null;
+
+    final credential = await _auth.signInWithCredential(googleCredential);
+    // Never restore a previous password account after a Google session.
+    await _clearCredentials();
+    await _setSessionExpected(true);
+    await _session.synchronize();
+    return credential;
+  }
+
+  Future<void> _clearGoogleSession() async {
+    try {
+      await _googleAuth.signOut();
+    } catch (_) {
+      // Native account-chooser cleanup must not undo Firebase sign-out.
+    }
+  }
+
+  /// Complete the Google chooser before any account data is removed.
+  Future<void> prepareForAccountDeletion() async {
+    final user = _auth.currentUser;
+    if (user == null) throw StateError('Not signed in');
+    if (!user.providerData.any(
+      (provider) => provider.providerId == 'google.com',
+    )) {
+      return;
+    }
+    final revision = _session.revision;
+    final refreshed = await _reauthenticate(user);
+    if (refreshed == null || revision != _session.revision) {
+      throw FirebaseAuthException(code: 'requires-recent-login');
+    }
   }
 
   /// Permanently deletes the signed-in Firebase account.
   ///
   /// Firebase rejects deletion when the sign-in is older than a few minutes,
-  /// so on `requires-recent-login` we silently re-authenticate with the
-  /// credentials kept in secure storage and retry once.
+  /// so on `requires-recent-login` we re-authenticate with the account's
+  /// provider and retry once. Google accounts may show an account chooser.
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
     if (user == null) throw StateError('Not signed in');
@@ -200,11 +249,23 @@ class AuthService {
     if (_auth.currentUser == null) {
       await _clearCredentials();
       await _setSessionExpected(false);
+      await _clearGoogleSession();
     }
     await _session.synchronize();
   }
 
   Future<User?> _reauthenticate(User user) async {
+    if (_auth.currentUser?.uid != user.uid) return null;
+    if (user.providerData.any(
+      (provider) => provider.providerId == 'google.com',
+    )) {
+      final credential = await _googleAuth.requestCredential();
+      if (credential == null || _auth.currentUser?.uid != user.uid) return null;
+      // Firebase rejects a different Google account; never switch users here.
+      await user.reauthenticateWithCredential(credential);
+      return _auth.currentUser?.uid == user.uid ? user : null;
+    }
+
     final email = await _secureStorage.read(key: _storedEmailKey);
     final password = await _secureStorage.read(key: _storedPasswordKey);
     if (email?.isNotEmpty != true || password?.isNotEmpty != true) return null;

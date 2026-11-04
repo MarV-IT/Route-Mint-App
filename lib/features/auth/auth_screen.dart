@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/auth/auth_service.dart';
 import '../../core/localization/app_strings.dart';
 
@@ -10,18 +11,20 @@ class AuthScreen extends StatefulWidget {
     required this.strings,
     required this.onContinueAsGuest,
     this.onAuthenticated,
+    this.authService,
   });
 
   final AppStrings strings;
   final VoidCallback onContinueAsGuest;
   final VoidCallback? onAuthenticated;
+  final AuthService? authService;
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final _authService = AuthService();
+  late final _authService = widget.authService ?? AuthService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
@@ -132,18 +135,48 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  String _mapError(FirebaseAuthException e) {
+  Future<void> _handleGoogleSignIn() async {
+    if (_isLoading) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final result = await _authService.signInWithGoogle();
+      if (!mounted || result == null) return;
+      widget.onAuthenticated?.call();
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) return;
+      setState(() => _errorMessage = _mapError(error, isGoogle: true));
+    } on GoogleSignInException catch (_) {
+      if (!mounted) return;
+      setState(
+        () => _errorMessage = widget.strings.authenticationFailedTryAgain,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(
+        () => _errorMessage = widget.strings.authenticationFailedTryAgain,
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _mapError(FirebaseAuthException e, {bool isGoogle = false}) {
     final s = widget.strings;
     return switch (e.code) {
       'email-already-in-use' => s.authEmailAlreadyInUse,
       'invalid-email' => s.authInvalidEmail,
       'weak-password' => s.authWeakPassword,
       'wrong-password' => s.authWrongPassword,
-      'invalid-credential' => s.authWrongPassword,
+      'invalid-credential' =>
+        isGoogle ? s.authenticationFailedTryAgain : s.authWrongPassword,
       'user-not-found' => s.authUserNotFound,
       'network-request-failed' => s.networkErrorCheckConnection,
       'too-many-requests' => s.authTooManyRequests,
       'operation-not-allowed' => s.authOperationNotAllowed,
+      'account-exists-with-different-credential' => s.authUseExistingSignIn,
       _ => s.authenticationFailedTryAgain,
     };
   }
@@ -188,7 +221,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     children: [
                       Expanded(
                         child: TextButton(
-                          onPressed: () => _switchMode(true),
+                          onPressed: _isLoading
+                              ? null
+                              : () => _switchMode(true),
                           style: TextButton.styleFrom(
                             foregroundColor: _isLogin
                                 ? cs.primary
@@ -206,7 +241,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                       Expanded(
                         child: TextButton(
-                          onPressed: () => _switchMode(false),
+                          onPressed: _isLoading
+                              ? null
+                              : () => _switchMode(false),
                           style: TextButton.styleFrom(
                             foregroundColor: !_isLogin
                                 ? cs.primary
@@ -343,6 +380,19 @@ class _AuthScreenState extends State<AuthScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
+
+                  if (_authService.supportsGoogleSignIn) ...[
+                    OutlinedButton.icon(
+                      onPressed: _isLoading ? null : _handleGoogleSignIn,
+                      icon: Image.asset(
+                        'assets/icons/google_g.png',
+                        width: 18,
+                        height: 18,
+                      ),
+                      label: Text(s.continueWithGoogle),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
 
                   // ── Continue without account ──────────────────────────────
                   OutlinedButton(

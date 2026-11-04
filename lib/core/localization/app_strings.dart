@@ -2618,6 +2618,24 @@ class AppStrings {
     fa: 'حساب',
   );
 
+  String get continueWithGoogle => _value(
+    en: 'Continue with Google',
+    es: 'Continuar con Google',
+    fr: 'Continuer avec Google',
+    ru: 'Продолжить с Google',
+    uk: 'Продовжити з Google',
+    fa: 'ادامه با Google',
+  );
+
+  String get authUseExistingSignIn => _value(
+    en: 'This email already has an account. Sign in with your original method.',
+    es: 'Este correo ya tiene una cuenta. Inicia sesión con tu método original.',
+    fr: 'Ce courriel possède déjà un compte. Connectez-vous avec votre méthode habituelle.',
+    ru: 'Аккаунт с этим адресом уже существует. Войдите прежним способом.',
+    uk: 'Акаунт із цією адресою вже існує. Увійдіть попереднім способом.',
+    fa: 'برای این ایمیل حسابی وجود دارد. با روش قبلی خود وارد شوید.',
+  );
+
   String get signIn => _value(
     en: 'Sign In',
     es: 'Iniciar sesión',

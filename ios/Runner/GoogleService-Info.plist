@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>1026475770254-k53rdc1qdp75h7r1rk56fgbilcj146q8.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1026475770254-k53rdc1qdp75h7r1rk56fgbilcj146q8</string>
+	<key>API_KEY</key>
+	<string>AIzaSyC2jTTS9scZPenpuHu-Z5Vz90hix9-SNks</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1026475770254</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.marvroute.app</string>
+	<key>PROJECT_ID</key>
+	<string>route-mint-app-2026</string>
+	<key>STORAGE_BUCKET</key>
+	<string>route-mint-app-2026.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1026475770254:ios:5f39a17acf6528d678e4df</string>
+</dict>
+</plist>
