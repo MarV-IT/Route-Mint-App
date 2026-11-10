@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/auth/auth_service.dart';
 import '../../core/localization/app_strings.dart';
+import '../../shared/widgets/legal_consent_notice.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({
@@ -399,6 +400,10 @@ class _AuthScreenState extends State<AuthScreen> {
                     onPressed: _isLoading ? null : widget.onContinueAsGuest,
                     child: Text(s.continueWithoutAccount),
                   ),
+                  const SizedBox(height: 16),
+
+                  // ── Terms and privacy ─────────────────────────────────────
+                  LegalConsentNotice(strings: s),
                   const SizedBox(height: 24),
                 ],
               ),

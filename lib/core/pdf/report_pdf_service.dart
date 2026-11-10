@@ -166,6 +166,7 @@ class ReportPdfService {
       businessName: businessName,
       vehicleName: vehicleName,
     );
+    final showsDeduction = TaxService.showsDeductionEstimate(country);
 
     doc.addPage(
       pw.MultiPage(
@@ -223,16 +224,28 @@ class ReportPdfService {
               ),
               pw.SizedBox(width: 10),
               pw.Expanded(
-                child: _statCard(
-                  label: PdfReportLabels.taxDeduction,
-                  value: PdfReportLabels.formatReportCurrency(
-                    tax,
-                    currencyCode,
-                  ),
-                  highlight: true,
-                ),
+                child: showsDeduction
+                    ? _statCard(
+                        label: PdfReportLabels.estimatedDeduction,
+                        value: PdfReportLabels.formatReportCurrency(
+                          tax,
+                          currencyCode,
+                        ),
+                        highlight: true,
+                      )
+                    : _statCard(
+                        label: PdfReportLabels.personalDistance,
+                        value: formatDistance(
+                          totalDistance - businessDistance,
+                          unit,
+                        ),
+                      ),
               ),
             ],
+          ),
+          pw.SizedBox(height: 10),
+          _disclaimerNote(
+            PdfReportLabels.summaryNote(showsDeduction: showsDeduction),
           ),
 
           pw.SizedBox(height: 20),
@@ -349,7 +362,7 @@ class ReportPdfService {
           pw.SizedBox(height: 16),
 
           // ── Disclaimer note (page 1 only, inside build) ────────────────
-          _disclaimerNote(),
+          _disclaimerNote(PdfReportLabels.reportDisclaimer),
 
           pw.SizedBox(height: 12),
 
@@ -503,7 +516,7 @@ class ReportPdfService {
 
   // ─── Disclaimer note ──────────────────────────────────────────────────────
 
-  pw.Widget _disclaimerNote() {
+  pw.Widget _disclaimerNote(String text) {
     return pw.Container(
       width: double.infinity,
       padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -513,7 +526,7 @@ class ReportPdfService {
         border: pw.Border.all(color: _noteYellowBorder, width: 0.5),
       ),
       child: pw.Text(
-        PdfReportLabels.reportDisclaimer,
+        text,
         style: pw.TextStyle(
           fontSize: 7,
           color: _grey,

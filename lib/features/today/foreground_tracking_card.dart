@@ -11,6 +11,7 @@ import '../../core/preferences/user_preferences.dart';
 import '../../features/trips/models/trip.dart';
 import '../../features/trips/services/trip_service.dart';
 import '../../features/work_mode/services/work_mode_service.dart';
+import 'location_disclosure.dart';
 
 class ForegroundTrackingCard extends StatefulWidget {
   const ForegroundTrackingCard({
@@ -49,7 +50,11 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
       _errorMessage = null;
     });
     try {
-      final status = await _permissionService.checkAndRequest();
+      final status = await requestLocationWithDisclosure(
+        context,
+        strings: widget.strings,
+        permissionService: _permissionService,
+      );
       if (!mounted) return;
       switch (status) {
         case LocationPermissionStatus.granted:

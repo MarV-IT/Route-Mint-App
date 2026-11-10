@@ -12,7 +12,6 @@ import '../../core/preferences/user_preferences.dart';
 import '../../core/subscription/entitlement_service.dart';
 import '../../core/subscription/pro_feature_gate.dart';
 import '../../core/tax/tax_service.dart';
-import '../../shared/utils/currency_utils.dart';
 import '../../shared/utils/distance_utils.dart';
 import '../../shared/utils/number_input.dart';
 import '../../shared/widgets/quick_actions_card.dart';
@@ -24,8 +23,10 @@ import '../trips/trip_deduction.dart';
 import '../work_mode/services/work_mode_service.dart';
 import 'auto_detection_card.dart';
 import 'brake_pad_card.dart';
+import 'deduction_card.dart';
 import 'foreground_tracking_card.dart';
 import 'live_trip_map_card.dart';
+import 'location_disclosure.dart';
 import 'odometer_reminder.dart';
 import 'oil_change_card.dart';
 import '../../core/help/help_catalog.dart';
@@ -726,7 +727,11 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
   Future<void> _startQuickTrip() async {
     setState(() => _trackingActionBusy = true);
     try {
-      final status = await _permissionService.checkAndRequest();
+      final status = await requestLocationWithDisclosure(
+        context,
+        strings: widget.strings,
+        permissionService: _permissionService,
+      );
       if (!mounted) return;
 
       switch (status) {
@@ -888,10 +893,10 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
   String get _taxLabel {
     final s = widget.strings;
     return switch (_period) {
-      _DashboardPeriod.today => s.taxSavingsToday,
-      _DashboardPeriod.thisWeek => s.taxSavingsThisWeek,
-      _DashboardPeriod.thisMonth => s.taxSavingsThisMonth,
-      _DashboardPeriod.thisYear => s.taxSavingsThisYear,
+      _DashboardPeriod.today => s.estimatedDeductionToday,
+      _DashboardPeriod.thisWeek => s.estimatedDeductionThisWeek,
+      _DashboardPeriod.thisMonth => s.estimatedDeductionThisMonth,
+      _DashboardPeriod.thisYear => s.estimatedDeductionThisYear,
     };
   }
 
@@ -928,9 +933,6 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
     final businessCount = _periodTrips
         .where((t) => t.category == 'business')
         .length;
-    final countryLabel = widget.preferences.country == Country.usa
-        ? widget.strings.unitedStates
-        : widget.strings.canada;
 
     return Scaffold(
       appBar: AppBar(
@@ -1035,10 +1037,12 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
             subtitle: '$businessCount ${widget.strings.tripsLabel}',
           ),
           const SizedBox(height: 12),
-          SummaryCard(
+          DeductionCard(
+            strings: widget.strings,
+            country: widget.preferences.country,
             title: _taxLabel,
-            value: formatCurrency(_taxPeriod, widget.preferences.currencyCode),
-            subtitle: countryLabel,
+            amount: _taxPeriod,
+            currencyCode: widget.preferences.currencyCode,
           ),
           const SizedBox(height: 12),
           if (entitlements.canUseMaintenanceReminders) ...[

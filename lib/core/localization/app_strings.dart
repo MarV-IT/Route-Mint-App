@@ -2596,13 +2596,16 @@ class AppStrings {
     fa: 'سفر',
   );
 
-  String get taxSavingsToday => _value(
-    en: 'Tax savings today',
-    es: 'Ahorro fiscal hoy',
-    fr: "Économies fiscales aujourd'hui",
-    ru: 'Налоговая экономия сегодня',
-    uk: 'Податкова економія сьогодні',
-    fa: 'صرفه‌جویی مالیاتی امروز',
+  // Shown for the United States only, together with
+  // [deductionEstimateNote]. "Estimated" is part of the label on purpose:
+  // the figure is a deduction at the IRS standard rate, not money saved.
+  String get estimatedDeductionToday => _value(
+    en: 'Estimated deduction today',
+    es: 'Deducción estimada hoy',
+    fr: "Déduction estimée aujourd'hui",
+    ru: 'Оценка вычета за сегодня',
+    uk: 'Орієнтовне відрахування сьогодні',
+    fa: 'کسر مالیاتی تخمینی امروز',
   );
 
   String get todayPeriod => _value(
@@ -2650,31 +2653,60 @@ class AppStrings {
     fa: 'مسافت این سال',
   );
 
-  String get taxSavingsThisWeek => _value(
-    en: 'Tax savings this week',
-    es: 'Ahorro fiscal esta semana',
-    fr: 'Économies cette semaine',
-    ru: 'Экономия за неделю',
-    uk: 'Економія цього тижня',
-    fa: 'صرفه‌جویی این هفته',
+  String get estimatedDeductionThisWeek => _value(
+    en: 'Estimated deduction this week',
+    es: 'Deducción estimada esta semana',
+    fr: 'Déduction estimée cette semaine',
+    ru: 'Оценка вычета за неделю',
+    uk: 'Орієнтовне відрахування цього тижня',
+    fa: 'کسر مالیاتی تخمینی این هفته',
   );
 
-  String get taxSavingsThisMonth => _value(
-    en: 'Tax savings this month',
-    es: 'Ahorro fiscal este mes',
-    fr: 'Économies ce mois',
-    ru: 'Экономия за месяц',
-    uk: 'Економія цього місяця',
-    fa: 'صرفه‌جویی این ماه',
+  String get estimatedDeductionThisMonth => _value(
+    en: 'Estimated deduction this month',
+    es: 'Deducción estimada este mes',
+    fr: 'Déduction estimée ce mois',
+    ru: 'Оценка вычета за месяц',
+    uk: 'Орієнтовне відрахування цього місяця',
+    fa: 'کسر مالیاتی تخمینی این ماه',
   );
 
-  String get taxSavingsThisYear => _value(
-    en: 'Tax savings this year',
-    es: 'Ahorro fiscal este año',
-    fr: 'Économies cette année',
-    ru: 'Экономия за год',
-    uk: 'Економія цього року',
-    fa: 'صرفه‌جویی این سال',
+  String get estimatedDeductionThisYear => _value(
+    en: 'Estimated deduction this year',
+    es: 'Deducción estimada este año',
+    fr: 'Déduction estimée cette année',
+    ru: 'Оценка вычета за год',
+    uk: 'Орієнтовне відрахування цього року',
+    fa: 'کسر مالیاتی تخمینی این سال',
+  );
+
+  String get deductionEstimateNote => _value(
+    en: 'IRS standard mileage rate. An estimate, not tax advice.',
+    es: 'Tarifa estándar por milla del IRS. Es una estimación, no asesoría fiscal.',
+    fr: "Taux standard par mille de l'IRS. Une estimation, pas un conseil fiscal.",
+    ru: 'Стандартная ставка IRS за милю. Это оценка, а не налоговая консультация.',
+    uk: 'Стандартна ставка IRS за милю. Це оцінка, а не податкова консультація.',
+    fa: 'نرخ استاندارد IRS برای هر مایل. این یک تخمین است، نه مشاوره مالیاتی.',
+  );
+
+  // Canada: the card that replaces the deduction amount. Self-employed
+  // drivers there claim actual expenses, so no amount is shown.
+  String get kilometerLogTitle => _value(
+    en: 'Kilometer log',
+    es: 'Registro de kilómetros',
+    fr: 'Registre des kilomètres',
+    ru: 'Журнал километров',
+    uk: 'Журнал кілометрів',
+    fa: 'ثبت کیلومترها',
+  );
+
+  String get kilometerLogBody => _value(
+    en: 'For Canada, MarV Route keeps your business kilometers and does not calculate a deduction amount: self-employed drivers claim their actual vehicle expenses by business-use share. Not tax advice.',
+    es: 'Para Canadá, MarV Route registra tus kilómetros de trabajo y no calcula un importe de deducción: los conductores autónomos deducen sus gastos reales del vehículo según la proporción de uso laboral. No es asesoría fiscal.',
+    fr: "Pour le Canada, MarV Route tient le registre de vos kilomètres professionnels et ne calcule aucun montant de déduction : les travailleurs indépendants déduisent leurs frais de véhicule réels selon la part d'utilisation professionnelle. Ce n'est pas un conseil fiscal.",
+    ru: 'Для Канады MarV Route ведёт учёт рабочих километров и не рассчитывает сумму вычета: самозанятые водители заявляют фактические расходы на автомобиль пропорционально доле рабочих поездок. Это не налоговая консультация.',
+    uk: 'Для Канади MarV Route веде облік робочих кілометрів і не рахує суму відрахування: самозайняті водії заявляють фактичні витрати на авто відповідно до частки робочих поїздок. Це не податкова консультація.',
+    fa: 'برای کانادا، MarV Route کیلومترهای کاری شما را ثبت می‌کند و مبلغ کسر مالیاتی را محاسبه نمی‌کند: رانندگان خویش‌فرما هزینه‌های واقعی خودرو را به نسبت استفاده کاری ادعا می‌کنند. این مشاوره مالیاتی نیست.',
   );
 
   String get errorLoadingTrips => _value(
@@ -3155,13 +3187,13 @@ class AppStrings {
     fa: 'سفرها به صورت محلی در این دستگاه ذخیره می‌شوند.',
   );
 
-  String get cloudBackupOptional => _value(
-    en: 'Cloud backup is optional and only available when signed in.',
-    es: 'La copia en la nube es opcional y solo está disponible al iniciar sesión.',
-    fr: 'La sauvegarde cloud est facultative et disponible uniquement une fois connecté.',
-    ru: 'Облачное резервное копирование необязательно и доступно только при входе в аккаунт.',
-    uk: 'Хмарне резервне копіювання необов\'язкове і доступне лише після входу в акаунт.',
-    fa: 'پشتیبان ابری اختیاری است و فقط پس از ورود در دسترس است.',
+  String get cloudBackupWhenSignedIn => _value(
+    en: 'Cloud backup works only while you are signed in with Pro; it then runs automatically once a day.',
+    es: 'La copia en la nube solo funciona con la sesión iniciada y Pro activo; entonces se hace automáticamente una vez al día.',
+    fr: "La sauvegarde cloud ne fonctionne que si vous êtes connecté avec Pro ; elle s'effectue alors automatiquement une fois par jour.",
+    ru: 'Облачная копия работает только при входе в аккаунт с Pro; тогда она создаётся автоматически раз в день.',
+    uk: 'Хмарна копія працює лише після входу в акаунт із Pro; тоді вона створюється автоматично раз на добу.',
+    fa: 'پشتیبان ابری فقط وقتی کار می‌کند که با Pro وارد حساب شده باشید؛ در آن صورت روزی یک بار خودکار انجام می‌شود.',
   );
 
   String get locationUsageExplanation => _value(
@@ -3180,6 +3212,92 @@ class AppStrings {
     ru: 'Отслеживание продолжается при выключенном экране. Во время отслеживания отображается уведомление.',
     uk: 'Відстеження триває при вимкненому екрані. Під час активного відстеження відображається сповіщення.',
     fa: 'ردیابی با خاموشی صفحه ادامه می‌یابد. در طول ردیابی فعال یک اعلان نمایش داده می‌شود.',
+  );
+
+  // ─── Legal ────────────────────────────────────────────────────────────────
+
+  String get privacyPolicy => _value(
+    en: 'Privacy Policy',
+    es: 'Política de privacidad',
+    fr: 'Politique de confidentialité',
+    ru: 'Политика конфиденциальности',
+    uk: 'Політика конфіденційності',
+    fa: 'سیاست حریم خصوصی',
+  );
+
+  String get termsOfService => _value(
+    en: 'Terms of Service',
+    es: 'Términos del servicio',
+    fr: "Conditions d'utilisation",
+    ru: 'Условия использования',
+    uk: 'Умови використання',
+    fa: 'شرایط استفاده',
+  );
+
+  String get legalConsentNotice => _value(
+    en: 'By signing in, creating an account or continuing without one, you agree to the Terms of Service and confirm that you have read the Privacy Policy.',
+    es: 'Al iniciar sesión, crear una cuenta o continuar sin cuenta, aceptas los Términos del servicio y confirmas que has leído la Política de privacidad.',
+    fr: "En vous connectant, en créant un compte ou en continuant sans compte, vous acceptez les Conditions d'utilisation et confirmez avoir lu la Politique de confidentialité.",
+    ru: 'Входя в аккаунт, создавая его или продолжая без аккаунта, вы принимаете Условия использования и подтверждаете, что ознакомились с Политикой конфиденциальности.',
+    uk: 'Входячи в акаунт, створюючи його або продовжуючи без акаунту, ви приймаєте Умови використання й підтверджуєте, що ознайомилися з Політикою конфіденційності.',
+    fa: 'با ورود، ساختن حساب یا ادامه بدون حساب، شرایط استفاده را می‌پذیرید و تأیید می‌کنید که سیاست حریم خصوصی را خوانده‌اید.',
+  );
+
+  String get openSourceLicenses => _value(
+    en: 'Open-source licenses',
+    es: 'Licencias de código abierto',
+    fr: 'Licences open source',
+    ru: 'Лицензии открытого ПО',
+    uk: 'Ліцензії відкритого ПЗ',
+    fa: 'مجوزهای متن‌باز',
+  );
+
+  String get couldNotOpenLink => _value(
+    en: 'Could not open the link. Address:',
+    es: 'No se pudo abrir el enlace. Dirección:',
+    fr: "Impossible d'ouvrir le lien. Adresse :",
+    ru: 'Не удалось открыть ссылку. Адрес:',
+    uk: 'Не вдалося відкрити посилання. Адреса:',
+    fa: 'پیوند باز نشد. نشانی:',
+  );
+
+  // Shown before the system location prompt. The sentence about collecting
+  // location "even when the app is closed or not in use" is the wording the
+  // stores expect; keep it in every language.
+  String get locationDisclosureTitle => _value(
+    en: 'How MarV Route uses location',
+    es: 'Cómo usa MarV Route la ubicación',
+    fr: 'Comment MarV Route utilise la localisation',
+    ru: 'Как MarV Route использует геолокацию',
+    uk: 'Як MarV Route використовує геолокацію',
+    fa: 'MarV Route چگونه از موقعیت مکانی استفاده می‌کند',
+  );
+
+  String get locationDisclosureBody => _value(
+    en: 'MarV Route collects location data to record your trips and measure their distance — even when the app is closed or not in use — while trip tracking or automatic trip detection is on. A notification is shown the whole time. Detailed routes stay on this device, and location data is never used for advertising.',
+    es: 'MarV Route recopila datos de ubicación para registrar tus viajes y medir su distancia —incluso cuando la app está cerrada o no se está usando— mientras el seguimiento de viajes o la detección automática estén activados. Se muestra una notificación todo el tiempo. Las rutas detalladas se quedan en este dispositivo y los datos de ubicación nunca se usan para publicidad.',
+    fr: "MarV Route recueille des données de localisation pour enregistrer vos trajets et mesurer leur distance — même lorsque l'application est fermée ou n'est pas utilisée — tant que le suivi des trajets ou la détection automatique est activé. Une notification reste affichée pendant tout ce temps. Les itinéraires détaillés restent sur cet appareil et les données de localisation ne servent jamais à la publicité.",
+    ru: 'MarV Route собирает данные о местоположении, чтобы записывать ваши поездки и измерять их расстояние — даже когда приложение закрыто или не используется, — пока включено отслеживание поездок или автоматическое определение поездок. Всё это время показывается уведомление. Подробные маршруты остаются на этом устройстве, а данные о местоположении никогда не используются для рекламы.',
+    uk: 'MarV Route збирає дані геолокації, щоб записувати ваші поїздки й вимірювати їхню відстань — навіть коли додаток закритий або не використовується, — поки ввімкнено відстеження поїздок чи автоматичне виявлення поїздок. Увесь цей час показується сповіщення. Детальні маршрути залишаються на цьому пристрої, а дані геолокації ніколи не використовуються для реклами.',
+    fa: 'MarV Route داده‌های موقعیت مکانی را جمع‌آوری می‌کند تا سفرهای شما را ثبت و مسافت آن‌ها را اندازه‌گیری کند — حتی وقتی برنامه بسته است یا استفاده نمی‌شود — تا زمانی که ردیابی سفر یا تشخیص خودکار سفر روشن باشد. در تمام این مدت یک اعلان نمایش داده می‌شود. مسیرهای دقیق در همین دستگاه می‌مانند و داده‌های موقعیت هرگز برای تبلیغات استفاده نمی‌شوند.',
+  );
+
+  String get notNow => _value(
+    en: 'Not now',
+    es: 'Ahora no',
+    fr: 'Plus tard',
+    ru: 'Не сейчас',
+    uk: 'Не зараз',
+    fa: 'حالا نه',
+  );
+
+  String get continueAction => _value(
+    en: 'Continue',
+    es: 'Continuar',
+    fr: 'Continuer',
+    ru: 'Продолжить',
+    uk: 'Продовжити',
+    fa: 'ادامه',
   );
 
   // ─── Internal ─────────────────────────────────────────────────────────────

@@ -57,51 +57,52 @@ const Map<HelpTopic, Map<AppLanguage, HelpEntry>> helpCatalog = {
   HelpTopic.home: {
     AppLanguage.english: HelpEntry(
       body:
-          'See your mileage and tax deduction for today, this week, this month '
-          'or this year. Start recording a trip yourself here, or turn on auto '
-          'detection (Pro): it saves a trip by itself once you have been '
-          'stopped for 3 minutes. Trips saved that way wait for review on the '
-          'Trips tab.',
+          'See your mileage for today, this week, this month or this year — '
+          'and, in the US, an estimated deduction. Start recording a trip '
+          'yourself here, or turn on auto detection (Pro): it saves a trip by '
+          'itself once you have been stopped for 3 minutes. Trips saved that '
+          'way wait for review on the Trips tab.',
     ),
     AppLanguage.spanish: HelpEntry(
       body:
-          'Aquí ves la distancia recorrida y la deducción fiscal de hoy, esta '
-          'semana, este mes o este año. Desde aquí puedes grabar un viaje tú '
-          'mismo o activar la detección automática (Pro): guarda el viaje por '
-          'sí sola cuando llevas 3 minutos detenido. Esos viajes esperan '
-          'revisión en la pestaña Viajes.',
+          'Aquí ves la distancia recorrida de hoy, esta semana, este mes o '
+          'este año y, en Estados Unidos, una deducción estimada. Desde aquí '
+          'puedes grabar un viaje tú mismo o activar la detección automática '
+          '(Pro): guarda el viaje por sí sola cuando llevas 3 minutos '
+          'detenido. Esos viajes esperan revisión en la pestaña Viajes.',
     ),
     AppLanguage.french: HelpEntry(
       body:
-          "Vous voyez ici la distance parcourue et la déduction fiscale "
-          "d'aujourd'hui, de la semaine, du mois ou de l'année. Lancez ici "
-          "l'enregistrement d'un trajet vous-même, ou activez la détection "
-          "automatique (Pro) : elle enregistre le trajet seule après 3 minutes "
-          "d'arrêt. Ces trajets attendent une vérification dans l'onglet "
-          "Trajets.",
+          "Vous voyez ici la distance parcourue aujourd'hui, cette semaine, "
+          "ce mois ou cette année et, aux États-Unis, une déduction estimée. "
+          "Lancez ici l'enregistrement d'un trajet vous-même, ou activez la "
+          "détection automatique (Pro) : elle enregistre le trajet seule "
+          "après 3 minutes d'arrêt. Ces trajets attendent une vérification "
+          "dans l'onglet Trajets.",
     ),
     AppLanguage.russian: HelpEntry(
       body:
-          'Здесь виден пробег и налоговый вычет за сегодня, неделю, месяц или '
-          'год. Отсюда можно самому начать запись поездки или включить '
-          'автоопределение (Pro): оно само сохранит поездку после остановки '
-          'дольше 3 минут. Такие поездки ждут проверки во вкладке «Поездки».',
+          'Здесь виден пробег за сегодня, неделю, месяц или год, а для США — '
+          'ещё и оценка вычета. Отсюда можно самому начать запись поездки или '
+          'включить автоопределение (Pro): оно само сохранит поездку после '
+          'остановки дольше 3 минут. Такие поездки ждут проверки во вкладке '
+          '«Поездки».',
     ),
     AppLanguage.ukrainian: HelpEntry(
       body:
-          'Тут видно пробіг і податкове відрахування за сьогодні, тиждень, '
-          'місяць або рік. Звідси можна самому почати запис поїздки або '
-          'ввімкнути авто-виявлення (Pro): воно саме збереже поїздку після '
-          'зупинки довше 3 хвилин. Такі поїздки чекають на перевірку у '
-          'вкладці «Поїздки».',
+          'Тут видно пробіг за сьогодні, тиждень, місяць або рік, а для США — '
+          'ще й орієнтовне відрахування. Звідси можна самому почати запис '
+          'поїздки або ввімкнути авто-виявлення (Pro): воно саме збереже '
+          'поїздку після зупинки довше 3 хвилин. Такі поїздки чекають на '
+          'перевірку у вкладці «Поїздки».',
     ),
     AppLanguage.dari: HelpEntry(
       body:
-          'اینجا مسافت پیموده‌شده و کسر مالیاتی امروز، این هفته، این ماه یا '
-          'امسال را می‌بینید. از اینجا می‌توانید ثبت سفر را خودتان شروع کنید '
-          'یا تشخیص خودکار (Pro) را روشن کنید: پس از ۳ دقیقه توقف، سفر را '
-          'خودش ذخیره می‌کند. این سفرها در زبانه «سفرها» منتظر بررسی '
-          'می‌مانند.',
+          'اینجا مسافت پیموده‌شده برای امروز، این هفته، این ماه یا امسال و، '
+          'در ایالات متحده، برآورد کسر مالیاتی را می‌بینید. از اینجا '
+          'می‌توانید ثبت سفر را خودتان شروع کنید یا تشخیص خودکار (Pro) را '
+          'روشن کنید: پس از ۳ دقیقه توقف، سفر را خودش ذخیره می‌کند. این '
+          'سفرها در زبانه «سفرها» منتظر بررسی می‌مانند.',
     ),
   },
   HelpTopic.trips: {
@@ -265,49 +266,52 @@ const Map<HelpTopic, Map<AppLanguage, HelpEntry>> helpCatalog = {
     AppLanguage.english: HelpEntry(
       body:
           'Reports total your overall and work mileage and expenses for the '
-          'chosen month or a custom range. From here you can save a PDF with '
-          'the tax deduction for your accountant, or a CSV spreadsheet; '
-          'exporting is a Pro feature. Trips marked “Needs review” are included '
-          'too, so check them first.',
+          'chosen month or a custom range. From here you can save a PDF for '
+          'your accountant — with an estimated deduction for the US — or a '
+          'CSV spreadsheet; exporting is a Pro feature. Trips marked “Needs '
+          'review” are included too, so check them first.',
     ),
     AppLanguage.spanish: HelpEntry(
       body:
           'Los informes suman la distancia total y de trabajo y los gastos del '
-          'mes elegido o de un periodo propio. Desde aquí guardas un PDF con la '
-          'deducción fiscal para tu contador o una hoja CSV; exportar es una '
-          'función Pro. Los viajes marcados «Requiere revisión» también entran '
-          'en el informe, así que revísalos antes.',
+          'mes elegido o de un periodo propio. Desde aquí guardas un PDF para '
+          'tu contador —con una deducción estimada para Estados Unidos— o una '
+          'hoja CSV; exportar es una función Pro. Los viajes marcados '
+          '«Requiere revisión» también entran en el informe, así que '
+          'revísalos antes.',
     ),
     AppLanguage.french: HelpEntry(
       body:
           'Les rapports totalisent la distance totale et professionnelle et '
           "les frais du mois choisi ou d'une période personnalisée. D'ici, vous "
-          'enregistrez un PDF avec la déduction fiscale pour votre comptable, '
-          "ou un tableau CSV ; l'export est une fonction Pro. Les trajets « À "
-          "vérifier » sont aussi inclus, vérifiez-les d'abord.",
+          'enregistrez un PDF pour votre comptable — avec une déduction '
+          'estimée pour les États-Unis — ou un tableau CSV ; '
+          "l'export est une fonction Pro. Les trajets « À vérifier » sont "
+          "aussi inclus, vérifiez-les d'abord.",
     ),
     AppLanguage.russian: HelpEntry(
       body:
           'Отчёты подводят итог общего и рабочего пробега и расходов за '
-          'выбранный месяц или свой период. Отсюда сохраняется PDF с налоговым '
-          'вычетом для бухгалтера или CSV-таблица — это функция Pro. Поездки с '
-          'пометкой «Требует проверки» тоже попадают в отчёт, поэтому сначала '
-          'проверьте их.',
+          'выбранный месяц или свой период. Отсюда сохраняется PDF для '
+          'бухгалтера (для США — с оценкой вычета) или CSV-таблица — это '
+          'функция Pro. Поездки с пометкой «Требует проверки» тоже попадают в '
+          'отчёт, поэтому сначала проверьте их.',
     ),
     AppLanguage.ukrainian: HelpEntry(
       body:
           'Звіти підсумовують загальний і робочий пробіг та витрати за обраний '
-          'місяць або свій період. Звідси зберігається PDF із податковим '
-          'відрахуванням для бухгалтера або CSV-таблиця — це функція Pro. '
-          'Поїздки з позначкою «Потребує перевірки» теж потрапляють у звіт, '
-          'тож спершу перегляньте їх.',
+          'місяць або свій період. Звідси зберігається PDF для бухгалтера (для '
+          'США — з орієнтовним відрахуванням) або CSV-таблиця — це функція '
+          'Pro. Поїздки з позначкою «Потребує перевірки» теж потрапляють у '
+          'звіт, тож спершу перегляньте їх.',
     ),
     AppLanguage.dari: HelpEntry(
       body:
           'گزارش‌ها مسافت کل و کاری و هزینه‌های ماه انتخاب‌شده یا بازه دلخواه '
-          'را جمع می‌زنند. از اینجا یک PDF با کسر مالیاتی برای حسابدار یا یک '
-          'جدول CSV ذخیره می‌کنید؛ خروجی گرفتن از امکانات Pro است. سفرهای '
-          '«نیاز به بررسی» هم در گزارش می‌آیند، پس اول آن‌ها را بررسی کنید.',
+          'را جمع می‌زنند. از اینجا یک PDF برای حسابدار (برای ایالات متحده با '
+          'برآورد کسر مالیاتی) یا یک جدول CSV ذخیره می‌کنید؛ خروجی گرفتن از '
+          'امکانات Pro است. سفرهای «نیاز به بررسی» هم در گزارش می‌آیند، پس اول '
+          'آن‌ها را بررسی کنید.',
     ),
   },
   HelpTopic.charts: {

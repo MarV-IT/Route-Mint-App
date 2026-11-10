@@ -69,6 +69,13 @@ void main() {
     expect(tax.calculateTaxFromKm(0, Country.canada), 0);
   });
 
+  test('only the United States gets a deduction estimate', () {
+    // Canada's per-kilometre figures are employer allowance limits, not a
+    // deduction a self-employed driver can claim, so no amount is shown.
+    expect(TaxService.showsDeductionEstimate(Country.usa), isTrue);
+    expect(TaxService.showsDeductionEstimate(Country.canada), isFalse);
+  });
+
   test('only business trips count toward the deduction', () {
     Trip trip(String category, DateTime date) => Trip(
       id: '$category$date',

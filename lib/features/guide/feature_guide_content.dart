@@ -40,8 +40,9 @@ const Map<AppLanguage, List<(String, String)>> _texts = {
   AppLanguage.english: [
     (
       'Your mileage at a glance',
-      'Home shows your mileage and tax deduction for today, this week, '
-          'month or year. Start recording a trip with GPS right from here.',
+      'Home shows your mileage for today, this week, month or year and, in '
+          'the US, an estimated deduction. Start recording a trip with GPS '
+          'right from here.',
     ),
     (
       'Every trip in one place',
@@ -62,8 +63,8 @@ const Map<AppLanguage, List<(String, String)>> _texts = {
     (
       'Reports for tax time',
       'See trips by platform and spending by type, then save a PDF for your '
-          'accountant with the deduction at the official IRS or CRA rate, or a '
-          'CSV (Pro).',
+          'accountant — with an estimated deduction at the IRS rate for the '
+          'US — or a CSV (Pro).',
     ),
     (
       'Your vehicle and help',
@@ -75,9 +76,9 @@ const Map<AppLanguage, List<(String, String)>> _texts = {
   AppLanguage.spanish: [
     (
       'Tu kilometraje de un vistazo',
-      'Inicio muestra tu kilometraje y la deducción fiscal de hoy, la semana, '
-          'el mes o el año. Desde aquí también empiezas a grabar un viaje con '
-          'GPS.',
+      'Inicio muestra tu kilometraje de hoy, la semana, el mes o el año y, '
+          'en Estados Unidos, una deducción estimada. Desde aquí también '
+          'empiezas a grabar un viaje con GPS.',
     ),
     (
       'Todos tus viajes en un lugar',
@@ -99,8 +100,8 @@ const Map<AppLanguage, List<(String, String)>> _texts = {
     (
       'Informes para los impuestos',
       'Mira los viajes por plataforma y los gastos por tipo, y guarda un PDF '
-          'para tu contador con la deducción a la tarifa oficial del IRS o la '
-          'CRA, o un CSV (Pro).',
+          'para tu contador —con una deducción estimada a la tarifa del IRS '
+          'para Estados Unidos— o un CSV (Pro).',
     ),
     (
       'Tu vehículo y ayuda',
@@ -112,9 +113,9 @@ const Map<AppLanguage, List<(String, String)>> _texts = {
   AppLanguage.french: [
     (
       "Votre kilométrage d'un coup d'œil",
-      "L'accueil affiche votre kilométrage et votre déduction fiscale du jour, "
-          "de la semaine, du mois ou de l'année. C'est aussi ici que vous "
-          'lancez un trajet enregistré par GPS.',
+      "L'accueil affiche votre kilométrage du jour, de la semaine, du mois ou "
+          "de l'année et, aux États-Unis, une déduction estimée. C'est aussi "
+          'ici que vous lancez un trajet enregistré par GPS.',
     ),
     (
       'Tous vos trajets au même endroit',
@@ -136,8 +137,8 @@ const Map<AppLanguage, List<(String, String)>> _texts = {
     (
       'Des rapports pour les impôts',
       'Voyez les trajets par plateforme et les dépenses par type, puis '
-          'enregistrez un PDF pour votre comptable avec la déduction au taux '
-          "officiel de l'IRS ou de l'ARC, ou un CSV (Pro).",
+          'enregistrez un PDF pour votre comptable — avec une déduction '
+          "estimée au taux de l'IRS pour les États-Unis — ou un CSV (Pro).",
     ),
     (
       "Votre véhicule et de l'aide",
@@ -149,8 +150,9 @@ const Map<AppLanguage, List<(String, String)>> _texts = {
   AppLanguage.russian: [
     (
       'Пробег с первого взгляда',
-      'На главной виден пробег и налоговый вычет за сегодня, неделю, месяц '
-          'или год. Отсюда же можно начать запись поездки по GPS.',
+      'На главной виден пробег за сегодня, неделю, месяц или год, а для США '
+          '— ещё и оценка вычета. Отсюда же можно начать запись поездки по '
+          'GPS.',
     ),
     (
       'Все поездки в одном месте',
@@ -171,7 +173,7 @@ const Map<AppLanguage, List<(String, String)>> _texts = {
     (
       'Отчёты для налогов',
       'Смотрите поездки по платформам и расходы по видам, а затем сохраните '
-          'PDF для бухгалтера с вычетом по официальной ставке IRS или CRA либо '
+          'PDF для бухгалтера (для США — с оценкой вычета по ставке IRS) либо '
           'CSV-таблицу (Pro).',
     ),
     (
@@ -184,8 +186,9 @@ const Map<AppLanguage, List<(String, String)>> _texts = {
   AppLanguage.ukrainian: [
     (
       'Пробіг з першого погляду',
-      'На головній видно пробіг і податкове відрахування за сьогодні, '
-          'тиждень, місяць або рік. Звідси ж можна почати запис поїздки з GPS.',
+      'На головній видно пробіг за сьогодні, тиждень, місяць або рік, а для '
+          'США — ще й орієнтовне відрахування. Звідси ж можна почати запис '
+          'поїздки з GPS.',
     ),
     (
       'Усі поїздки в одному місці',
@@ -206,8 +209,8 @@ const Map<AppLanguage, List<(String, String)>> _texts = {
     (
       'Звіти для податків',
       'Дивіться поїздки за платформами й витрати за видами, а потім збережіть '
-          'PDF для бухгалтера з відрахуванням за офіційною ставкою IRS або CRA '
-          'чи CSV-таблицю (Pro).',
+          'PDF для бухгалтера (для США — з орієнтовним відрахуванням за '
+          'ставкою IRS) чи CSV-таблицю (Pro).',
     ),
     (
       'Авто й підказки',
@@ -219,8 +222,9 @@ const Map<AppLanguage, List<(String, String)>> _texts = {
   AppLanguage.dari: [
     (
       'مسافت شما در یک نگاه',
-      'صفحه «خانه» مسافت و کسر مالیاتی امروز، این هفته، این ماه یا امسال را '
-          'نشان می‌دهد. ثبت سفر با GPS را هم از همین‌جا شروع می‌کنید.',
+      'صفحه «خانه» مسافت امروز، این هفته، این ماه یا امسال و، در ایالات '
+          'متحده، برآورد کسر مالیاتی را نشان می‌دهد. ثبت سفر با GPS را هم از '
+          'همین‌جا شروع می‌کنید.',
     ),
     (
       'همه سفرها در یک جا',
@@ -241,8 +245,8 @@ const Map<AppLanguage, List<(String, String)>> _texts = {
     (
       'گزارش برای مالیات',
       'سفرها را بر اساس پلتفرم و هزینه‌ها را بر اساس نوع ببینید، سپس یک PDF '
-          'با کسر به نرخ رسمی IRS یا CRA برای حسابدار یا یک CSV ذخیره کنید '
-          '(Pro).',
+          'برای حسابدار (برای ایالات متحده با برآورد کسر به نرخ IRS) یا یک CSV '
+          'ذخیره کنید (Pro).',
     ),
     (
       'خودرو و راهنما',

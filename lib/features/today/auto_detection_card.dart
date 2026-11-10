@@ -5,6 +5,7 @@ import '../../core/location/geolocator_tracking_provider.dart';
 import '../../core/location/location_permission_service.dart';
 import '../../core/notifications/trip_notification_service.dart';
 import '../../core/preferences/user_preferences.dart';
+import 'location_disclosure.dart';
 
 class AutoDetectionCard extends StatefulWidget {
   const AutoDetectionCard({
@@ -87,7 +88,11 @@ class _AutoDetectionCardState extends State<AutoDetectionCard>
       _errorMessage = null;
     });
     try {
-      final status = await _permissionService.checkAndRequest();
+      final status = await requestLocationWithDisclosure(
+        context,
+        strings: widget.strings,
+        permissionService: _permissionService,
+      );
       if (!mounted) return;
       switch (status) {
         case LocationPermissionStatus.granted:
