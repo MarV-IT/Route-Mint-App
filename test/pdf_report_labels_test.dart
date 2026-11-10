@@ -23,4 +23,35 @@ void main() {
       expect(purpose, 'Airport pickup');
     });
   });
+
+  group('PdfReportLabels.summaryNote', () {
+    test('calls the US deduction an estimate', () {
+      final note = PdfReportLabels.summaryNote(showsDeduction: true);
+
+      expect(note, startsWith(PdfReportLabels.reportDisclaimer));
+      expect(note, contains('estimate at the IRS standard mileage rate'));
+      expect(note, endsWith('Not tax advice.'));
+    });
+
+    test('says no amount is calculated for Canada', () {
+      final note = PdfReportLabels.summaryNote(showsDeduction: false);
+
+      expect(note, startsWith(PdfReportLabels.reportDisclaimer));
+      expect(note, contains('No deduction amount is calculated for Canada'));
+      expect(note, isNot(contains('IRS')));
+    });
+
+    test('uses only characters the PDF font can draw', () {
+      for (final showsDeduction in [true, false]) {
+        final note = PdfReportLabels.summaryNote(
+          showsDeduction: showsDeduction,
+        );
+        expect(
+          note.codeUnits.every((unit) => unit >= 0x20 && unit <= 0x7E),
+          isTrue,
+          reason: 'showsDeduction: $showsDeduction',
+        );
+      }
+    });
+  });
 }

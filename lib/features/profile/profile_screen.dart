@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/auth/account_deletion_service.dart';
 import '../../core/auth/auth_service.dart';
+import '../../core/legal/legal_links.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/location/geolocator_tracking_provider.dart';
 import '../../core/preferences/preferences_service.dart';
@@ -1606,6 +1607,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         title: Text(s.buildNumber),
                         subtitle: Text(info?.buildNumber ?? '...'),
                       ),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.article_outlined),
+                        title: Text(s.openSourceLicenses),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => showLicensePage(
+                          context: context,
+                          applicationName: appName,
+                          applicationVersion: info?.version,
+                        ),
+                      ),
                     ],
                   );
                 },
@@ -1628,7 +1640,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 contentPadding: EdgeInsets.zero,
                 dense: true,
                 leading: const Icon(Icons.cloud_outlined),
-                title: Text(s.cloudBackupOptional),
+                title: Text(s.cloudBackupWhenSignedIn),
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -1641,6 +1653,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 dense: true,
                 leading: const Icon(Icons.radar_outlined),
                 title: Text(s.foregroundTrackingExplanation),
+              ),
+              const Divider(height: 24),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.policy_outlined),
+                title: Text(s.privacyPolicy),
+                trailing: const Icon(Icons.open_in_new),
+                onTap: () => openLegalLink(
+                  context,
+                  s,
+                  LegalLinks.privacyPolicy(s.currentLanguage),
+                ),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.description_outlined),
+                title: Text(s.termsOfService),
+                trailing: const Icon(Icons.open_in_new),
+                onTap: () => openLegalLink(
+                  context,
+                  s,
+                  LegalLinks.termsOfService(s.currentLanguage),
+                ),
               ),
               // Account deletion lives here rather than next to Sign out: it
               // is a data right, and this section is collapsed by default so

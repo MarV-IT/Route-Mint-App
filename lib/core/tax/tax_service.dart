@@ -11,6 +11,16 @@ typedef DatedDistance = ({DateTime date, double km});
 /// When a new rate is announced, add it to the tables below; dates after the
 /// newest entry keep using it until then.
 class TaxService {
+  /// Whether the app shows a deduction estimate for [country].
+  ///
+  /// Only the United States has a standard mileage rate that a self-employed
+  /// driver can deduct. In Canada the self-employed claim the business share
+  /// of their actual vehicle expenses, and the per-kilometre figures below are
+  /// limits for allowances an employer pays to an employee. Presenting them
+  /// as a deduction would mislead, so for Canada the app keeps the kilometer
+  /// log and shows no amount.
+  static bool showsDeductionEstimate(Country country) => country == Country.usa;
+
   // ─── Rate tables ──────────────────────────────────────────────────────────
 
   /// IRS business standard mileage rates, oldest first, each in force from
@@ -26,6 +36,8 @@ class TaxService {
 
   /// CRA per-kilometre allowance limits for the provinces, by calendar year:
   /// one rate for the first 5,000 km of the year and a lower one after.
+  /// Kept for reference only: nothing in the app shows an amount worked out
+  /// from them (see [showsDeductionEstimate]).
   /// https://www.canada.ca/en/department-finance/news/2026/01/government-announces-the-2026-automobile-deduction-limits-and-expense-benefit-rates-for-businesses.html
   static const Map<int, ({double firstTier, double afterTier})> _canadaRates = {
     2023: (firstTier: 0.68, afterTier: 0.62),

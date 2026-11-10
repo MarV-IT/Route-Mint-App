@@ -324,10 +324,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
         trips: trips,
         totalDistance: totalDistance,
         businessDistance: businessDistance,
-        tax: _taxService.calculateTaxForTrips(
-          businessDistances(trips),
-          country,
-        ),
+        // No amount for Canada: the report is a kilometer log there.
+        tax: TaxService.showsDeductionEstimate(country)
+            ? _taxService.calculateTaxForTrips(
+                businessDistances(trips),
+                country,
+              )
+            : 0.0,
         platformBreakdown: _buildPlatformBreakdown(trips),
         country: country,
         unit: widget.unit,
