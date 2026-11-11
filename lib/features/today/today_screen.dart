@@ -9,6 +9,7 @@ import '../../core/location/reverse_geocoding_service.dart';
 import '../../core/location/tracking_result.dart';
 import '../../core/notifications/trip_notification_service.dart';
 import '../../core/preferences/user_preferences.dart';
+import '../../core/storage/account_data_store.dart';
 import '../../core/subscription/entitlement_service.dart';
 import '../../core/subscription/pro_feature_gate.dart';
 import '../../core/tax/tax_service.dart';
@@ -725,6 +726,7 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _startQuickTrip() async {
+    final scope = AccountDataStore.current;
     setState(() => _trackingActionBusy = true);
     try {
       final status = await requestLocationWithDisclosure(
@@ -732,11 +734,12 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
         strings: widget.strings,
         permissionService: _permissionService,
       );
-      if (!mounted) return;
+      if (!mounted || !identical(scope, AccountDataStore.current)) return;
 
       switch (status) {
         case LocationPermissionStatus.granted:
           await TripNotificationService.instance.requestPermission();
+          if (!mounted || !identical(scope, AccountDataStore.current)) return;
           final started = await appTrackingService.startTracking();
           if (!started && mounted) {
             ScaffoldMessenger.of(context).showSnackBar(

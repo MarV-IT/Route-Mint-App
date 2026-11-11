@@ -5,6 +5,7 @@ import '../../core/location/geolocator_tracking_provider.dart';
 import '../../core/location/location_permission_service.dart';
 import '../../core/notifications/trip_notification_service.dart';
 import '../../core/preferences/user_preferences.dart';
+import '../../core/storage/account_data_store.dart';
 import 'location_disclosure.dart';
 
 class AutoDetectionCard extends StatefulWidget {
@@ -83,6 +84,7 @@ class _AutoDetectionCardState extends State<AutoDetectionCard>
 
   Future<void> _handleStart() async {
     if (_isBusy) return;
+    final scope = AccountDataStore.current;
     setState(() {
       _isBusy = true;
       _errorMessage = null;
@@ -93,11 +95,12 @@ class _AutoDetectionCardState extends State<AutoDetectionCard>
         strings: widget.strings,
         permissionService: _permissionService,
       );
-      if (!mounted) return;
+      if (!mounted || !identical(scope, AccountDataStore.current)) return;
       switch (status) {
         case LocationPermissionStatus.granted:
           setState(() => _servicesDisabled = false);
           await TripNotificationService.instance.requestPermission();
+          if (!mounted || !identical(scope, AccountDataStore.current)) return;
           await appAutoDetectionService.startMonitoring();
         case LocationPermissionStatus.denied:
         case LocationPermissionStatus.permanentlyDenied:

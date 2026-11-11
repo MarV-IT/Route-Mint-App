@@ -170,6 +170,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     } catch (_) {
       lastCloudBackupTime = null;
     }
+    if (!mounted) return;
 
     _allTrips = trips;
     _allFuelEntries = fuelEntries;

@@ -346,6 +346,10 @@ class _AuthScreenState extends State<AuthScreen> {
                     const SizedBox(height: 8),
                   ],
 
+                  // Offer the documents before any action that enters the app.
+                  LegalConsentNotice(strings: s),
+                  const SizedBox(height: 16),
+
                   // ── Submit button ────────────────────────────────────────
                   SizedBox(
                     height: 48,
@@ -400,10 +404,6 @@ class _AuthScreenState extends State<AuthScreen> {
                     onPressed: _isLoading ? null : widget.onContinueAsGuest,
                     child: Text(s.continueWithoutAccount),
                   ),
-                  const SizedBox(height: 16),
-
-                  // ── Terms and privacy ─────────────────────────────────────
-                  LegalConsentNotice(strings: s),
                   const SizedBox(height: 24),
                 ],
               ),

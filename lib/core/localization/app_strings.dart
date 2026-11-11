@@ -3188,12 +3188,12 @@ class AppStrings {
   );
 
   String get cloudBackupWhenSignedIn => _value(
-    en: 'Cloud backup works only while you are signed in with Pro; it then runs automatically once a day.',
-    es: 'La copia en la nube solo funciona con la sesión iniciada y Pro activo; entonces se hace automáticamente una vez al día.',
-    fr: "La sauvegarde cloud ne fonctionne que si vous êtes connecté avec Pro ; elle s'effectue alors automatiquement une fois par jour.",
-    ru: 'Облачная копия работает только при входе в аккаунт с Pro; тогда она создаётся автоматически раз в день.',
-    uk: 'Хмарна копія працює лише після входу в акаунт із Pro; тоді вона створюється автоматично раз на добу.',
-    fa: 'پشتیبان ابری فقط وقتی کار می‌کند که با Pro وارد حساب شده باشید؛ در آن صورت روزی یک بار خودکار انجام می‌شود.',
+    en: 'Signed-in Pro users get an automatic daily backup attempt while the app is running or when they return to it. An internet connection is required; a backup is not guaranteed every day.',
+    es: 'Con la sesión iniciada y Pro activo, se intenta una copia diaria automática mientras la app está funcionando o al volver a ella. Se necesita internet; no se garantiza una copia cada día.',
+    fr: "Avec Pro et une session ouverte, une sauvegarde quotidienne est tentée automatiquement pendant que l'application fonctionne ou à votre retour. Internet est nécessaire ; une sauvegarde chaque jour n'est pas garantie.",
+    ru: 'Для вошедших пользователей Pro приложение пытается создать ежедневную копию во время работы или при возвращении в него. Нужен интернет; резервная копия каждый день не гарантируется.',
+    uk: 'Для користувачів Pro, які ввійшли в акаунт, додаток намагається створити щоденну копію під час роботи або при поверненні до нього. Потрібен інтернет; копія щодня не гарантується.',
+    fa: 'برای کاربران Pro که وارد حساب شده‌اند، هنگام اجرای برنامه یا بازگشت به آن، پشتیبان روزانه به‌صورت خودکار تلاش می‌شود. اتصال اینترنت لازم است؛ پشتیبان در هر روز تضمین نمی‌شود.',
   );
 
   String get locationUsageExplanation => _value(
@@ -3206,12 +3206,12 @@ class AppStrings {
   );
 
   String get foregroundTrackingExplanation => _value(
-    en: 'Tracking continues while the screen is off. A notification is shown during active tracking.',
-    es: 'El rastreo continúa con la pantalla apagada. Se muestra una notificación durante el rastreo activo.',
-    fr: "Le suivi continue écran éteint. Une notification est affichée pendant le suivi actif.",
-    ru: 'Отслеживание продолжается при выключенном экране. Во время отслеживания отображается уведомление.',
-    uk: 'Відстеження триває при вимкненому екрані. Під час активного відстеження відображається сповіщення.',
-    fa: 'ردیابی با خاموشی صفحه ادامه می‌یابد. در طول ردیابی فعال یک اعلان نمایش داده می‌شود.',
+    en: 'Tracking can continue while the screen is off. Depending on your device and permissions, the system may show a notification or location indicator.',
+    es: 'El seguimiento puede continuar con la pantalla apagada. Según el dispositivo y los permisos, el sistema puede mostrar una notificación o un indicador de ubicación.',
+    fr: "Le suivi peut continuer écran éteint. Selon votre appareil et les autorisations, le système peut afficher une notification ou un indicateur de localisation.",
+    ru: 'Отслеживание может продолжаться при выключенном экране. В зависимости от устройства и разрешений система может показывать уведомление или индикатор геолокации.',
+    uk: 'Відстеження може тривати з вимкненим екраном. Залежно від пристрою й дозволів система може показувати сповіщення або індикатор геолокації.',
+    fa: 'ردیابی می‌تواند با صفحه خاموش ادامه یابد. بسته به دستگاه و مجوزها، سیستم ممکن است اعلان یا نشانگر موقعیت مکانی نمایش دهد.',
   );
 
   // ─── Legal ────────────────────────────────────────────────────────────────
@@ -3261,9 +3261,8 @@ class AppStrings {
     fa: 'پیوند باز نشد. نشانی:',
   );
 
-  // Shown before the system location prompt. The sentence about collecting
-  // location "even when the app is closed or not in use" is the wording the
-  // stores expect; keep it in every language.
+  // Shown before the system location prompt. Explain background collection
+  // without promising continued tracking after the OS terminates the app.
   String get locationDisclosureTitle => _value(
     en: 'How MarV Route uses location',
     es: 'Cómo usa MarV Route la ubicación',
@@ -3274,12 +3273,12 @@ class AppStrings {
   );
 
   String get locationDisclosureBody => _value(
-    en: 'MarV Route collects location data to record your trips and measure their distance — even when the app is closed or not in use — while trip tracking or automatic trip detection is on. A notification is shown the whole time. Detailed routes stay on this device, and location data is never used for advertising.',
-    es: 'MarV Route recopila datos de ubicación para registrar tus viajes y medir su distancia —incluso cuando la app está cerrada o no se está usando— mientras el seguimiento de viajes o la detección automática estén activados. Se muestra una notificación todo el tiempo. Las rutas detalladas se quedan en este dispositivo y los datos de ubicación nunca se usan para publicidad.',
-    fr: "MarV Route recueille des données de localisation pour enregistrer vos trajets et mesurer leur distance — même lorsque l'application est fermée ou n'est pas utilisée — tant que le suivi des trajets ou la détection automatique est activé. Une notification reste affichée pendant tout ce temps. Les itinéraires détaillés restent sur cet appareil et les données de localisation ne servent jamais à la publicité.",
-    ru: 'MarV Route собирает данные о местоположении, чтобы записывать ваши поездки и измерять их расстояние — даже когда приложение закрыто или не используется, — пока включено отслеживание поездок или автоматическое определение поездок. Всё это время показывается уведомление. Подробные маршруты остаются на этом устройстве, а данные о местоположении никогда не используются для рекламы.',
-    uk: 'MarV Route збирає дані геолокації, щоб записувати ваші поїздки й вимірювати їхню відстань — навіть коли додаток закритий або не використовується, — поки ввімкнено відстеження поїздок чи автоматичне виявлення поїздок. Увесь цей час показується сповіщення. Детальні маршрути залишаються на цьому пристрої, а дані геолокації ніколи не використовуються для реклами.',
-    fa: 'MarV Route داده‌های موقعیت مکانی را جمع‌آوری می‌کند تا سفرهای شما را ثبت و مسافت آن‌ها را اندازه‌گیری کند — حتی وقتی برنامه بسته است یا استفاده نمی‌شود — تا زمانی که ردیابی سفر یا تشخیص خودکار سفر روشن باشد. در تمام این مدت یک اعلان نمایش داده می‌شود. مسیرهای دقیق در همین دستگاه می‌مانند و داده‌های موقعیت هرگز برای تبلیغات استفاده نمی‌شوند.',
+    en: 'MarV Route collects location data to record your trips and measure their distance while trip tracking or automatic trip detection is on, including in the background or with the screen locked. Depending on your device and permissions, the system may show a notification or location indicator. Detailed GPS routes are stored on this device; cloud backups include trip start and end locations. Location data is never used for advertising.',
+    es: 'MarV Route recopila datos de ubicación para registrar tus viajes y medir su distancia mientras el seguimiento o la detección automática estén activados, incluso en segundo plano o con la pantalla bloqueada. Según el dispositivo y los permisos, el sistema puede mostrar una notificación o un indicador de ubicación. Las rutas GPS detalladas se guardan en este dispositivo; las copias en la nube incluyen los lugares de inicio y fin. La ubicación nunca se usa para publicidad.',
+    fr: "MarV Route recueille des données de localisation pour enregistrer vos trajets et mesurer leur distance lorsque le suivi ou la détection automatique est activé, y compris en arrière-plan ou écran verrouillé. Selon votre appareil et les autorisations, le système peut afficher une notification ou un indicateur de localisation. Les itinéraires GPS détaillés sont stockés sur cet appareil ; les sauvegardes cloud incluent les lieux de départ et d'arrivée. La localisation ne sert jamais à la publicité.",
+    ru: 'MarV Route собирает данные геолокации для записи поездок и измерения расстояния, пока включено отслеживание или автоопределение, в том числе в фоне и с заблокированным экраном. В зависимости от устройства и разрешений система может показывать уведомление или индикатор геолокации. Подробные GPS-маршруты хранятся на этом устройстве; облачные копии включают места начала и конца поездок. Геолокация не используется для рекламы.',
+    uk: 'MarV Route збирає дані геолокації для запису поїздок і вимірювання відстані, поки ввімкнено відстеження або автоматичне виявлення, зокрема у фоні чи із заблокованим екраном. Залежно від пристрою й дозволів система може показувати сповіщення або індикатор геолокації. Детальні GPS-маршрути зберігаються на цьому пристрої; хмарні копії містять місця початку й завершення поїздок. Геолокація не використовується для реклами.',
+    fa: 'MarV Route هنگام روشن بودن ردیابی یا تشخیص خودکار، داده‌های موقعیت را برای ثبت سفر و اندازه‌گیری مسافت جمع‌آوری می‌کند، از جمله در پس‌زمینه یا با صفحه قفل‌شده. بسته به دستگاه و مجوزها، سیستم ممکن است اعلان یا نشانگر موقعیت نمایش دهد. مسیرهای دقیق GPS روی این دستگاه ذخیره می‌شوند؛ پشتیبان ابری شامل محل آغاز و پایان سفرها است. موقعیت مکانی برای تبلیغات استفاده نمی‌شود.',
   );
 
   String get notNow => _value(

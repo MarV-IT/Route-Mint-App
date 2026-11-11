@@ -27,6 +27,10 @@ class TaxService {
   /// [from] until the next entry.
   /// https://www.irs.gov/tax-professionals/standard-mileage-rates
   static final List<({DateTime from, double perMile})> _usaRates = [
+    (from: DateTime(2020), perMile: 0.575), // IR-2019-215
+    (from: DateTime(2021), perMile: 0.56), // IR-2020-279
+    (from: DateTime(2022), perMile: 0.585), // IR-2021-251
+    (from: DateTime(2022, 7), perMile: 0.625), // IR-2022-124
     (from: DateTime(2023), perMile: 0.655), // IR-2022-234
     (from: DateTime(2024), perMile: 0.67), // IR-2023-239
     (from: DateTime(2025), perMile: 0.70), // IR-2024-312

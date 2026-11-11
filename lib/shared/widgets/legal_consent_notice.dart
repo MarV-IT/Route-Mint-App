@@ -6,9 +6,7 @@ import '../../core/localization/app_strings.dart';
 /// "By continuing you agree…" with links to the Terms of Service and the
 /// Privacy Policy.
 ///
-/// Shown on the sign-in screen, the one place where an account is created or
-/// the app is entered without one, so the documents are offered before any
-/// data is collected.
+/// Shown before the sign-in, account creation and guest entry actions.
 class LegalConsentNotice extends StatelessWidget {
   const LegalConsentNotice({super.key, required this.strings});
 

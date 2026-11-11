@@ -14,20 +14,20 @@ class LocationPermissionService {
   /// cannot enable them itself, so this is the only way to get the user there.
   Future<void> openLocationSettings() => Geolocator.openLocationSettings();
 
-  /// Whether [checkAndRequest] is about to show the system permission
-  /// prompt: location services are on and access has not been decided yet.
-  /// Callers use it to explain the use of location first.
-  Future<bool> willPromptForPermission() async {
-    if (!await Geolocator.isLocationServiceEnabled()) return false;
-    return await Geolocator.checkPermission() == LocationPermission.denied;
-  }
-
-  Future<LocationPermissionStatus> checkAndRequest() async {
+  /// Runs [beforePermissionRequest] only when a native prompt is needed.
+  /// Keeping the explanation at this decision avoids a second permission
+  /// check unexpectedly asking for access without the user's agreement.
+  Future<LocationPermissionStatus> checkAndRequest({
+    Future<bool> Function()? beforePermissionRequest,
+  }) async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return LocationPermissionStatus.serviceDisabled;
 
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
+      if (beforePermissionRequest != null && !await beforePermissionRequest()) {
+        return LocationPermissionStatus.denied;
+      }
       permission = await Geolocator.requestPermission();
     }
 

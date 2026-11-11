@@ -5,7 +5,7 @@ import '../../app/app.dart';
 /// The version these notes describe. Must match the version name in
 /// pubspec.yaml (a test checks it): when it changes, everyone who updates
 /// sees the new notes once.
-const whatsNewVersion = '1.0.1';
+const whatsNewVersion = '1.0.2';
 
 class WhatsNewItem {
   const WhatsNewItem({
@@ -20,10 +20,9 @@ class WhatsNewItem {
 }
 
 const _icons = [
-  Icons.login,
-  Icons.directions_car_outlined,
   Icons.calculate_outlined,
-  Icons.tour_outlined,
+  Icons.policy_outlined,
+  Icons.location_on_outlined,
 ];
 
 /// What changed in [whatsNewVersion], in [language].
@@ -38,117 +37,86 @@ List<WhatsNewItem> whatsNewItems(AppLanguage language) {
 const Map<AppLanguage, List<(String, String)>> _texts = {
   AppLanguage.english: [
     (
-      'Sign in with Google',
-      'You can now sign in with your Google account, no separate password '
-          'needed.',
+      'Clearer mileage reports',
+      'US deductions are labelled as estimates using the IRS rate for each trip date. Canada shows a kilometer log without a deduction amount.',
     ),
     (
-      'Vehicle section',
-      'Profile now keeps make, model, year, license plate and insurance '
-          'details in one place.',
+      'Terms and privacy',
+      'Open the Terms of Service and Privacy Policy from sign-in or Profile. Open-source licenses are in Profile → About.',
     ),
     (
-      'Updated mileage rates',
-      'Each trip is valued at the rate in force on its date. In the US that '
-          'is 76¢ a mile from July 1, 2026.',
+      'Location explained',
+      'Before asking for location access, the app explains how tracking works. You can decline without opening the system prompt.',
     ),
-    ('App tour', 'A short overview of what the app can do: Profile → Help.'),
   ],
   AppLanguage.spanish: [
     (
-      'Inicio de sesión con Google',
-      'Ahora puedes entrar con tu cuenta de Google, sin otra contraseña.',
+      'Informes de kilometraje más claros',
+      'Las deducciones de EE. UU. son estimaciones con la tarifa del IRS de cada fecha. Canadá muestra un registro de kilómetros sin importe de deducción.',
     ),
     (
-      'Sección Vehículo',
-      'En Perfil tienes marca, modelo, año, placa y datos del seguro en un '
-          'solo lugar.',
+      'Condiciones y privacidad',
+      'Abre los Términos del servicio y la Política de privacidad desde el acceso o Perfil. Las licencias están en Perfil → Acerca de.',
     ),
     (
-      'Tarifas por kilometraje actualizadas',
-      'Cada viaje se calcula con la tarifa vigente en su fecha. En EE. UU. '
-          'son 76 ¢ por milla desde el 1 de julio de 2026.',
-    ),
-    (
-      'Recorrido por la app',
-      'Un resumen breve de lo que hace la app: Perfil → Ayuda.',
+      'Uso de ubicación explicado',
+      'Antes de pedir acceso a la ubicación, la app explica el seguimiento. Puedes rechazarlo sin abrir la solicitud del sistema.',
     ),
   ],
   AppLanguage.french: [
     (
-      'Connexion avec Google',
-      'Vous pouvez maintenant vous connecter avec votre compte Google, sans '
-          'autre mot de passe.',
+      'Des rapports kilométriques plus clairs',
+      "Les déductions américaines sont des estimations au taux IRS de chaque trajet. Au Canada, un registre kilométrique remplace le montant de déduction.",
     ),
     (
-      'Section Véhicule',
-      "Le profil réunit marque, modèle, année, plaque et assurance au même "
-          'endroit.',
+      'Conditions et confidentialité',
+      "Ouvrez les conditions et la politique de confidentialité depuis la connexion ou le profil. Les licences sont dans Profil → À propos.",
     ),
     (
-      'Taux kilométriques à jour',
-      'Chaque trajet est calculé au taux en vigueur à sa date. Aux '
-          'États-Unis : 76 ¢ par mille depuis le 1er juillet 2026.',
-    ),
-    (
-      "Visite de l'app",
-      "Un aperçu rapide de ce que fait l'app : Profil → Aide.",
+      'La localisation expliquée',
+      "Avant de demander la localisation, l'application explique le suivi. Vous pouvez refuser sans ouvrir la demande du système.",
     ),
   ],
   AppLanguage.russian: [
     (
-      'Вход через Google',
-      'Теперь можно войти через свой аккаунт Google — без отдельного пароля.',
+      'Понятные отчёты о пробеге',
+      'Для США показана оценка вычета по ставке IRS на дату поездки. Для Канады — журнал километров без суммы вычета.',
     ),
     (
-      'Раздел «Автомобиль»',
-      'В Профиле — марка, модель, год, номерной знак и данные страховки в '
-          'одном месте.',
+      'Условия и конфиденциальность',
+      'Условия использования и политика конфиденциальности доступны при входе и в Профиле. Лицензии — в Профиль → О приложении.',
     ),
     (
-      'Новые ставки вычета',
-      'Каждая поездка считается по ставке на её дату. Для США с 1 июля 2026 '
-          'года — 76 центов за милю.',
-    ),
-    (
-      'Обзор функций',
-      'Короткий обзор возможностей приложения: Профиль → Помощь.',
+      'Пояснение о геолокации',
+      'Перед запросом доступа приложение объясняет работу отслеживания. Можно отказаться, не открывая системный запрос.',
     ),
   ],
   AppLanguage.ukrainian: [
     (
-      'Вхід через Google',
-      'Тепер можна ввійти через свій акаунт Google — без окремого пароля.',
+      'Зрозумілі звіти про пробіг',
+      'Для США показано орієнтовне відрахування за ставкою IRS на дату поїздки. Для Канади — журнал кілометрів без суми відрахування.',
     ),
     (
-      'Розділ «Автомобіль»',
-      'У Профілі — марка, модель, рік, номерний знак і дані страхування в '
-          'одному місці.',
+      'Умови й конфіденційність',
+      'Умови використання та політика конфіденційності доступні при вході й у Профілі. Ліцензії — у Профіль → Про додаток.',
     ),
     (
-      'Нові ставки відрахування',
-      'Кожна поїздка рахується за ставкою на свою дату. Для США з 1 липня '
-          '2026 року — 76 центів за милю.',
-    ),
-    (
-      'Гайд по функціях',
-      'Короткий огляд можливостей додатка: Профіль → Допомога.',
+      'Пояснення про геолокацію',
+      'Перед запитом доступу додаток пояснює роботу відстеження. Можна відмовитися, не відкриваючи системний запит.',
     ),
   ],
   AppLanguage.dari: [
     (
-      'ورود با Google',
-      'اکنون می‌توانید با حساب Google خود وارد شوید، بدون رمز جداگانه.',
+      'گزارش مسافت روشن‌تر',
+      'کسر آمریکا برآوردی با نرخ IRS در تاریخ هر سفر است. برای کانادا، گزارش کیلومتر بدون مبلغ کسر نمایش داده می‌شود.',
     ),
     (
-      'بخش «خودرو»',
-      'در پروفایل، سازنده، مدل، سال، پلاک و اطلاعات بیمه در یک جا هستند.',
+      'شرایط و حریم خصوصی',
+      'شرایط استفاده و سیاست حریم خصوصی از صفحه ورود یا پروفایل باز می‌شوند. مجوزها در پروفایل ← درباره برنامه هستند.',
     ),
     (
-      'نرخ‌های جدید کسر',
-      'هر سفر با نرخ تاریخ خودش حساب می‌شود. برای آمریکا از 1 جولای 2026، '
-          '76 سنت برای هر مایل.',
+      'توضیح موقعیت مکانی',
+      'پیش از درخواست دسترسی به موقعیت، برنامه ردیابی را توضیح می‌دهد. می‌توانید بدون باز شدن درخواست سیستم آن را رد کنید.',
     ),
-    ('آشنایی با برنامه', 'مروری کوتاه بر امکانات برنامه: پروفایل ← راهنما.'),
   ],
 };

@@ -8,6 +8,7 @@ import '../../core/location/reverse_geocoding_service.dart';
 import '../../core/location/tracking_result.dart';
 import '../../core/notifications/trip_notification_service.dart';
 import '../../core/preferences/user_preferences.dart';
+import '../../core/storage/account_data_store.dart';
 import '../../features/trips/models/trip.dart';
 import '../../features/trips/services/trip_service.dart';
 import '../../features/work_mode/services/work_mode_service.dart';
@@ -45,6 +46,7 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
 
   Future<void> _handleStart() async {
     if (_isBusy) return;
+    final scope = AccountDataStore.current;
     setState(() {
       _isBusy = true;
       _errorMessage = null;
@@ -55,10 +57,11 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
         strings: widget.strings,
         permissionService: _permissionService,
       );
-      if (!mounted) return;
+      if (!mounted || !identical(scope, AccountDataStore.current)) return;
       switch (status) {
         case LocationPermissionStatus.granted:
           await TripNotificationService.instance.requestPermission();
+          if (!mounted || !identical(scope, AccountDataStore.current)) return;
           final started = await appTrackingService.startTracking();
           if (mounted && !started) {
             setState(() => _errorMessage = widget.strings.trackingError);

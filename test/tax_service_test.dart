@@ -19,7 +19,7 @@ void main() {
     });
 
     test('dates outside the table use the nearest known rate', () {
-      expect(tax.usaRatePerMile(DateTime(2019)), 0.655);
+      expect(tax.usaRatePerMile(DateTime(1900)), 0.575);
       expect(tax.usaRatePerMile(DateTime(2030)), 0.76);
     });
 
@@ -29,6 +29,17 @@ void main() {
         (date: DateTime(2026, 7, 15), km: 100 * _kmPerMile),
       ], Country.usa);
       expect(deduction, closeTo(72.5 + 76, 1e-6));
+    });
+
+    test('reports from 2020 use historical rates including the 2022 split', () {
+      final deduction = tax.calculateTaxForTrips([
+        (date: DateTime(2020, 1, 1), km: 100 * _kmPerMile),
+        (date: DateTime(2021, 12, 31), km: 100 * _kmPerMile),
+        (date: DateTime(2022, 6, 30, 23, 59), km: 100 * _kmPerMile),
+        (date: DateTime(2022, 7, 1), km: 100 * _kmPerMile),
+        (date: DateTime(2023, 1, 1), km: 100 * _kmPerMile),
+      ], Country.usa);
+      expect(deduction, closeTo(57.5 + 56 + 58.5 + 62.5 + 65.5, 1e-6));
     });
   });
 

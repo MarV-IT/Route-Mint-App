@@ -8,9 +8,7 @@ import '../localization/app_strings.dart';
 /// Addresses of the legal documents on marvroute.com.
 ///
 /// The site publishes them in English, Ukrainian and French, and `?lang=`
-/// opens a page in that language. French matters for Québec, where the
-/// contract has to be offered in French first; the other app languages fall
-/// back to English.
+/// opens a page in that language. The other app languages fall back to English.
 class LegalLinks {
   const LegalLinks._();
 
@@ -52,7 +50,7 @@ Future<void> openLegalLink(
   }
   if (opened) return;
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text('${strings.couldNotOpenLink} $uri')),
-  );
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text('${strings.couldNotOpenLink} $uri')));
 }
