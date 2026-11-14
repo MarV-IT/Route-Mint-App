@@ -16,6 +16,7 @@ import '../../core/preferences/preferences_service.dart';
 import '../../core/preferences/user_preferences.dart';
 import '../../core/subscription/entitlement_service.dart';
 import '../../core/subscription/pro_feature_gate.dart';
+import '../../core/subscription/subscription_controller.dart';
 import '../../core/tax/tax_service.dart';
 import '../../core/backup/backup_service.dart';
 import '../../core/backup/cloud_backup_service.dart';
@@ -25,6 +26,7 @@ import '../../shared/utils/number_input.dart';
 import '../auth/auth_screen.dart';
 import '../guide/feature_guide_screen.dart';
 import '../help/help_screen.dart';
+import '../subscription/subscription_text.dart';
 import '../whats_new/whats_new_content.dart';
 import '../whats_new/whats_new_dialog.dart';
 import '../work_mode/work_mode_screen.dart';
@@ -39,6 +41,9 @@ class ProfileScreen extends StatefulWidget {
   final ValueChanged<AppLanguage?> onLanguageChanged;
   final ValueChanged<UserPreferences> onPreferencesChanged;
 
+  /// Defaults to the app-wide controller; tests pass their own.
+  final SubscriptionController? subscription;
+
   const ProfileScreen({
     super.key,
     required this.strings,
@@ -48,6 +53,7 @@ class ProfileScreen extends StatefulWidget {
     required this.onUnitChanged,
     required this.onLanguageChanged,
     required this.onPreferencesChanged,
+    this.subscription,
   });
 
   @override
@@ -81,6 +87,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _prefsService = PreferencesService();
   final _authService = AuthService();
   final _accountDeletionService = AccountDeletionService();
+  late final SubscriptionController _subscription =
+      widget.subscription ?? appSubscription;
   User? _lastKnownUser;
   bool _isExportingBackup = false;
   bool _isImportingBackup = false;
@@ -842,6 +850,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// One line under the plan name: what is paid for and what happens next.
+  String _subscriptionSummary(AppStrings s, EntitlementService entitlements) {
+    if (entitlements.isTesterPro) return s.testerProEnabled;
+    if (!entitlements.isPro || !_subscription.storeEnabled) {
+      return s.unlockProBody;
+    }
+    final state = _subscription.state;
+    if (state.hasBillingIssue) return s.proBillingIssue;
+    final details = [
+      ?planName(state.period, s),
+      ?subscriptionNextStep(state, s),
+    ];
+    return details.isEmpty ? s.unlockProBody : details.join(' · ');
+  }
+
   void _setTesterPro(bool enabled) {
     final updated = widget.preferences.copyWith(
       subscriptionStatus: enabled
@@ -936,28 +959,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: s.subscription,
             initiallyExpanded: true,
             children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.workspace_premium_outlined),
-                title: Text(entitlements.isPro ? s.proActive : s.freePlan),
-                subtitle: Text(
-                  entitlements.isTesterPro
-                      ? s.testerProEnabled
-                      : s.unlockProBody,
+              // The status is always visible here, and follows the store:
+              // a cancellation changes the wording without touching Pro.
+              ListenableBuilder(
+                listenable: _subscription,
+                builder: (context, _) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.workspace_premium_outlined),
+                  title: Text(entitlements.isPro ? s.proActive : s.freePlan),
+                  subtitle: Text(_subscriptionSummary(s, entitlements)),
+                  trailing: entitlements.isPro
+                      ? _proBadge(s)
+                      : const Icon(Icons.chevron_right),
+                  onTap: () => openGoProScreen(context, s),
                 ),
-                trailing: entitlements.isPro
-                    ? _proBadge(s)
-                    : const Icon(Icons.chevron_right),
-                onTap: () => openGoProScreen(context, s),
               ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                secondary: const Icon(Icons.science_outlined),
-                title: Text(s.enableTesterPro),
-                subtitle: Text(s.enableTesterProSubtitle),
-                value: entitlements.isTesterPro,
-                onChanged: _setTesterPro,
-              ),
+              // Free Pro for testing: only before payments are switched on,
+              // and afterwards only in development builds.
+              if (!_subscription.storeEnabled || kDebugMode)
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: const Icon(Icons.science_outlined),
+                  title: Text(s.enableTesterPro),
+                  subtitle: Text(s.enableTesterProSubtitle),
+                  value: entitlements.isTesterPro,
+                  onChanged: _setTesterPro,
+                ),
             ],
           ),
 

@@ -15,6 +15,8 @@ const accountDataKeys = <String>[
   'app_country',
   'auto_detection_active_trip',
   'auto_detection_monitoring',
+  // SubscriptionController.snapshotKey: what the store last confirmed.
+  'subscription_snapshot',
 ];
 
 /// An immutable storage owner. Services retain this scope so an operation

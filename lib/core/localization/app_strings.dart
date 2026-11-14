@@ -5,6 +5,15 @@ class AppStrings {
 
   const AppStrings(this.currentLanguage);
 
+  String get testPaymentsNotice => _value(
+    en: 'Test payment — no money is charged. Choose a result in the test window. Test subscriptions renew and expire faster.',
+    es: 'Pago de prueba: no se cobra dinero. Elige un resultado en la ventana de prueba. Las suscripciones de prueba se renuevan y caducan más rápido.',
+    fr: 'Paiement de test : aucun débit. Choisissez un résultat dans la fenêtre de test. Les abonnements de test se renouvellent et expirent plus vite.',
+    ru: 'Тестовая оплата — деньги не списываются. Выберите результат в тестовом окне. Тестовые подписки продлеваются и истекают быстрее.',
+    uk: 'Тестова оплата — кошти не списуються. Виберіть результат у тестовому вікні. Тестові підписки поновлюються та завершуються швидше.',
+    fa: 'پرداخت آزمایشی است و پولی کسر نمی‌شود. نتیجه را در پنجرهٔ آزمایش انتخاب کنید. اشتراک‌های آزمایشی زودتر تمدید و منقضی می‌شوند.',
+  );
+
   String get rateApp => _value(
     en: 'Rate MarV Route',
     es: 'Valorar MarV Route',
@@ -924,6 +933,333 @@ class AppStrings {
     ru: 'Напоминания об обслуживании',
     uk: 'Нагадування про обслуговування',
     fa: 'یادآوری‌های نگهداری',
+  );
+
+  // ─── Subscription ─────────────────────────────────────────────────────────
+
+  String get whatProIncludes => _value(
+    en: 'What Pro includes',
+    es: 'Qué incluye Pro',
+    fr: 'Ce que Pro inclut',
+    ru: 'Что входит в Pro',
+    uk: 'Що входить у Pro',
+    fa: 'Pro شامل چیست',
+  );
+
+  String get planAnnual => _value(
+    en: 'Annual',
+    es: 'Anual',
+    fr: 'Annuel',
+    ru: 'Годовая',
+    uk: 'Річна',
+    fa: 'سالانه',
+  );
+
+  String get planMonthly => _value(
+    en: 'Monthly',
+    es: 'Mensual',
+    fr: 'Mensuel',
+    ru: 'Месячная',
+    uk: 'Місячна',
+    fa: 'ماهانه',
+  );
+
+  String get proPlanAnnual => _value(
+    en: 'Annual plan',
+    es: 'Plan anual',
+    fr: 'Offre annuelle',
+    ru: 'Годовой план',
+    uk: 'Річний план',
+    fa: 'طرح سالانه',
+  );
+
+  String get proPlanMonthly => _value(
+    en: 'Monthly plan',
+    es: 'Plan mensual',
+    fr: 'Offre mensuelle',
+    ru: 'Месячный план',
+    uk: 'Місячний план',
+    fa: 'طرح ماهانه',
+  );
+
+  String pricePerYear(String price) => _value(
+    en: '$price / year',
+    es: '$price / año',
+    fr: '$price / an',
+    ru: '$price / год',
+    uk: '$price / рік',
+    fa: '$price / سال',
+  );
+
+  String pricePerMonth(String price) => _value(
+    en: '$price / month',
+    es: '$price / mes',
+    fr: '$price / mois',
+    ru: '$price / месяц',
+    uk: '$price / місяць',
+    fa: '$price / ماه',
+  );
+
+  String planMonthlyEquivalent(String price) => _value(
+    en: '$price per month',
+    es: '$price al mes',
+    fr: '$price par mois',
+    ru: '$price в месяц',
+    uk: '$price на місяць',
+    fa: '$price در ماه',
+  );
+
+  String planSavings(int percent) => _value(
+    en: 'Save $percent%',
+    es: 'Ahorra $percent %',
+    fr: 'Économisez $percent %',
+    ru: 'Экономия $percent%',
+    uk: 'Економія $percent%',
+    fa: '$percent% صرفه‌جویی',
+  );
+
+  /// A length of time such as "7 days" or "1 month", for a free trial.
+  String trialDays(int count) => _value(
+    en: count == 1 ? '1 day' : '$count days',
+    es: count == 1 ? '1 día' : '$count días',
+    fr: count == 1 ? '1 jour' : '$count jours',
+    ru: '$count ${_slavicPlural(count, 'день', 'дня', 'дней')}',
+    uk: '$count ${_slavicPlural(count, 'день', 'дні', 'днів')}',
+    fa: '$count روز',
+  );
+
+  String trialWeeks(int count) => _value(
+    en: count == 1 ? '1 week' : '$count weeks',
+    es: count == 1 ? '1 semana' : '$count semanas',
+    fr: count == 1 ? '1 semaine' : '$count semaines',
+    ru: '$count ${_slavicPlural(count, 'неделя', 'недели', 'недель')}',
+    uk: '$count ${_slavicPlural(count, 'тиждень', 'тижні', 'тижнів')}',
+    fa: '$count هفته',
+  );
+
+  String trialMonths(int count) => _value(
+    en: count == 1 ? '1 month' : '$count months',
+    es: count == 1 ? '1 mes' : '$count meses',
+    fr: '$count mois',
+    ru: '$count ${_slavicPlural(count, 'месяц', 'месяца', 'месяцев')}',
+    uk: '$count ${_slavicPlural(count, 'місяць', 'місяці', 'місяців')}',
+    fa: '$count ماه',
+  );
+
+  String trialYears(int count) => _value(
+    en: count == 1 ? '1 year' : '$count years',
+    es: count == 1 ? '1 año' : '$count años',
+    fr: count == 1 ? '1 an' : '$count ans',
+    ru: '$count ${_slavicPlural(count, 'год', 'года', 'лет')}',
+    uk: '$count ${_slavicPlural(count, 'рік', 'роки', 'років')}',
+    fa: '$count سال',
+  );
+
+  String freeTrialLabel(String length) => _value(
+    en: 'Free trial: $length',
+    es: 'Prueba gratuita: $length',
+    fr: 'Essai gratuit : $length',
+    ru: 'Бесплатный период: $length',
+    uk: 'Безкоштовний період: $length',
+    fa: 'دوره رایگان: $length',
+  );
+
+  String get startFreeTrial => _value(
+    en: 'Start free trial',
+    es: 'Empezar prueba gratuita',
+    fr: "Commencer l'essai gratuit",
+    ru: 'Начать бесплатный период',
+    uk: 'Почати безкоштовний період',
+    fa: 'شروع دوره رایگان',
+  );
+
+  String get subscribeNow => _value(
+    en: 'Subscribe',
+    es: 'Suscribirme',
+    fr: "S'abonner",
+    ru: 'Подписаться',
+    uk: 'Підписатися',
+    fa: 'خرید اشتراک',
+  );
+
+  String subscriptionRenewsYearly(String price) => _value(
+    en: 'The subscription costs $price per year and renews automatically until you cancel.',
+    es: 'La suscripción cuesta $price al año y se renueva automáticamente hasta que la canceles.',
+    fr: "L'abonnement coûte $price par an et se renouvelle automatiquement jusqu'à ce que vous l'annuliez.",
+    ru: 'Подписка стоит $price в год и продлевается автоматически, пока вы её не отмените.',
+    uk: 'Підписка коштує $price на рік і поновлюється автоматично, доки ви її не скасуєте.',
+    fa: 'اشتراک سالانه $price است و تا زمانی که لغو نکنید خودکار تمدید می‌شود.',
+  );
+
+  String subscriptionRenewsMonthly(String price) => _value(
+    en: 'The subscription costs $price per month and renews automatically until you cancel.',
+    es: 'La suscripción cuesta $price al mes y se renueva automáticamente hasta que la canceles.',
+    fr: "L'abonnement coûte $price par mois et se renouvelle automatiquement jusqu'à ce que vous l'annuliez.",
+    ru: 'Подписка стоит $price в месяц и продлевается автоматически, пока вы её не отмените.',
+    uk: 'Підписка коштує $price на місяць і поновлюється автоматично, доки ви її не скасуєте.',
+    fa: 'اشتراک ماهانه $price است و تا زمانی که لغو نکنید خودکار تمدید می‌شود.',
+  );
+
+  String trialNotice(String length) => _value(
+    en: 'Free trial: $length. Cancel before it ends and you are not charged.',
+    es: 'Prueba gratuita: $length. Si cancelas antes de que termine, no se te cobra nada.',
+    fr: "Essai gratuit : $length. Si vous annulez avant la fin, rien n'est facturé.",
+    ru: 'Бесплатный период: $length. Если отменить до его окончания, оплата не списывается.',
+    uk: 'Безкоштовний період: $length. Якщо скасувати до його завершення, оплата не знімається.',
+    fa: 'دوره رایگان: $length. اگر پیش از پایان آن لغو کنید، هزینه‌ای پرداخت نمی‌کنید.',
+  );
+
+  String cancelAnytimeIn(String store) => _value(
+    en: 'Cancel any time in your $store subscriptions, at least 24 hours before the current period ends.',
+    es: 'Puedes cancelar cuando quieras en las suscripciones de $store, al menos 24 horas antes de que termine el periodo actual.',
+    fr: 'Vous pouvez annuler à tout moment dans les abonnements $store, au moins 24 heures avant la fin de la période en cours.',
+    ru: 'Отменить можно в любой момент в подписках $store, не позднее чем за 24 часа до конца текущего периода.',
+    uk: 'Скасувати можна будь-коли в підписках $store, не пізніше ніж за 24 години до кінця поточного періоду.',
+    fa: 'هر زمان می‌توانید در بخش اشتراک‌های $store لغو کنید، دست‌کم 24 ساعت پیش از پایان دوره جاری.',
+  );
+
+  String get restorePurchase => _value(
+    en: 'Restore purchase',
+    es: 'Restaurar compra',
+    fr: "Restaurer l'achat",
+    ru: 'Восстановить покупку',
+    uk: 'Відновити покупку',
+    fa: 'بازیابی خرید',
+  );
+
+  String get plansLoadFailed => _value(
+    en: 'Could not load the subscription plans.',
+    es: 'No se pudieron cargar los planes de suscripción.',
+    fr: "Impossible de charger les offres d'abonnement.",
+    ru: 'Не удалось загрузить тарифы подписки.',
+    uk: 'Не вдалося завантажити тарифи підписки.',
+    fa: 'بارگیری طرح‌های اشتراک ممکن نشد.',
+  );
+
+  String get plansUnavailable => _value(
+    en: 'Subscriptions are not available right now. Try again later.',
+    es: 'Las suscripciones no están disponibles ahora. Inténtalo más tarde.',
+    fr: 'Les abonnements ne sont pas disponibles pour le moment. Réessayez plus tard.',
+    ru: 'Подписка сейчас недоступна. Попробуйте позже.',
+    uk: 'Підписка зараз недоступна. Спробуйте пізніше.',
+    fa: 'اشتراک اکنون در دسترس نیست. بعداً دوباره تلاش کنید.',
+  );
+
+  String get proActivated => _value(
+    en: 'Pro is on. Thank you!',
+    es: 'Pro está activo. ¡Gracias!',
+    fr: 'Pro est activé. Merci !',
+    ru: 'Pro включён. Спасибо!',
+    uk: 'Pro увімкнено. Дякуємо!',
+    fa: 'Pro فعال شد. سپاسگزاریم!',
+  );
+
+  String get purchasePending => _value(
+    en: 'The purchase is waiting for approval or payment. Pro turns on by itself once it goes through.',
+    es: 'La compra está pendiente de aprobación o de pago. Pro se activará solo cuando se complete.',
+    fr: "L'achat attend une approbation ou un paiement. Pro s'activera tout seul une fois l'achat finalisé.",
+    ru: 'Покупка ожидает подтверждения или оплаты. Pro включится сам, когда она пройдёт.',
+    uk: 'Покупка очікує підтвердження або оплати. Pro увімкнеться сам, щойно вона пройде.',
+    fa: 'خرید در انتظار تأیید یا پرداخت است. پس از تکمیل، Pro خودکار فعال می‌شود.',
+  );
+
+  String get purchaseNotAllowed => _value(
+    en: 'Purchases are not allowed on this device or account.',
+    es: 'Las compras no están permitidas en este dispositivo o cuenta.',
+    fr: 'Les achats ne sont pas autorisés sur cet appareil ou ce compte.',
+    ru: 'Покупки запрещены на этом устройстве или в этом аккаунте.',
+    uk: 'Покупки заборонені на цьому пристрої або в цьому акаунті.',
+    fa: 'خرید در این دستگاه یا حساب مجاز نیست.',
+  );
+
+  String get purchaseFailed => _value(
+    en: 'The purchase did not go through. Try again.',
+    es: 'La compra no se completó. Inténtalo de nuevo.',
+    fr: "L'achat n'a pas abouti. Réessayez.",
+    ru: 'Покупка не прошла. Попробуйте ещё раз.',
+    uk: 'Покупка не пройшла. Спробуйте ще раз.',
+    fa: 'خرید انجام نشد. دوباره تلاش کنید.',
+  );
+
+  String get purchaseAlreadyOwned => _value(
+    en: 'This store account already has the subscription. Tap Restore purchase.',
+    es: 'Esta cuenta de la tienda ya tiene la suscripción. Toca Restaurar compra.',
+    fr: "Ce compte possède déjà l'abonnement. Touchez Restaurer l'achat.",
+    ru: 'В этом аккаунте магазина подписка уже есть. Нажмите «Восстановить покупку».',
+    uk: 'У цьому акаунті магазину підписка вже є. Натисніть «Відновити покупку».',
+    fa: 'این حساب فروشگاه از قبل اشتراک دارد. روی «بازیابی خرید» بزنید.',
+  );
+
+  String get purchaseRestored => _value(
+    en: 'Purchase restored. Pro is on.',
+    es: 'Compra restaurada. Pro está activo.',
+    fr: 'Achat restauré. Pro est activé.',
+    ru: 'Покупка восстановлена. Pro включён.',
+    uk: 'Покупку відновлено. Pro увімкнено.',
+    fa: 'خرید بازیابی شد. Pro فعال است.',
+  );
+
+  String get nothingToRestore => _value(
+    en: 'No active subscription was found for this store account.',
+    es: 'No se encontró ninguna suscripción activa en esta cuenta de la tienda.',
+    fr: "Aucun abonnement actif n'a été trouvé pour ce compte.",
+    ru: 'Для этого аккаунта магазина активная подписка не найдена.',
+    uk: 'Для цього акаунта магазину активну підписку не знайдено.',
+    fa: 'اشتراک فعالی برای این حساب فروشگاه پیدا نشد.',
+  );
+
+  String proRenewsOn(String date) => _value(
+    en: 'Renews on $date',
+    es: 'Se renueva el $date',
+    fr: 'Renouvellement le $date',
+    ru: 'Продлится $date',
+    uk: 'Поновиться $date',
+    fa: 'تمدید در $date',
+  );
+
+  String proEndsOn(String date) => _value(
+    en: 'Cancelled. Pro stays on until $date',
+    es: 'Cancelada. Pro sigue activo hasta el $date',
+    fr: "Annulé. Pro reste actif jusqu'au $date",
+    ru: 'Отменена. Pro действует до $date',
+    uk: 'Скасовано. Pro діє до $date',
+    fa: 'لغو شده. Pro تا $date فعال می‌ماند',
+  );
+
+  String proTrialUntil(String date) => _value(
+    en: 'Free trial until $date',
+    es: 'Prueba gratuita hasta el $date',
+    fr: "Essai gratuit jusqu'au $date",
+    ru: 'Бесплатный период до $date',
+    uk: 'Безкоштовний період до $date',
+    fa: 'دوره رایگان تا $date',
+  );
+
+  String get proBillingIssue => _value(
+    en: 'The store could not take your payment. Update your payment method there to keep Pro.',
+    es: 'La tienda no pudo cobrar el pago. Actualiza allí tu método de pago para conservar Pro.',
+    fr: "La boutique n'a pas pu prélever le paiement. Mettez-y à jour votre moyen de paiement pour conserver Pro.",
+    ru: 'Магазин не смог списать оплату. Обновите там способ оплаты, чтобы сохранить Pro.',
+    uk: 'Магазин не зміг списати оплату. Оновіть там спосіб оплати, щоб зберегти Pro.',
+    fa: 'فروشگاه نتوانست پرداخت را دریافت کند. برای حفظ Pro، روش پرداخت را در آنجا به‌روز کنید.',
+  );
+
+  String get manageSubscription => _value(
+    en: 'Manage subscription',
+    es: 'Gestionar suscripción',
+    fr: "Gérer l'abonnement",
+    ru: 'Управлять подпиской',
+    uk: 'Керувати підпискою',
+    fa: 'مدیریت اشتراک',
+  );
+
+  String boughtInStore(String store) => _value(
+    en: 'Bought in $store. Manage or cancel it there.',
+    es: 'Comprada en $store. Gestiónala o cancélala allí.',
+    fr: 'Acheté sur $store. Gérez-le ou annulez-le là-bas.',
+    ru: 'Куплено в $store. Управлять и отменять нужно там.',
+    uk: 'Куплено в $store. Керувати й скасовувати треба там.',
+    fa: 'از $store خریداری شده است. مدیریت یا لغو آن در همان‌جا انجام می‌شود.',
   );
 
   String get paymentsComingSoon => _value(

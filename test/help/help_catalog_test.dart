@@ -35,8 +35,7 @@ void main() {
     for (final topic in HelpTopic.values) {
       for (final language in AppLanguage.values) {
         final entry = helpEntry(topic, language);
-        final words =
-            wordCount(entry.body) + wordCount(entry.example ?? '');
+        final words = wordCount(entry.body) + wordCount(entry.example ?? '');
         expect(
           words,
           lessThanOrEqualTo(60),
@@ -71,6 +70,47 @@ void main() {
         reason: topic.id,
       );
     }
+  });
+
+  test('the Pro text for when it is on sale keeps to the same limits', () {
+    for (final language in AppLanguage.values) {
+      final entry = premiumOnSaleHelp[language];
+      expect(entry, isNotNull, reason: '$language missing');
+      final words = wordCount(entry!.body) + wordCount(entry.example ?? '');
+      expect(
+        words,
+        lessThanOrEqualTo(60),
+        reason: '$language has $words words',
+      );
+      expect(
+        sentenceCount(entry.body),
+        inInclusiveRange(2, 4),
+        reason: '$language',
+      );
+    }
+  });
+
+  test('Pro is explained as it is in this build: on sale or not yet', () {
+    for (final language in AppLanguage.values) {
+      expect(
+        helpEntry(HelpTopic.premium, language, storeEnabled: true).body,
+        premiumOnSaleHelp[language]!.body,
+      );
+      expect(
+        helpEntry(HelpTopic.premium, language, storeEnabled: false).body,
+        helpCatalog[HelpTopic.premium]![language]!.body,
+      );
+      // Other topics do not depend on the store.
+      expect(
+        helpEntry(HelpTopic.trips, language, storeEnabled: true).body,
+        helpCatalog[HelpTopic.trips]![language]!.body,
+      );
+    }
+    // A build without store keys keeps the earlier wording by default.
+    expect(
+      helpEntry(HelpTopic.premium, AppLanguage.english).body,
+      helpCatalog[HelpTopic.premium]![AppLanguage.english]!.body,
+    );
   });
 
   test('analytics topic ids are unique and stable', () {

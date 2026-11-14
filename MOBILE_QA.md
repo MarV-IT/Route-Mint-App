@@ -1,5 +1,18 @@
 # Перевірка Android та iPhone
 
+## Об’єднання Pro та оцінювання — 2026-11-14
+
+- До гілки `codex/in-app-review` інтегровано 23 файли реалізації Pro від Claude Code зі snapshot-коміту `56f547e`. Вихідна робоча копія Claude не змінена; SHA-256 усіх 23 файлів збігаються зі snapshot. Функція нативного оцінювання збережена в `a57e986`.
+- Виправлено запізніле збереження налаштувань після перемикання акаунтів, серіалізовано операції магазину й перемикання покупця, відкидаються чужі результати покупки/відновлення та запізнілі події. Пошкоджена дата завершення в кеші більше не дає безстрокового Pro.
+- У RevenueCat перевірено наявні `default`, `monthly`, `yearly` та entitlement `marv_route_pro`; додаток використовує саме цей entitlement. Тестовий ключ передано під час збірки; ключі реальних магазинів залишаються порожніми. На екрані Pro тестові платежі явно позначені шістьма мовами.
+- `flutter analyze --no-pub`: **No issues found** (`build/pro-analyze.log`).
+- `flutter test --no-pub --concurrency=2 --reporter expanded`: **400 тестів пройшли** (`build/pro-full-test.log`). Покриті нові регресії ізоляції акаунтів, Pro, оцінювання й адаптивність Android/iOS. Початковий запуск виявив проблеми асинхронної черги у widget-тестах; чергу виправлено, повторний набір пройшов. Аналізатор спершу повідомив чотири зауваження стилю; їх виправлено.
+- `flutter build apk --debug --no-pub --android-project-arg=signDebugWithReleaseKey=true --dart-define=REVENUECAT_API_KEY=<public-test-key>`: **успіх** (`build/pro-android-build.log`). RevenueCat Test Store для Flutter потребує debug-збірки; APK не призначений для публікації в Play.
+- Артефакт: `build/MarV-Route-1.0.3-Pro-Test.apk`, 180274024 байти. SHA-256: `B899B60CA09E3CBE3B54D6D5FDC89D787597998BDA7534E9F27D61E7392E78EA`.
+- `apksigner verify --verbose --print-certs`: успішний підпис v2. Сертифікат SHA-256 `808e572159cc10b6cd4dcae9654d19f2212d132a14685f3cfb2f85877be7f4b3` збігається з попереднім `MarV-Route-1.0.2-review.apk`. Першу збірку зі стандартним debug-підписом не передаємо; явний Gradle-параметр усунув розбіжність.
+- `aapt dump badging`: `com.marvroute.app`, версія `1.0.3+12`, minSdk 24, targetSdk 36, debug, ABI `armeabi-v7a`, `arm64-v8a`, `x86_64`.
+- **Не виконано:** компіляція iOS (Windows без Xcode), встановлення/ручна тестова покупка на телефоні, справжні Google Play/App Store sandbox-покупки та перевірка фактичного показу системного діалогу оцінювання. `adb devices` не виявив підключених пристроїв. Інструкції для перевірки оплати — у `SUBSCRIPTIONS.md`.
+
 ## Нативне оцінювання — 2026-11-12
 
 Фіча підготовлена в `codex/in-app-review` на базі `51c5673` (перевірка PR №1). Зміни годинника та Sign in with Apple з інших робочих папок сюди не інтегровані.

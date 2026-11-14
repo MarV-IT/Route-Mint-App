@@ -12,6 +12,7 @@ import '../core/localization/app_strings_scope.dart';
 import '../core/location/geolocator_tracking_provider.dart';
 import '../core/preferences/user_preferences.dart';
 import '../core/subscription/entitlement_service.dart';
+import '../core/subscription/subscription_controller.dart';
 import '../core/preferences/preferences_service.dart';
 import '../core/storage/account_data_store.dart';
 import '../core/review/review_prompt_host.dart';
@@ -43,9 +44,18 @@ extension AppLanguageDisplay on AppLanguage {
 enum AppThemeMode { system, light, dark }
 
 class RouteMintApp extends StatefulWidget {
-  const RouteMintApp({super.key, this.accountSession});
+  const RouteMintApp({
+    super.key,
+    this.accountSession,
+    this.subscription,
+    this.preferencesFactory,
+  });
 
   final AccountSessionService? accountSession;
+
+  /// Defaults to the app-wide controller; tests pass their own.
+  final SubscriptionController? subscription;
+  final PreferencesService Function(AccountDataScope)? preferencesFactory;
 
   @override
   State<RouteMintApp> createState() => _RouteMintAppState();
@@ -53,9 +63,15 @@ class RouteMintApp extends StatefulWidget {
 
 class _RouteMintAppState extends State<RouteMintApp>
     with WidgetsBindingObserver {
-  PreferencesService get _prefsService => PreferencesService();
+  PreferencesService _preferencesFor(AccountDataScope scope) =>
+      widget.preferencesFactory?.call(scope) ??
+      PreferencesService(scope: scope);
+  PreferencesService get _prefsService =>
+      _preferencesFor(AccountDataStore.current);
   final _cloudBackupService = CloudBackupService();
   final _dailyCloudBackupService = DailyCloudBackupService();
+  late final SubscriptionController _subscription =
+      widget.subscription ?? appSubscription;
 
   AppLanguage _selectedLanguage = AppLanguage.english;
 
@@ -86,6 +102,7 @@ class _RouteMintAppState extends State<RouteMintApp>
     _reviewUsageTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       unawaited(ReviewService.instance.checkpoint());
     });
+    _subscription.addListener(_onSubscriptionChanged);
     if (widget.accountSession != null || Firebase.apps.isNotEmpty) {
       _accountSession = widget.accountSession ?? AccountSessionService.instance;
       _accountSession!.addListener(_onAccountSessionChanged);
@@ -100,6 +117,7 @@ class _RouteMintAppState extends State<RouteMintApp>
     WidgetsBinding.instance.removeObserver(this);
     _reviewUsageTimer?.cancel();
     unawaited(ReviewService.instance.setForeground(false));
+    _subscription.removeListener(_onSubscriptionChanged);
     _dailyCloudBackupTimer?.cancel();
     _accountSession?.removeListener(_onAccountSessionChanged);
     super.dispose();
@@ -111,6 +129,8 @@ class _RouteMintAppState extends State<RouteMintApp>
       ReviewService.instance.setForeground(state == AppLifecycleState.resumed),
     );
     if (state == AppLifecycleState.resumed) {
+      // A renewal, cancellation or refund may have happened while away.
+      unawaited(_subscription.refresh());
       if (_loadingAccount || !_accountReady) return;
       // Mobile operating systems suspend Dart timers in the background.
       _scheduleDailyCloudBackup();
@@ -158,6 +178,9 @@ class _RouteMintAppState extends State<RouteMintApp>
     final scope = AccountDataStore.current;
     final revision = _accountRevision;
     try {
+      // First, so the preferences below already carry this account's Pro.
+      await _subscription.attach(scope);
+      if (!_isCurrentAccount(scope, revision)) return;
       await _loadPreferences(performBackgroundTasks: false);
       if (!_isCurrentAccount(scope, revision)) return;
       if (_accountSession?.user != null) {
@@ -171,6 +194,7 @@ class _RouteMintAppState extends State<RouteMintApp>
     } finally {
       if (_isCurrentAccount(scope, revision)) {
         setState(() => _loadingAccount = false);
+        _onSubscriptionChanged();
       }
     }
   }
@@ -179,7 +203,10 @@ class _RouteMintAppState extends State<RouteMintApp>
     if (!_accountReady) return;
     final scope = AccountDataStore.current;
     final revision = _accountRevision;
-    final prefs = await _prefsService.loadPreferences();
+    final service = _preferencesFor(scope);
+    final stored = await service.loadPreferences();
+    if (!_isCurrentAccount(scope, revision)) return;
+    final prefs = await _withSubscription(stored, service);
     if (!_isCurrentAccount(scope, revision)) return;
     setState(() {
       _preferences = prefs;
@@ -285,7 +312,10 @@ class _RouteMintAppState extends State<RouteMintApp>
       _cloudStartupVerified = true;
       if (!restored) return;
 
-      final restoredPrefs = await _prefsService.loadPreferences();
+      final service = _preferencesFor(scope);
+      final stored = await service.loadPreferences();
+      if (!_isCurrentAccount(scope, revision)) return;
+      final restoredPrefs = await _withSubscription(stored, service);
       if (!_isCurrentAccount(scope, revision)) return;
       setState(() {
         _preferences = restoredPrefs;
@@ -348,6 +378,28 @@ class _RouteMintAppState extends State<RouteMintApp>
     _prefsService.savePreferences(updated);
     _scheduleDailyCloudBackup(updated);
     _checkDailyCloudBackup(updated);
+  }
+
+  /// Preferences as loaded from storage or a backup, with the subscription
+  /// status replaced by what the store confirmed. The stored copy is kept
+  /// in step for the services that read preferences on their own.
+  Future<UserPreferences> _withSubscription(
+    UserPreferences stored,
+    PreferencesService service,
+  ) async {
+    final current = _subscription.applyTo(stored);
+    if (!identical(current, stored)) {
+      await service.savePreferences(current);
+    }
+    return current;
+  }
+
+  void _onSubscriptionChanged() {
+    final prefs = _preferences;
+    if (!mounted || prefs == null || _loadingAccount) return;
+    final updated = _subscription.applyTo(prefs);
+    // Pro features switch on or off at once, wherever the user is.
+    if (!identical(updated, prefs)) _changePreferences(updated);
   }
 
   void _onOnboardingComplete(UserPreferences prefs) {

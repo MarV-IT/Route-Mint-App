@@ -5,7 +5,7 @@ import '../../app/app.dart';
 /// The version these notes describe. Must match the version name in
 /// pubspec.yaml (a test checks it): when it changes, everyone who updates
 /// sees the new notes once.
-const whatsNewVersion = '1.0.2';
+const whatsNewVersion = '1.0.3';
 
 class WhatsNewItem {
   const WhatsNewItem({
@@ -20,9 +20,9 @@ class WhatsNewItem {
 }
 
 const _icons = [
-  Icons.calculate_outlined,
-  Icons.policy_outlined,
-  Icons.location_on_outlined,
+  Icons.workspace_premium_outlined,
+  Icons.star_outline,
+  Icons.account_circle_outlined,
 ];
 
 /// What changed in [whatsNewVersion], in [language].
@@ -37,86 +37,86 @@ List<WhatsNewItem> whatsNewItems(AppLanguage language) {
 const Map<AppLanguage, List<(String, String)>> _texts = {
   AppLanguage.english: [
     (
-      'Clearer mileage reports',
-      'US deductions are labelled as estimates using the IRS rate for each trip date. Canada shows a kilometer log without a deduction amount.',
+      'MarV Route Pro',
+      'View monthly and yearly plans, restore a purchase and check your subscription in Profile. Test payments are clearly labelled.',
     ),
     (
-      'Terms and privacy',
-      'Open the Terms of Service and Privacy Policy from sign-in or Profile. Open-source licenses are in Profile → About.',
+      'Rate the app',
+      'After using the app, a rating request may appear at a quiet moment. You can turn requests off in Profile.',
     ),
     (
-      'Location explained',
-      'Before asking for location access, the app explains how tracking works. You can decline without opening the system prompt.',
+      'Your account, your data',
+      'Trips, preferences and Pro status stay with their account, including when you switch accounts during a pending operation.',
     ),
   ],
   AppLanguage.spanish: [
     (
-      'Informes de kilometraje más claros',
-      'Las deducciones de EE. UU. son estimaciones con la tarifa del IRS de cada fecha. Canadá muestra un registro de kilómetros sin importe de deducción.',
+      'MarV Route Pro',
+      'Consulta planes mensuales y anuales, restaura una compra y revisa tu suscripción en Perfil. Los pagos de prueba están identificados.',
     ),
     (
-      'Condiciones y privacidad',
-      'Abre los Términos del servicio y la Política de privacidad desde el acceso o Perfil. Las licencias están en Perfil → Acerca de.',
+      'Valorar la aplicación',
+      'Después de usar la aplicación, puede aparecer una solicitud de valoración en un momento tranquilo. Puedes desactivarla en Perfil.',
     ),
     (
-      'Uso de ubicación explicado',
-      'Antes de pedir acceso a la ubicación, la app explica el seguimiento. Puedes rechazarlo sin abrir la solicitud del sistema.',
+      'Tu cuenta, tus datos',
+      'Los viajes, preferencias y estado Pro permanecen en su cuenta, incluso al cambiar de cuenta durante una operación pendiente.',
     ),
   ],
   AppLanguage.french: [
     (
-      'Des rapports kilométriques plus clairs',
-      "Les déductions américaines sont des estimations au taux IRS de chaque trajet. Au Canada, un registre kilométrique remplace le montant de déduction.",
+      'MarV Route Pro',
+      'Consultez les forfaits mensuels et annuels, restaurez un achat et consultez votre abonnement dans Profil. Les paiements de test sont signalés.',
     ),
     (
-      'Conditions et confidentialité',
-      "Ouvrez les conditions et la politique de confidentialité depuis la connexion ou le profil. Les licences sont dans Profil → À propos.",
+      'Noter l’application',
+      'Après utilisation, une demande de note peut apparaître à un moment calme. Vous pouvez la désactiver dans Profil.',
     ),
     (
-      'La localisation expliquée',
-      "Avant de demander la localisation, l'application explique le suivi. Vous pouvez refuser sans ouvrir la demande du système.",
+      'Votre compte, vos données',
+      'Trajets, préférences et statut Pro restent liés à leur compte, même lors d’un changement de compte pendant une opération en cours.',
     ),
   ],
   AppLanguage.russian: [
     (
-      'Понятные отчёты о пробеге',
-      'Для США показана оценка вычета по ставке IRS на дату поездки. Для Канады — журнал километров без суммы вычета.',
+      'MarV Route Pro',
+      'Месячный и годовой планы, восстановление покупки и состояние подписки в Профиле. Тестовые платежи отмечены отдельно.',
     ),
     (
-      'Условия и конфиденциальность',
-      'Условия использования и политика конфиденциальности доступны при входе и в Профиле. Лицензии — в Профиль → О приложении.',
+      'Оценка приложения',
+      'После использования запрос оценки может появиться в спокойный момент. Запросы можно отключить в Профиле.',
     ),
     (
-      'Пояснение о геолокации',
-      'Перед запросом доступа приложение объясняет работу отслеживания. Можно отказаться, не открывая системный запрос.',
+      'Ваш аккаунт, ваши данные',
+      'Поездки, настройки и статус Pro остаются в своём аккаунте, даже при смене аккаунта во время незавершённой операции.',
     ),
   ],
   AppLanguage.ukrainian: [
     (
-      'Зрозумілі звіти про пробіг',
-      'Для США показано орієнтовне відрахування за ставкою IRS на дату поїздки. Для Канади — журнал кілометрів без суми відрахування.',
+      'MarV Route Pro',
+      'Місячний і річний плани, відновлення покупки та стан підписки у Профілі. Тестові платежі позначено окремо.',
     ),
     (
-      'Умови й конфіденційність',
-      'Умови використання та політика конфіденційності доступні при вході й у Профілі. Ліцензії — у Профіль → Про додаток.',
+      'Оцінювання додатку',
+      'Після використання запит оцінки може з’явитися у спокійний момент. Запити можна вимкнути у Профілі.',
     ),
     (
-      'Пояснення про геолокацію',
-      'Перед запитом доступу додаток пояснює роботу відстеження. Можна відмовитися, не відкриваючи системний запит.',
+      'Ваш акаунт, ваші дані',
+      'Поїздки, налаштування та статус Pro залишаються у своєму акаунті, навіть при зміні акаунта під час незавершеної операції.',
     ),
   ],
   AppLanguage.dari: [
     (
-      'گزارش مسافت روشن‌تر',
-      'کسر آمریکا برآوردی با نرخ IRS در تاریخ هر سفر است. برای کانادا، گزارش کیلومتر بدون مبلغ کسر نمایش داده می‌شود.',
+      'MarV Route Pro',
+      'طرح‌های ماهانه و سالانه، بازیابی خرید و وضعیت اشتراک در پروفایل در دسترس‌اند. پرداخت‌های آزمایشی مشخص شده‌اند.',
     ),
     (
-      'شرایط و حریم خصوصی',
-      'شرایط استفاده و سیاست حریم خصوصی از صفحه ورود یا پروفایل باز می‌شوند. مجوزها در پروفایل ← درباره برنامه هستند.',
+      'امتیاز دادن به برنامه',
+      'پس از استفاده، درخواست امتیاز ممکن است در زمانی آرام نمایش داده شود. می‌توانید درخواست‌ها را در پروفایل خاموش کنید.',
     ),
     (
-      'توضیح موقعیت مکانی',
-      'پیش از درخواست دسترسی به موقعیت، برنامه ردیابی را توضیح می‌دهد. می‌توانید بدون باز شدن درخواست سیستم آن را رد کنید.',
+      'حساب شما، داده‌های شما',
+      'سفرها، تنظیمات و وضعیت Pro در حساب خود باقی می‌مانند، حتی هنگام تغییر حساب در جریان یک عملیات.',
     ),
   ],
 };

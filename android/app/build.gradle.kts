@@ -53,6 +53,16 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Opt-in for a directly distributed Test Store APK that can update
+            // an existing signed install. Normal local debug signing is unchanged.
+            if (providers.gradleProperty("signDebugWithReleaseKey").orNull == "true") {
+                check(keystorePropertiesFile.exists()) {
+                    "signDebugWithReleaseKey requires android/key.properties"
+                }
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
         release {
             // Use the upload keystore when key.properties is present; otherwise fall
             // back to debug keys so `flutter run --release` still works locally/CI.

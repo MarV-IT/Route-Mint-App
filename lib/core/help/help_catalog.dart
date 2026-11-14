@@ -1,5 +1,6 @@
 import '../../app/app.dart';
 import '../localization/app_strings.dart';
+import '../subscription/subscription_controller.dart';
 
 /// A screen or feature that has a "?" explanation.
 ///
@@ -42,8 +43,19 @@ String helpTitle(HelpTopic topic, AppStrings s) => switch (topic) {
   HelpTopic.premium => 'Pro',
 };
 
-HelpEntry helpEntry(HelpTopic topic, AppLanguage language) =>
-    helpCatalog[topic]![language]!;
+/// [storeEnabled] says whether Pro is on sale in this build; it defaults
+/// to the app's own state and decides which Pro explanation is true.
+HelpEntry helpEntry(
+  HelpTopic topic,
+  AppLanguage language, {
+  bool? storeEnabled,
+}) {
+  if (topic == HelpTopic.premium &&
+      (storeEnabled ?? appSubscription.storeEnabled)) {
+    return premiumOnSaleHelp[language]!;
+  }
+  return helpCatalog[topic]![language]!;
+}
 
 /// Every explanation in every language, in one place so texts are easy to
 /// edit and translate. Bundled with the app: no network, and a text change
@@ -416,4 +428,61 @@ const Map<HelpTopic, Map<AppLanguage, HelpEntry>> helpCatalog = {
           'داده‌هایتان روی دستگاه باقی می‌مانند.',
     ),
   },
+};
+
+/// The Pro explanation once the subscription can be bought. The entry in
+/// [helpCatalog] is the one for builds where payments are not switched on.
+const Map<AppLanguage, HelpEntry> premiumOnSaleHelp = {
+  AppLanguage.english: HelpEntry(
+    body:
+        'Pro unlocks PDF and CSV report export, cloud backup, automatic trip '
+        'detection, fuel summaries, the month-end checklist and maintenance '
+        'reminders. It is a monthly or yearly subscription through the App '
+        'Store or Google Play. Cancel there at any time: Pro stays on until '
+        'the paid period ends, and your trips and records remain yours.',
+  ),
+  AppLanguage.spanish: HelpEntry(
+    body:
+        'Pro desbloquea exportar informes en PDF y CSV, copia en la nube, '
+        'detección automática de viajes, resúmenes de combustible, lista de '
+        'cierre mensual y recordatorios de mantenimiento. Es una suscripción '
+        'mensual o anual en App Store o Google Play. Puedes cancelarla allí '
+        'cuando quieras: Pro sigue activo hasta el final del periodo pagado '
+        'y tus datos siguen siendo tuyos.',
+  ),
+  AppLanguage.french: HelpEntry(
+    body:
+        "Pro débloque l'export PDF et CSV, la sauvegarde cloud, la détection "
+        'automatique des trajets, les résumés carburant, la clôture '
+        "mensuelle et les rappels d'entretien. C'est un abonnement mensuel "
+        "ou annuel via l'App Store ou Google Play. Annulez-le là-bas à tout "
+        "moment : Pro reste actif jusqu'à la fin de la période payée et vos "
+        'données restent les vôtres.',
+  ),
+  AppLanguage.russian: HelpEntry(
+    body:
+        'Pro открывает экспорт отчётов в PDF и CSV, облачную копию, '
+        'автоопределение поездок, сводки по топливу, чеклист закрытия '
+        'месяца и напоминания об обслуживании. Это месячная или годовая '
+        'подписка через App Store или Google Play. Отменить её можно там в '
+        'любой момент: Pro действует до конца оплаченного периода, а ваши '
+        'поездки и записи остаются с вами.',
+  ),
+  AppLanguage.ukrainian: HelpEntry(
+    body:
+        'Pro відкриває експорт звітів у PDF і CSV, хмарну копію, '
+        'автовизначення поїздок, підсумки пального, чекліст закриття місяця '
+        'та нагадування про обслуговування. Це місячна або річна підписка '
+        'через App Store чи Google Play. Скасувати її можна там будь-коли: '
+        'Pro діятиме до кінця оплаченого періоду, а ваші поїздки й записи '
+        'залишаться з вами.',
+  ),
+  AppLanguage.dari: HelpEntry(
+    body:
+        'Pro خروجی گزارش‌ها به PDF و CSV، پشتیبان ابری، تشخیص خودکار سفر، '
+        'خلاصه سوخت، فهرست بستن ماه و یادآورهای نگهداری را باز می‌کند. این '
+        'یک اشتراک ماهانه یا سالانه از طریق App Store یا Google Play است. '
+        'هر زمان می‌توانید آن را همان‌جا لغو کنید؛ Pro تا پایان دوره '
+        'پرداخت‌شده فعال می‌ماند و سفرها و سوابق شما برای خودتان می‌ماند.',
+  ),
 };
