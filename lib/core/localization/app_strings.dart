@@ -5,6 +5,55 @@ class AppStrings {
 
   const AppStrings(this.currentLanguage);
 
+  String get rateApp => _value(
+    en: 'Rate MarV Route',
+    es: 'Valorar MarV Route',
+    fr: 'Noter MarV Route',
+    ru: 'Оценить MarV Route',
+    uk: 'Оцінити MarV Route',
+    fa: 'امتیاز دادن به MarV Route',
+  );
+  String get rateAppSubtitle => _value(
+    en: 'Open the app store to leave a review.',
+    es: 'Abre la tienda para dejar una reseña.',
+    fr: 'Ouvrir la boutique pour laisser un avis.',
+    ru: 'Открыть магазин приложений и оставить отзыв.',
+    uk: 'Відкрити магазин додатків і залишити відгук.',
+    fa: 'برای نوشتن نظر، فروشگاه برنامه را باز کنید.',
+  );
+  String get automaticReviewRequests => _value(
+    en: 'Ask me to rate the app',
+    es: 'Pedir que valore la aplicación',
+    fr: 'Me proposer de noter l’application',
+    ru: 'Предлагать оценить приложение',
+    uk: 'Пропонувати оцінити додаток',
+    fa: 'درخواست امتیاز دادن به برنامه',
+  );
+  String get automaticReviewRequestsSubtitle => _value(
+    en: 'Occasional requests after using the app. Turn off to stop asking.',
+    es: 'Solicitudes ocasionales después de usar la aplicación. Desactiva para no recibirlas.',
+    fr: 'Demandes occasionnelles après utilisation. Désactivez pour ne plus en recevoir.',
+    ru: 'Редкие запросы после использования. Отключите, чтобы больше не спрашивать.',
+    uk: 'Зрідка після використання. Вимкніть, щоб більше не запитувати.',
+    fa: 'گاهی پس از استفاده درخواست می‌شود. برای توقف، خاموش کنید.',
+  );
+  String get reviewRequestsStopped => _value(
+    en: 'Automatic requests are off because you opened the store to review the app.',
+    es: 'Las solicitudes están desactivadas porque abriste la tienda para valorar la aplicación.',
+    fr: 'Les demandes sont désactivées car vous avez ouvert la boutique pour donner un avis.',
+    ru: 'Запросы отключены после перехода в магазин для оценки приложения.',
+    uk: 'Запити вимкнено після переходу до магазину для оцінювання додатку.',
+    fa: 'پس از باز کردن فروشگاه برای نوشتن نظر، درخواست‌ها خاموش شده‌اند.',
+  );
+  String get reviewActionFailed => _value(
+    en: 'Could not complete this action. Please try again.',
+    es: 'No se pudo completar la acción. Inténtalo de nuevo.',
+    fr: 'Impossible de terminer cette action. Réessayez.',
+    ru: 'Не удалось выполнить действие. Попробуйте ещё раз.',
+    uk: 'Не вдалося виконати дію. Спробуйте ще раз.',
+    fa: 'این کار انجام نشد. لطفاً دوباره تلاش کنید.',
+  );
+
   // ─── Navigation ───────────────────────────────────────────────────────────
 
   String get today => _value(

@@ -14,6 +14,8 @@ import '../core/preferences/user_preferences.dart';
 import '../core/subscription/entitlement_service.dart';
 import '../core/preferences/preferences_service.dart';
 import '../core/storage/account_data_store.dart';
+import '../core/review/review_prompt_host.dart';
+import '../core/review/review_service.dart';
 import '../features/auth/auth_gate.dart';
 import '../features/guide/feature_guide_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
@@ -69,11 +71,21 @@ class _RouteMintAppState extends State<RouteMintApp>
   bool _autoDetectionRestoreRunning = false;
   bool _autoDetectionRecoveryCompleted = false;
   int _dataRefreshKey = 0;
+  final _reviewActivity = ReviewActivity();
+  Timer? _reviewUsageTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    unawaited(
+      ReviewService.instance.setForeground(
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed,
+      ),
+    );
+    _reviewUsageTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      unawaited(ReviewService.instance.checkpoint());
+    });
     if (widget.accountSession != null || Firebase.apps.isNotEmpty) {
       _accountSession = widget.accountSession ?? AccountSessionService.instance;
       _accountSession!.addListener(_onAccountSessionChanged);
@@ -86,6 +98,8 @@ class _RouteMintAppState extends State<RouteMintApp>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _reviewUsageTimer?.cancel();
+    unawaited(ReviewService.instance.setForeground(false));
     _dailyCloudBackupTimer?.cancel();
     _accountSession?.removeListener(_onAccountSessionChanged);
     super.dispose();
@@ -93,6 +107,9 @@ class _RouteMintAppState extends State<RouteMintApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    unawaited(
+      ReviewService.instance.setForeground(state == AppLifecycleState.resumed),
+    );
     if (state == AppLifecycleState.resumed) {
       if (_loadingAccount || !_accountReady) return;
       // Mobile operating systems suspend Dart timers in the background.
@@ -359,6 +376,7 @@ class _RouteMintAppState extends State<RouteMintApp>
       key: ValueKey(_accountSession?.revision ?? 0),
       debugShowCheckedModeBanner: false,
       title: 'MarV Route',
+      navigatorObservers: [ReviewNavigationObserver(_reviewActivity)],
       themeMode: themeMode,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -377,8 +395,18 @@ class _RouteMintAppState extends State<RouteMintApp>
       ),
       // Above the Navigator, so help sheets and other routes see the
       // active language too.
-      builder: (context, child) =>
-          AppStringsScope(strings: strings, child: child!),
+      builder: (context, child) => AppStringsScope(
+        strings: strings,
+        child: ReviewPromptHost(
+          service: ReviewService.instance,
+          activity: _reviewActivity,
+          isTracking: () =>
+              appTrackingService.isTracking ||
+              appTrackingService.hasPendingTripNotifier.value ||
+              appAutoDetectionService.isTripActive,
+          child: child!,
+        ),
+      ),
       home: _buildHome(strings),
     );
   }

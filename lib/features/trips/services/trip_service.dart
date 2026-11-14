@@ -1,18 +1,21 @@
 import 'dart:convert';
 import '../../../core/preferences/preferences_service.dart';
 import '../../../core/storage/account_data_store.dart';
+import '../../../core/review/review_service.dart';
 import '../models/trip.dart';
 
 class TripService {
-  TripService({AccountDataScope? scope})
+  TripService({AccountDataScope? scope, ReviewService? reviewService})
     : _scope = scope ?? AccountDataStore.current {
     _preferencesService = PreferencesService(scope: _scope);
+    _reviewService = reviewService ?? ReviewService.instance;
   }
 
   final AccountDataScope _scope;
   static const String _tripsKey = 'trips';
   static final Map<String, Future<void>> _pendingMutations = {};
   late final PreferencesService _preferencesService;
+  late final ReviewService _reviewService;
 
   Future<List<Trip>> loadTrips() async {
     final prefs = await _scope.getPreferences();
@@ -56,6 +59,9 @@ class TripService {
     trips.add(trip);
 
     await _saveTrips(trips);
+    if (existing == null) {
+      await _reviewService.recordCompletedTrip(_scope.namespace, trip.id);
+    }
     await _adjustOdometerBy(trip.distance - (existing?.distance ?? 0));
   });
 

@@ -3,6 +3,8 @@ import '../core/localization/app_strings.dart';
 import '../core/location/auto_trip_detection_service.dart';
 import '../core/location/geolocator_tracking_provider.dart';
 import '../core/preferences/user_preferences.dart';
+import '../core/review/review_prompt_host.dart';
+import '../features/whats_new/whats_new_dialog.dart';
 import '../features/today/today_screen.dart';
 import '../features/trips/trips_screen.dart';
 import '../features/add_trip/add_trip_screen.dart';
@@ -147,65 +149,72 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
     ];
 
-    return Scaffold(
-      body: Column(
-        children: [
-          Expanded(child: pages[widget.selectedIndex]),
-          // Show a persistent banner on every tab except Today (index 0),
-          // where the tracking card already shows status.
-          ValueListenableBuilder<bool>(
-            valueListenable: appTrackingService.isTrackingNotifier,
-            builder: (context, isTracking, _) {
-              return ValueListenableBuilder<AutoDetectionState>(
-                valueListenable: appAutoDetectionService.stateNotifier,
-                builder: (context, autoState, _) {
-                  final autoIsActive = autoState != AutoDetectionState.idle;
-                  if ((!isTracking && !autoIsActive) ||
-                      widget.selectedIndex == 0) {
-                    return const SizedBox.shrink();
-                  }
-                  return _ActiveTrackingBanner(
-                    strings: strings,
-                    autoDetectionActive: autoIsActive && !isTracking,
-                  );
-                },
-              );
-            },
-          ),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: widget.selectedIndex,
-        onDestinationSelected: (index) {
-          _selectTab(index);
-        },
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home),
-            label: strings.home,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.route_outlined),
-            selectedIcon: const Icon(Icons.route),
-            label: strings.trips,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.add_circle_outline),
-            selectedIcon: const Icon(Icons.add_circle),
-            label: strings.add,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.bar_chart_outlined),
-            selectedIcon: const Icon(Icons.bar_chart),
-            label: strings.reports,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.person_outline),
-            selectedIcon: const Icon(Icons.person),
-            label: strings.profile,
-          ),
-        ],
+    return ReviewHome(
+      enabled:
+          widget.selectedIndex == 0 &&
+          widget.preferences.onboardingCompleted &&
+          widget.preferences.featureGuideCompleted &&
+          !shouldShowWhatsNew(widget.preferences),
+      child: Scaffold(
+        body: Column(
+          children: [
+            Expanded(child: pages[widget.selectedIndex]),
+            // Show a persistent banner on every tab except Today (index 0),
+            // where the tracking card already shows status.
+            ValueListenableBuilder<bool>(
+              valueListenable: appTrackingService.isTrackingNotifier,
+              builder: (context, isTracking, _) {
+                return ValueListenableBuilder<AutoDetectionState>(
+                  valueListenable: appAutoDetectionService.stateNotifier,
+                  builder: (context, autoState, _) {
+                    final autoIsActive = autoState != AutoDetectionState.idle;
+                    if ((!isTracking && !autoIsActive) ||
+                        widget.selectedIndex == 0) {
+                      return const SizedBox.shrink();
+                    }
+                    return _ActiveTrackingBanner(
+                      strings: strings,
+                      autoDetectionActive: autoIsActive && !isTracking,
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: widget.selectedIndex,
+          onDestinationSelected: (index) {
+            _selectTab(index);
+          },
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.home_outlined),
+              selectedIcon: const Icon(Icons.home),
+              label: strings.home,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.route_outlined),
+              selectedIcon: const Icon(Icons.route),
+              label: strings.trips,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.add_circle_outline),
+              selectedIcon: const Icon(Icons.add_circle),
+              label: strings.add,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.bar_chart_outlined),
+              selectedIcon: const Icon(Icons.bar_chart),
+              label: strings.reports,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.person_outline),
+              selectedIcon: const Icon(Icons.person),
+              label: strings.profile,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -9,6 +9,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/auth/account_deletion_service.dart';
 import '../../core/auth/auth_service.dart';
 import '../../core/legal/legal_links.dart';
+import '../../core/review/review_settings.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/location/geolocator_tracking_provider.dart';
 import '../../core/preferences/preferences_service.dart';
@@ -1579,6 +1580,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: Icons.info_outline,
             title: s.about,
             children: [
+              ReviewSettings(strings: s),
               FutureBuilder<PackageInfo>(
                 future: PackageInfo.fromPlatform(),
                 builder: (context, snapshot) {
