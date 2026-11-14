@@ -6,6 +6,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:route_mint_app/core/backup/backup_service.dart';
 import 'package:route_mint_app/core/backup/cloud_backup_service.dart';
+import 'package:route_mint_app/core/preferences/preferences_service.dart';
+import 'package:route_mint_app/core/preferences/user_preferences.dart';
+import 'package:route_mint_app/core/subscription/entitlement_service.dart';
 import 'package:route_mint_app/core/storage/account_data_store.dart';
 import 'package:route_mint_app/features/trips/models/trip.dart';
 import 'package:route_mint_app/features/trips/services/trip_service.dart';
@@ -128,6 +131,40 @@ void main() {
   });
 
   tearDown(AccountDataStore.resetForTesting);
+
+  for (final cloud in [false, true]) {
+    test(
+      '${cloud ? 'cloud' : 'local'} backup preserves data without reviving Tester Pro',
+      () async {
+        final backup = {
+          ..._backup('saved-trip'),
+          'preferences': {
+            ...UserPreferences.defaults().toJson(),
+            'subscriptionStatus': 'testerPro',
+            'driverName': 'Original owner',
+          },
+        };
+        if (cloud) {
+          firestore.documents['users/account-a/backups/latest'] = backup;
+          await service.restoreBackupForCurrentUser();
+        } else {
+          await BackupService().importBackup(jsonEncode(backup));
+        }
+        final preferences = await PreferencesService().loadPreferences();
+        expect(preferences.driverName, 'Original owner');
+        expect(preferences.subscriptionStatus, SubscriptionStatus.free);
+        expect(EntitlementService(preferences).isPro, isFalse);
+        expect((await TripService().loadTrips()).single.id, 'saved-trip');
+        final stored = await AccountDataStore.current.getPreferences();
+        expect(
+          jsonDecode(
+            stored.getString('user_preferences')!,
+          )['subscriptionStatus'],
+          'free',
+        );
+      },
+    );
+  }
 
   test(
     'long-lived cloud service backs up each account to its own document',

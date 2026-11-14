@@ -136,7 +136,7 @@ void main() {
           lastOilChangeOdometerKm: 500.0,
           lastAutomaticCloudBackupAt: DateTime(2026, 9, 14),
           autoTripDetectionEnabled: true,
-          subscriptionStatus: SubscriptionStatus.testerPro,
+          subscriptionStatus: SubscriptionStatus.pro,
         ),
       );
       await SettingsService().saveLanguage(AppLanguage.ukrainian);

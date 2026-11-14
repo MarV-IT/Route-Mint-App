@@ -192,7 +192,6 @@ class _GoProScreenState extends State<GoProScreen> {
 
   List<Widget> _comingSoon(BuildContext context) {
     final s = widget.strings;
-    final theme = Theme.of(context);
     return [
       _Intro(strings: s),
       const SizedBox(height: 12),
@@ -202,14 +201,6 @@ class _GoProScreenState extends State<GoProScreen> {
         onPressed: null,
         icon: const Icon(Icons.lock_outline),
         label: Text(s.paymentsComingSoon),
-      ),
-      const SizedBox(height: 8),
-      Text(
-        s.testerProHint,
-        textAlign: TextAlign.center,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
       ),
     ];
   }

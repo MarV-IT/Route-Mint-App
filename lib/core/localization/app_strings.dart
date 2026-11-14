@@ -836,33 +836,6 @@ class AppStrings {
     fa: 'Pro فعال است',
   );
 
-  String get testerProEnabled => _value(
-    en: 'Tester Pro is enabled',
-    es: 'Tester Pro está activado',
-    fr: 'Tester Pro est activé',
-    ru: 'Tester Pro включён',
-    uk: 'Tester Pro увімкнено',
-    fa: 'Tester Pro فعال است',
-  );
-
-  String get enableTesterPro => _value(
-    en: 'Enable tester Pro',
-    es: 'Activar Tester Pro',
-    fr: 'Activer Tester Pro',
-    ru: 'Включить Tester Pro',
-    uk: 'Увімкнути Tester Pro',
-    fa: 'فعال کردن Tester Pro',
-  );
-
-  String get enableTesterProSubtitle => _value(
-    en: 'Temporary switch for testing Pro features before payments are connected.',
-    es: 'Interruptor temporal para probar funciones Pro antes de conectar pagos.',
-    fr: 'Option temporaire pour tester les fonctions Pro avant les paiements.',
-    ru: 'Временный переключатель для тестирования Pro-функций до подключения платежей.',
-    uk: 'Тимчасовий перемикач для тестування Pro-функцій до підключення платежів.',
-    fa: 'کلید موقت برای آزمایش قابلیت‌های Pro پیش از اتصال پرداخت‌ها.',
-  );
-
   String get unlockProTitle => _value(
     en: 'Unlock MarV Route Pro',
     es: 'Desbloquea MarV Route Pro',
@@ -1269,15 +1242,6 @@ class AppStrings {
     ru: 'Платежи скоро',
     uk: 'Платежі скоро',
     fa: 'پرداخت به‌زودی',
-  );
-
-  String get testerProHint => _value(
-    en: 'Use the tester Pro switch in Profile to preview these features.',
-    es: 'Usa el interruptor Tester Pro en Perfil para probar estas funciones.',
-    fr: 'Utilisez Tester Pro dans Profil pour prévisualiser ces fonctions.',
-    ru: 'Используйте переключатель Tester Pro в профиле для предпросмотра функций.',
-    uk: 'Використовуйте перемикач Tester Pro у профілі для перегляду цих функцій.',
-    fa: 'برای پیش‌نمایش این قابلیت‌ها از کلید Tester Pro در پروفایل استفاده کنید.',
   );
 
   String get help => _value(

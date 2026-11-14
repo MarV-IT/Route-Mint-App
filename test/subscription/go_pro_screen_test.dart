@@ -80,7 +80,6 @@ void main() {
 
       expect(find.text(uk.proUnlimitedReports), findsOneWidget);
       expect(find.text(uk.paymentsComingSoon), findsOneWidget);
-      expect(find.text(uk.testerProHint), findsOneWidget);
       expect(find.text(uk.restorePurchase), findsNothing);
       expect(find.text(uk.subscribeNow), findsNothing);
     });

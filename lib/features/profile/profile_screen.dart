@@ -11,7 +11,6 @@ import '../../core/auth/auth_service.dart';
 import '../../core/legal/legal_links.dart';
 import '../../core/review/review_settings.dart';
 import '../../core/localization/app_strings.dart';
-import '../../core/location/geolocator_tracking_provider.dart';
 import '../../core/preferences/preferences_service.dart';
 import '../../core/preferences/user_preferences.dart';
 import '../../core/subscription/entitlement_service.dart';
@@ -852,7 +851,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   /// One line under the plan name: what is paid for and what happens next.
   String _subscriptionSummary(AppStrings s, EntitlementService entitlements) {
-    if (entitlements.isTesterPro) return s.testerProEnabled;
     if (!entitlements.isPro || !_subscription.storeEnabled) {
       return s.unlockProBody;
     }
@@ -863,15 +861,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ?subscriptionNextStep(state, s),
     ];
     return details.isEmpty ? s.unlockProBody : details.join(' · ');
-  }
-
-  void _setTesterPro(bool enabled) {
-    final updated = widget.preferences.copyWith(
-      subscriptionStatus: enabled
-          ? SubscriptionStatus.testerPro
-          : SubscriptionStatus.free,
-    );
-    widget.onPreferencesChanged(updated);
   }
 
   @override
@@ -974,17 +963,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: () => openGoProScreen(context, s),
                 ),
               ),
-              // Free Pro for testing: only before payments are switched on,
-              // and afterwards only in development builds.
-              if (!_subscription.storeEnabled || kDebugMode)
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  secondary: const Icon(Icons.science_outlined),
-                  title: Text(s.enableTesterPro),
-                  subtitle: Text(s.enableTesterProSubtitle),
-                  value: entitlements.isTesterPro,
-                  onChanged: _setTesterPro,
-                ),
             ],
           ),
 
@@ -1367,49 +1345,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => TrackingDiagnosticsScreen(strings: s),
-                  ),
-                ),
-              ),
-              const Divider(),
-
-              // ── Automation ────────────────────────────────────────────────
-              SwitchListTile(
-                secondary: const Icon(Icons.radar_outlined),
-                title: Row(
-                  children: [
-                    Expanded(child: Text(s.autoTripDetection)),
-                    _proBadge(s),
-                  ],
-                ),
-                subtitle: Text(s.autoTripDetectionDescription),
-                value: widget.preferences.autoTripDetectionEnabled,
-                onChanged: (value) async {
-                  if (value &&
-                      !requireProFeature(
-                        context: context,
-                        strings: s,
-                        allowed: entitlements.canUseAutoDetection,
-                      )) {
-                    return;
-                  }
-                  // Turning the setting off has to stop the running monitor as
-                  // well, otherwise its foreground-service notification keeps
-                  // claiming detection is active.
-                  if (!value && appAutoDetectionService.isMonitoring) {
-                    await appAutoDetectionService.stopMonitoring();
-                  }
-                  final updated = widget.preferences.copyWith(
-                    autoTripDetectionEnabled: value,
-                  );
-                  widget.onPreferencesChanged(updated);
-                },
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-                child: Text(
-                  s.foregroundOnlyTracking,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
                   ),
                 ),
               ),

@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:route_mint_app/core/preferences/user_preferences.dart';
 import 'package:route_mint_app/core/storage/account_data_store.dart';
 import 'package:route_mint_app/core/subscription/subscription_controller.dart';
+import 'package:route_mint_app/core/subscription/entitlement_service.dart';
 import 'package:route_mint_app/core/subscription/subscription_models.dart';
 import 'package:route_mint_app/core/tax/tax_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -61,16 +61,19 @@ void main() {
   });
 
   group('before payments are switched on', () {
-    test('nothing changes: no store, and the tester switch still works', () {
-      final off = SubscriptionController();
-      addTearDown(off.dispose);
+    test(
+      'without a store, valid saved subscription statuses are preserved',
+      () {
+        final off = SubscriptionController();
+        addTearDown(off.dispose);
 
-      expect(off.storeEnabled, isFalse);
-      expect(off.isPremium, isFalse);
-      for (final stored in SubscriptionStatus.values) {
-        expect(off.statusFor(stored), stored);
-      }
-    });
+        expect(off.storeEnabled, isFalse);
+        expect(off.isPremium, isFalse);
+        for (final stored in SubscriptionStatus.values) {
+          expect(off.statusFor(stored), stored);
+        }
+      },
+    );
 
     test('buying is refused rather than silently doing nothing', () async {
       final off = SubscriptionController();
@@ -481,13 +484,30 @@ void main() {
       }
     });
 
-    test('the tester switch survives only in development builds', () async {
-      await attach(controller, 'A');
-      expect(
-        controller.statusFor(SubscriptionStatus.testerPro),
-        kDebugMode ? SubscriptionStatus.testerPro : SubscriptionStatus.free,
-      );
-    });
+    test(
+      'legacy tester access is free until the store confirms a purchase',
+      () async {
+        await attach(controller, 'A');
+        final legacy = UserPreferences.fromJson({
+          ...UserPreferences.fromCountry(Country.canada).toJson(),
+          'subscriptionStatus': 'testerPro',
+          'driverName': 'Original owner',
+        });
+        expect(legacy.subscriptionStatus, SubscriptionStatus.free);
+        expect(legacy.toJson()['subscriptionStatus'], 'free');
+        expect(legacy.driverName, 'Original owner');
+        expect(legacy.country, Country.canada);
+        expect(EntitlementService(legacy).isPro, isFalse);
+        expect(EntitlementService(controller.applyTo(legacy)).isPro, isFalse);
+        final unconfigured = SubscriptionController();
+        addTearDown(unconfigured.dispose);
+        expect(EntitlementService(unconfigured.applyTo(legacy)).isPro, isFalse);
+
+        gateway.byUser['A'] = activeAnnual;
+        await controller.refresh();
+        expect(EntitlementService(controller.applyTo(legacy)).isPro, isTrue);
+      },
+    );
 
     test(
       'preferences are rewritten only when the status really differs',

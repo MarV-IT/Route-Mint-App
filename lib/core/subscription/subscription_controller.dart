@@ -68,12 +68,10 @@ class SubscriptionController extends ChangeNotifier {
   /// what is [stored] in preferences.
   ///
   /// With the store on, only the store grants Pro; a stored value is at most
-  /// a copy of its last answer. The tester switch keeps working in debug
-  /// builds so Pro screens can be developed without buying anything.
+  /// a copy of its last answer. Test purchases use RevenueCat Test Store.
   SubscriptionStatus statusFor(SubscriptionStatus stored) {
     if (!storeEnabled) return stored;
     if (isPremium) return SubscriptionStatus.pro;
-    if (kDebugMode && stored == SubscriptionStatus.testerPro) return stored;
     return SubscriptionStatus.free;
   }
 

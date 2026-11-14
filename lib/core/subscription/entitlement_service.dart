@@ -5,12 +5,7 @@ class EntitlementService {
 
   final UserPreferences preferences;
 
-  bool get isPro =>
-      preferences.subscriptionStatus == SubscriptionStatus.pro ||
-      preferences.subscriptionStatus == SubscriptionStatus.testerPro;
-
-  bool get isTesterPro =>
-      preferences.subscriptionStatus == SubscriptionStatus.testerPro;
+  bool get isPro => preferences.subscriptionStatus == SubscriptionStatus.pro;
 
   bool get canExportUnlimitedReports => isPro;
   bool get canUseCloudBackup => isPro;

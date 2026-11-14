@@ -1,7 +1,7 @@
 import '../tax/tax_service.dart';
 import '../../app/app.dart';
 
-enum SubscriptionStatus { free, pro, testerPro }
+enum SubscriptionStatus { free, pro }
 
 /// Stores the user's app-wide preferences, set during onboarding
 /// and editable afterwards from the Profile screen.
@@ -174,6 +174,8 @@ class UserPreferences {
     autoTripDetectionEnabled: json['autoTripDetectionEnabled'] is bool
         ? json['autoTripDetectionEnabled'] as bool
         : false,
+    // Legacy testerPro values (including backups) fall back to free.
+    // Confirmed subscriptions are reapplied by SubscriptionController.
     subscriptionStatus: SubscriptionStatus.values.firstWhere(
       (s) => s.name == json['subscriptionStatus'],
       orElse: () => SubscriptionStatus.free,
