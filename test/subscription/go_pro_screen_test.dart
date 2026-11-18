@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:route_mint_app/app/app.dart';
 import 'package:route_mint_app/core/localization/app_strings.dart';
@@ -9,6 +10,7 @@ import 'package:route_mint_app/core/storage/account_data_store.dart';
 import 'package:route_mint_app/core/subscription/subscription_controller.dart';
 import 'package:route_mint_app/core/subscription/subscription_models.dart';
 import 'package:route_mint_app/features/subscription/go_pro_screen.dart';
+import 'package:route_mint_app/features/subscription/subscription_text.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fakes.dart';
@@ -437,6 +439,142 @@ void main() {
 
       expect(find.text(uk.proActive), findsNothing);
       expect(find.text(r'$39.99 / рік'), findsOneWidget);
+    });
+  });
+
+  group('promo codes', () {
+    const launcher = MethodChannel('plugins.flutter.io/url_launcher');
+    late List<MethodCall> launched;
+
+    setUp(() {
+      launched = [];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(launcher, (call) async {
+            launched.add(call);
+            return true;
+          });
+    });
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(launcher, null);
+    });
+
+    testWidgets('Android: the code is handed to Google Play to redeem', (
+      tester,
+    ) async {
+      await open(tester);
+      await tester.tap(find.text(uk.havePromoCode));
+      await tester.pumpAndSettle();
+
+      // Says plainly what a code gives before asking for it.
+      expect(find.text(uk.promoCodeBody), findsOneWidget);
+      expect(find.text(uk.promoCodeAlternative), findsOneWidget);
+      FilledButton redeem() => tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, uk.redeemInGooglePlay),
+      );
+      expect(redeem().onPressed, isNull);
+
+      await tester.enterText(find.byType(TextField), '  MARVFREE ');
+      await tester.pump();
+      expect(redeem().onPressed, isNotNull);
+      await tester.tap(find.text(uk.redeemInGooglePlay));
+      await tester.pumpAndSettle();
+
+      expect(launched.map((call) => call.arguments['url']), [
+        'https://play.google.com/redeem?code=MARVFREE',
+      ]);
+      expect(find.byType(AlertDialog), findsNothing);
+      // The store call for iOS offer codes is not used here.
+      expect(gateway.calls, isNot(contains('offerCode')));
+    });
+
+    testWidgets('Android: closing the dialog opens nothing', (tester) async {
+      await open(tester);
+      await tester.tap(find.text(uk.havePromoCode));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(uk.close));
+      await tester.pumpAndSettle();
+
+      expect(launched, isEmpty);
+      expect(find.text(uk.startFreeTrial), findsOneWidget);
+    });
+
+    testWidgets('iPhone: opens the App Store sheet for offer codes', (
+      tester,
+    ) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      await open(tester);
+      await tester.tap(find.text(uk.havePromoCode));
+      await tester.runAsync(pumpEventQueue);
+      await tester.pumpAndSettle();
+      debugDefaultTargetPlatformOverride = null;
+
+      expect(gateway.calls, contains('offerCode'));
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(launched, isEmpty);
+    });
+
+    testWidgets('iPhone: a store problem is reported, not swallowed', (
+      tester,
+    ) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      gateway.offerCodeFailure = const PurchaseFailure(
+        PurchaseFailureKind.network,
+      );
+      await open(tester);
+      await tester.tap(find.text(uk.havePromoCode));
+      await tester.runAsync(pumpEventQueue);
+      await tester.pumpAndSettle();
+      debugDefaultTargetPlatformOverride = null;
+
+      expect(find.text(uk.networkErrorCheckConnection), findsOneWidget);
+    });
+
+    testWidgets('a subscription started by a code switches the screen over', (
+      tester,
+    ) async {
+      await open(tester);
+      // Redeemed in the Play Store; the store reports it afterwards.
+      await tester.runAsync(() async {
+        gateway.push(activeAnnual);
+        await pumpEventQueue();
+      });
+      await tester.pumpAndSettle();
+
+      expect(find.text(uk.proActive), findsOneWidget);
+      expect(find.text(uk.havePromoCode), findsNothing);
+    });
+
+    testWidgets('is not offered with test payments or before the store is on', (
+      tester,
+    ) async {
+      final testStore = SubscriptionController(
+        gateway: gateway,
+        clock: () => checkedAt,
+        isTestStore: true,
+      );
+      addTearDown(testStore.dispose);
+      await open(tester, controller: testStore);
+      expect(find.text(uk.restorePurchase), findsOneWidget);
+      expect(find.text(uk.havePromoCode), findsNothing);
+    });
+
+    testWidgets('is not offered while payments are switched off', (
+      tester,
+    ) async {
+      final off = SubscriptionController();
+      addTearDown(off.dispose);
+      await open(tester, controller: off);
+      expect(find.text(uk.havePromoCode), findsNothing);
+    });
+
+    test('the Google Play link carries the code safely', () {
+      expect(
+        playRedeemUri(' MARV-7 ').toString(),
+        'https://play.google.com/redeem?code=MARV-7',
+      );
+      expect(playRedeemUri('a b&c=d').queryParameters, {'code': 'a b&c=d'});
     });
   });
 

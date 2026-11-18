@@ -30,4 +30,9 @@ abstract interface class PurchaseGateway {
   /// Finds purchases made earlier with the same store account, for a new
   /// phone or a reinstall.
   Future<SubscriptionState> restore();
+
+  /// Opens the App Store's own sheet for typing an offer code. iOS only:
+  /// Google Play takes its promo codes in the Play Store or on its payment
+  /// screen. A subscription started this way arrives through [updates].
+  Future<void> presentOfferCodeSheet();
 }

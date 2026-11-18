@@ -122,6 +122,11 @@ class SubscriptionController extends ChangeNotifier {
     accept: true,
   ).then((state) => state.isPremiumAt(_clock()));
 
+  /// Shows the App Store sheet for an offer code. What the code starts is
+  /// reported by the store afterwards, like any other change.
+  Future<void> presentOfferCodeSheet() =>
+      _forCurrentAccount((gateway) => gateway.presentOfferCodeSheet());
+
   PurchaseGateway _requireGateway() =>
       _gateway ??
       (throw const PurchaseFailure(

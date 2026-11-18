@@ -21,6 +21,7 @@ class FakeGateway implements PurchaseGateway {
   PurchaseFailure? plansFailure;
   PurchaseFailure? purchaseFailure;
   PurchaseFailure? restoreFailure;
+  PurchaseFailure? offerCodeFailure;
 
   List<SubscriptionPlan> offered = const [annualPlan, monthlyPlan];
 
@@ -91,6 +92,12 @@ class FakeGateway implements PurchaseGateway {
     await restoreGate?.future;
     if (restoreFailure != null) throw restoreFailure!;
     return byUser[user] = restored;
+  }
+
+  @override
+  Future<void> presentOfferCodeSheet() async {
+    calls.add('offerCode');
+    if (offerCodeFailure != null) throw offerCodeFailure!;
   }
 
   Future<void> close() => _updates.close();

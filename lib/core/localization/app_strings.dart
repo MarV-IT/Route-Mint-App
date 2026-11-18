@@ -1091,6 +1091,60 @@ class AppStrings {
     fa: 'هر زمان می‌توانید در بخش اشتراک‌های $store لغو کنید، دست‌کم 24 ساعت پیش از پایان دوره جاری.',
   );
 
+  String get havePromoCode => _value(
+    en: 'I have a promo code',
+    es: 'Tengo un código promocional',
+    fr: "J'ai un code promo",
+    ru: 'У меня есть промокод',
+    uk: 'Маю промокод',
+    fa: 'کد تبلیغاتی دارم',
+  );
+
+  String get promoCodeTitle => _value(
+    en: 'Promo code',
+    es: 'Código promocional',
+    fr: 'Code promo',
+    ru: 'Промокод',
+    uk: 'Промокод',
+    fa: 'کد تبلیغاتی',
+  );
+
+  String get promoCodeBody => _value(
+    en: 'Enter your code and Google Play will apply it to the subscription. A payment method is still required, and after the free period the subscription becomes paid unless you cancel.',
+    es: 'Introduce tu código y Google Play lo aplicará a la suscripción. Se necesita igualmente un método de pago y, tras el periodo gratuito, la suscripción pasa a ser de pago si no la cancelas.',
+    fr: "Saisissez votre code et Google Play l'appliquera à l'abonnement. Un moyen de paiement reste nécessaire et, après la période gratuite, l'abonnement devient payant si vous ne l'annulez pas.",
+    ru: 'Введите код, и Google Play применит его к подписке. Способ оплаты всё равно нужен, а после бесплатного периода подписка становится платной, если её не отменить.',
+    uk: 'Введіть код, і Google Play застосує його до підписки. Спосіб оплати все одно потрібен, а після безкоштовного періоду підписка стає платною, якщо її не скасувати.',
+    fa: 'کد خود را وارد کنید تا Google Play آن را روی اشتراک اعمال کند. روش پرداخت همچنان لازم است و پس از دوره رایگان، اگر لغو نکنید اشتراک پولی می‌شود.',
+  );
+
+  String get promoCodeFieldLabel => _value(
+    en: 'Code',
+    es: 'Código',
+    fr: 'Code',
+    ru: 'Код',
+    uk: 'Код',
+    fa: 'کد',
+  );
+
+  String get redeemInGooglePlay => _value(
+    en: 'Redeem in Google Play',
+    es: 'Canjear en Google Play',
+    fr: 'Utiliser dans Google Play',
+    ru: 'Активировать в Google Play',
+    uk: 'Активувати в Google Play',
+    fa: 'استفاده در Google Play',
+  );
+
+  String get promoCodeAlternative => _value(
+    en: 'If the code is not accepted there, choose a plan, tap the subscribe button, then open the payment method on the Google Play screen and tap Redeem code.',
+    es: 'Si allí no se acepta el código, elige un plan, toca el botón de suscripción y, en la pantalla de Google Play, abre el método de pago y toca «Canjear código».',
+    fr: "Si le code n'y est pas accepté, choisissez une offre, touchez le bouton d'abonnement puis, sur l'écran Google Play, ouvrez le moyen de paiement et touchez « Utiliser un code ».",
+    ru: 'Если код там не принимается, выберите тариф, нажмите кнопку подписки, а на экране Google Play откройте способ оплаты и нажмите «Активировать код».',
+    uk: 'Якщо код там не приймається, оберіть тариф, натисніть кнопку підписки, а на екрані Google Play відкрийте спосіб оплати й натисніть «Активувати код».',
+    fa: 'اگر کد در آنجا پذیرفته نشد، یک طرح را انتخاب کنید، روی دکمه اشتراک بزنید و در صفحه Google Play روش پرداخت را باز کرده و «استفاده از کد» را انتخاب کنید.',
+  );
+
   String get restorePurchase => _value(
     en: 'Restore purchase',
     es: 'Restaurar compra',

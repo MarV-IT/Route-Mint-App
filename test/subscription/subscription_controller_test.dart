@@ -546,4 +546,44 @@ void main() {
     expect(preferencesJson, isNot(contains('expiresAt')));
     expect(preferencesJson, isNot(contains('entitled')));
   });
+
+  group('offer codes', () {
+    test('the App Store sheet is opened for the signed-in customer', () async {
+      await attach(controller, 'A');
+      await controller.presentOfferCodeSheet();
+      expect(gateway.user, 'A');
+      expect(gateway.calls.last, 'offerCode');
+    });
+
+    test(
+      'a subscription started by a code turns Pro on when it arrives',
+      () async {
+        await attach(controller, 'A');
+        await controller.presentOfferCodeSheet();
+        expect(controller.isPremium, isFalse);
+
+        gateway.push(activeAnnual);
+        await pumpEventQueue();
+        expect(controller.isPremium, isTrue);
+      },
+    );
+
+    test('a store failure reaches the caller', () async {
+      await attach(controller, 'A');
+      gateway.offerCodeFailure = _offline;
+      await expectLater(
+        controller.presentOfferCodeSheet(),
+        throwsA(isA<PurchaseFailure>()),
+      );
+    });
+
+    test('is refused while payments are switched off', () async {
+      final off = SubscriptionController();
+      addTearDown(off.dispose);
+      await expectLater(
+        off.presentOfferCodeSheet(),
+        throwsA(isA<PurchaseFailure>()),
+      );
+    });
+  });
 }

@@ -41,6 +41,10 @@ String? storeName(SubscriptionStore store) => switch (store) {
   SubscriptionStore.other => null,
 };
 
+/// Google Play's own page for redeeming [code]; it fills the code in.
+Uri playRedeemUri(String code) =>
+    Uri.https('play.google.com', '/redeem', {'code': code.trim()});
+
 /// A plan's price with its period, e.g. "$39.99 / year".
 String planPrice(SubscriptionPlan plan, AppStrings s) => switch (plan.period) {
   PlanPeriod.annual => s.pricePerYear(plan.priceText),

@@ -119,6 +119,10 @@ class RevenueCatGateway implements PurchaseGateway {
   });
 
   @override
+  Future<void> presentOfferCodeSheet() =>
+      _guard(Purchases.presentCodeRedemptionSheet);
+
+  @override
   Future<SubscriptionState> restore() =>
       _guard(() async => _state(await Purchases.restorePurchases()));
 

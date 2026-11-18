@@ -139,6 +139,32 @@ class _GoProScreenState extends State<GoProScreen> {
     }
   }
 
+  /// Promo codes belong to the stores, so each store redeems its own:
+  /// the App Store in its sheet, Google Play on its redeem page.
+  Future<void> _redeemCode() async {
+    final s = widget.strings;
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      try {
+        await _subscription.presentOfferCodeSheet();
+      } on PurchaseFailure catch (failure) {
+        if (kDebugMode) debugPrint('[GoPro] offer code failed: $failure');
+        if (!mounted || failure.kind == PurchaseFailureKind.cancelled) return;
+        _say(
+          failure.kind == PurchaseFailureKind.network
+              ? s.networkErrorCheckConnection
+              : s.plansUnavailable,
+        );
+      }
+      return;
+    }
+    final code = await showDialog<String>(
+      context: context,
+      builder: (_) => _PromoCodeDialog(strings: s),
+    );
+    if (code == null || !mounted) return;
+    await openLegalLink(context, s, playRedeemUri(code));
+  }
+
   void _say(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -287,7 +313,13 @@ class _GoProScreenState extends State<GoProScreen> {
         ],
       ],
       const SizedBox(height: 8),
-      _Links(strings: s, onRestore: _busy ? null : _restore),
+      _Links(
+        strings: s,
+        onRestore: _busy ? null : _restore,
+        // Test payments have no store behind them to take a code.
+        showPromoCode: !_subscription.isTestStore,
+        onPromoCode: _busy ? null : _redeemCode,
+      ),
     ];
   }
 
@@ -624,6 +656,8 @@ class _Links extends StatelessWidget {
     required this.strings,
     this.onRestore,
     this.showRestore = true,
+    this.onPromoCode,
+    this.showPromoCode = false,
   });
 
   final AppStrings strings;
@@ -634,6 +668,10 @@ class _Links extends StatelessWidget {
   /// False once Pro is on and there is nothing left to restore.
   final bool showRestore;
 
+  /// Null while a purchase is with the store.
+  final VoidCallback? onPromoCode;
+  final bool showPromoCode;
+
   @override
   Widget build(BuildContext context) {
     final s = strings;
@@ -641,6 +679,8 @@ class _Links extends StatelessWidget {
     return Wrap(
       alignment: WrapAlignment.center,
       children: [
+        if (showPromoCode)
+          TextButton(onPressed: onPromoCode, child: Text(s.havePromoCode)),
         if (showRestore)
           TextButton(onPressed: onRestore, child: Text(s.restorePurchase)),
         TextButton(
@@ -652,6 +692,79 @@ class _Links extends StatelessWidget {
           onPressed: () =>
               openLegalLink(context, s, LegalLinks.privacyPolicy(language)),
           child: Text(s.privacyPolicy),
+        ),
+      ],
+    );
+  }
+}
+
+/// Takes a Google Play promo code and hands it to the Play Store, which is
+/// where such a code is redeemed. Pops with the code, or null if closed.
+class _PromoCodeDialog extends StatefulWidget {
+  const _PromoCodeDialog({required this.strings});
+
+  final AppStrings strings;
+
+  @override
+  State<_PromoCodeDialog> createState() => _PromoCodeDialogState();
+}
+
+class _PromoCodeDialogState extends State<_PromoCodeDialog> {
+  final _code = TextEditingController();
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = widget.strings;
+    final theme = Theme.of(context);
+    final code = _code.text.trim();
+    return AlertDialog(
+      title: Text(s.promoCodeTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // What a code really gives: a free period, then a paid plan.
+            Text(s.promoCodeBody),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _code,
+              autofocus: true,
+              autocorrect: false,
+              enableSuggestions: false,
+              textCapitalization: TextCapitalization.characters,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                labelText: s.promoCodeFieldLabel,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              s.promoCodeAlternative,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(s.close),
+        ),
+        FilledButton(
+          onPressed: code.isEmpty
+              ? null
+              : () => Navigator.of(context).pop(code),
+          child: Text(s.redeemInGooglePlay),
         ),
       ],
     );
