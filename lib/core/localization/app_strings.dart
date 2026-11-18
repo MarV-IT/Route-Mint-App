@@ -2407,15 +2407,6 @@ class AppStrings {
     fa: 'تشخیص سفر فعال است. یک اعلان در حین نظارت نمایش داده می‌شود.',
   );
 
-  String get enableAutoDetectionFirst => _value(
-    en: 'Enable Auto Trip Detection in Profile first',
-    es: 'Activa la detección automática en Perfil primero',
-    fr: "Activez la détection automatique dans Profil d'abord",
-    ru: 'Сначала включите Авто-определение поездок в Профиле',
-    uk: 'Спочатку увімкніть Авто-виявлення поїздок у Профілі',
-    fa: 'ابتدا تشخیص خودکار سفر را در پروفایل فعال کنید',
-  );
-
   String get resolvingAddresses => _value(
     en: 'Resolving addresses…',
     es: 'Resolviendo direcciones…',

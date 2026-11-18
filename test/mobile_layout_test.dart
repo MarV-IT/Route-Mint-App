@@ -80,7 +80,6 @@ void main() {
             body: SingleChildScrollView(
               child: ForegroundTrackingCard(
                 strings: strings,
-                preferences: preferences,
                 onTripSaved: () {},
               ),
             ),

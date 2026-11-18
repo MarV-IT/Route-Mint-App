@@ -7,7 +7,6 @@ import '../../core/location/location_permission_service.dart';
 import '../../core/location/reverse_geocoding_service.dart';
 import '../../core/location/tracking_result.dart';
 import '../../core/notifications/trip_notification_service.dart';
-import '../../core/preferences/user_preferences.dart';
 import '../../core/storage/account_data_store.dart';
 import '../../features/trips/models/trip.dart';
 import '../../features/trips/services/trip_service.dart';
@@ -18,13 +17,11 @@ class ForegroundTrackingCard extends StatefulWidget {
   const ForegroundTrackingCard({
     super.key,
     required this.strings,
-    required this.preferences,
     required this.onTripSaved,
     this.compact = false,
   });
 
   final AppStrings strings;
-  final UserPreferences preferences;
   final VoidCallback onTripSaved;
   final bool compact;
 
@@ -247,7 +244,6 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
   @override
   Widget build(BuildContext context) {
     final strings = widget.strings;
-    final autoEnabled = widget.preferences.autoTripDetectionEnabled;
     final colorScheme = Theme.of(context).colorScheme;
 
     return ValueListenableBuilder<AutoDetectionState>(
@@ -271,10 +267,6 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
               _ when canStop && !isTracking => (
                 strings.trackingError,
                 colorScheme.error,
-              ),
-              _ when !autoEnabled => (
-                strings.enableAutoDetectionFirst,
-                colorScheme.onSurfaceVariant,
               ),
               _ when autoIsActive && !isTracking => (
                 strings.autoDetectionActive,
@@ -311,27 +303,26 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
                             color: isTracking ? colorScheme.primary : null,
                           ),
                           const Spacer(),
-                          if (autoEnabled || canStop)
-                            Tooltip(
-                              message: canStop
-                                  ? stopLabel
-                                  : strings.startTracking,
-                              child: IconButton.filledTonal(
-                                visualDensity: VisualDensity.compact,
-                                onPressed:
-                                    (canStop
-                                        ? _isBusy
-                                        : (autoIsActive || _isBusy))
-                                    ? null
-                                    : canStop
-                                    ? _handleStop
-                                    : _handleStart,
-                                icon: Icon(
-                                  canStop ? Icons.stop : Icons.gps_fixed,
-                                  size: 18,
-                                ),
+                          Tooltip(
+                            message: canStop
+                                ? stopLabel
+                                : strings.startTracking,
+                            child: IconButton.filledTonal(
+                              visualDensity: VisualDensity.compact,
+                              onPressed:
+                                  (canStop
+                                      ? _isBusy
+                                      : (autoIsActive || _isBusy))
+                                  ? null
+                                  : canStop
+                                  ? _handleStop
+                                  : _handleStart,
+                              icon: Icon(
+                                canStop ? Icons.stop : Icons.gps_fixed,
+                                size: 18,
                               ),
                             ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -388,27 +379,25 @@ class _ForegroundTrackingCardState extends State<ForegroundTrackingCard> {
                         context,
                       ).textTheme.bodyMedium?.copyWith(color: statusColor),
                     ),
-                    if (autoEnabled || canStop) ...[
-                      const SizedBox(height: 12),
-                      if (canStop)
-                        FilledButton.icon(
-                          onPressed: _isBusy ? null : _handleStop,
-                          icon: const Icon(Icons.stop),
-                          label: Text(stopLabel),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: colorScheme.error,
-                            foregroundColor: colorScheme.onError,
-                          ),
-                        )
-                      else
-                        FilledButton.icon(
-                          onPressed: (autoIsActive || _isBusy)
-                              ? null
-                              : _handleStart,
-                          icon: const Icon(Icons.gps_fixed),
-                          label: Text(strings.startTracking),
+                    const SizedBox(height: 12),
+                    if (canStop)
+                      FilledButton.icon(
+                        onPressed: _isBusy ? null : _handleStop,
+                        icon: const Icon(Icons.stop),
+                        label: Text(stopLabel),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: colorScheme.error,
+                          foregroundColor: colorScheme.onError,
                         ),
-                    ],
+                      )
+                    else
+                      FilledButton.icon(
+                        onPressed: (autoIsActive || _isBusy)
+                            ? null
+                            : _handleStart,
+                        icon: const Icon(Icons.gps_fixed),
+                        label: Text(strings.startTracking),
+                      ),
                   ],
                 ),
               ),

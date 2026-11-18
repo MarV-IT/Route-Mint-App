@@ -4,7 +4,6 @@ import '../../core/location/auto_trip_detection_service.dart';
 import '../../core/location/geolocator_tracking_provider.dart';
 import '../../core/location/location_permission_service.dart';
 import '../../core/notifications/trip_notification_service.dart';
-import '../../core/preferences/user_preferences.dart';
 import '../../core/storage/account_data_store.dart';
 import 'location_disclosure.dart';
 
@@ -12,14 +11,17 @@ class AutoDetectionCard extends StatefulWidget {
   const AutoDetectionCard({
     super.key,
     required this.strings,
-    required this.preferences,
     required this.onTripSaved,
+    this.onDetectionStarted,
     this.compact = false,
   });
 
   final AppStrings strings;
-  final UserPreferences preferences;
   final VoidCallback onTripSaved;
+
+  /// Called once monitoring is really running. This card is the only switch
+  /// for automatic detection, so the owner records the choice from here.
+  final VoidCallback? onDetectionStarted;
   final bool compact;
 
   @override
@@ -85,6 +87,8 @@ class _AutoDetectionCardState extends State<AutoDetectionCard>
   Future<void> _handleStart() async {
     if (_isBusy) return;
     final scope = AccountDataStore.current;
+    // Recording the choice can rebuild this card, so keep the callback.
+    final onDetectionStarted = widget.onDetectionStarted;
     setState(() {
       _isBusy = true;
       _errorMessage = null;
@@ -102,6 +106,10 @@ class _AutoDetectionCardState extends State<AutoDetectionCard>
           await TripNotificationService.instance.requestPermission();
           if (!mounted || !identical(scope, AccountDataStore.current)) return;
           await appAutoDetectionService.startMonitoring();
+          if (appAutoDetectionService.isMonitoring &&
+              identical(scope, AccountDataStore.current)) {
+            onDetectionStarted?.call();
+          }
         case LocationPermissionStatus.denied:
         case LocationPermissionStatus.permanentlyDenied:
           setState(
@@ -149,7 +157,6 @@ class _AutoDetectionCardState extends State<AutoDetectionCard>
   @override
   Widget build(BuildContext context) {
     final strings = widget.strings;
-    final autoEnabled = widget.preferences.autoTripDetectionEnabled;
     final colorScheme = Theme.of(context).colorScheme;
 
     return ValueListenableBuilder<AutoDetectionState>(
@@ -158,10 +165,6 @@ class _AutoDetectionCardState extends State<AutoDetectionCard>
         final isActive = autoState != AutoDetectionState.idle;
 
         final (statusText, statusColor) = switch (true) {
-          _ when !autoEnabled => (
-            strings.enableAutoDetectionFirst,
-            colorScheme.onSurfaceVariant,
-          ),
           _ when autoState == AutoDetectionState.idle => (
             strings.autoDetectionOff,
             colorScheme.onSurfaceVariant,
@@ -174,7 +177,7 @@ class _AutoDetectionCardState extends State<AutoDetectionCard>
         };
 
         if (widget.compact) {
-          final toggleAutoDetection = !autoEnabled || _isBusy
+          final toggleAutoDetection = _isBusy
               ? null
               : _servicesDisabled
               ? _openLocationSettings
@@ -200,20 +203,19 @@ class _AutoDetectionCardState extends State<AutoDetectionCard>
                           color: isActive ? colorScheme.primary : null,
                         ),
                         const Spacer(),
-                        if (autoEnabled)
-                          Tooltip(
-                            message: isActive
-                                ? strings.stopAutoDetection
-                                : strings.startAutoDetection,
-                            child: IconButton.filledTonal(
-                              visualDensity: VisualDensity.compact,
-                              onPressed: toggleAutoDetection,
-                              icon: Icon(
-                                isActive ? Icons.stop : Icons.sensors,
-                                size: 18,
-                              ),
+                        Tooltip(
+                          message: isActive
+                              ? strings.stopAutoDetection
+                              : strings.startAutoDetection,
+                          child: IconButton.filledTonal(
+                            visualDensity: VisualDensity.compact,
+                            onPressed: toggleAutoDetection,
+                            icon: Icon(
+                              isActive ? Icons.stop : Icons.sensors,
+                              size: 18,
                             ),
                           ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -290,31 +292,29 @@ class _AutoDetectionCardState extends State<AutoDetectionCard>
                       ).textTheme.bodySmall?.copyWith(color: colorScheme.error),
                     ),
                   ),
-                if (autoEnabled) ...[
-                  const SizedBox(height: 12),
-                  if (_servicesDisabled)
-                    FilledButton.icon(
-                      onPressed: _openLocationSettings,
-                      icon: const Icon(Icons.my_location),
-                      label: Text(strings.turnOnLocation),
-                    )
-                  else if (isActive)
-                    FilledButton.icon(
-                      onPressed: _isBusy ? null : _handleStop,
-                      icon: const Icon(Icons.stop),
-                      label: Text(strings.stopAutoDetection),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: colorScheme.error,
-                        foregroundColor: colorScheme.onError,
-                      ),
-                    )
-                  else
-                    FilledButton.icon(
-                      onPressed: _isBusy ? null : _handleStart,
-                      icon: const Icon(Icons.sensors),
-                      label: Text(strings.startAutoDetection),
+                const SizedBox(height: 12),
+                if (_servicesDisabled)
+                  FilledButton.icon(
+                    onPressed: _openLocationSettings,
+                    icon: const Icon(Icons.my_location),
+                    label: Text(strings.turnOnLocation),
+                  )
+                else if (isActive)
+                  FilledButton.icon(
+                    onPressed: _isBusy ? null : _handleStop,
+                    icon: const Icon(Icons.stop),
+                    label: Text(strings.stopAutoDetection),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: colorScheme.error,
+                      foregroundColor: colorScheme.onError,
                     ),
-                ],
+                  )
+                else
+                  FilledButton.icon(
+                    onPressed: _isBusy ? null : _handleStart,
+                    icon: const Icon(Icons.sensors),
+                    label: Text(strings.startAutoDetection),
+                  ),
               ],
             ),
           ),

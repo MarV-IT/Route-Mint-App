@@ -571,6 +571,16 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
     }
   }
 
+  /// Starting detection on Home is what switches the feature on for this
+  /// account: the setup list, the reliability warning and the restart after
+  /// an app kill all read this setting, and no other screen can change it.
+  void _rememberAutoDetectionOn() {
+    if (!mounted || widget.preferences.autoTripDetectionEnabled) return;
+    widget.onPreferencesChanged(
+      widget.preferences.copyWith(autoTripDetectionEnabled: true),
+    );
+  }
+
   String _odometerDisplayText(double? km) {
     if (km == null) return '';
     return fromKilometers(km, widget.unit).toStringAsFixed(0);
@@ -918,8 +928,8 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
       child: entitlements.canUseAutoDetection
           ? AutoDetectionCard(
               strings: widget.strings,
-              preferences: widget.preferences,
               onTripSaved: _handleTripSaved,
+              onDetectionStarted: _rememberAutoDetectionOn,
               compact: true,
             )
           : _CompactProFeatureCard(
@@ -1078,15 +1088,14 @@ class _TodayScreenState extends State<TodayScreen> with WidgetsBindingObserver {
             const SizedBox(height: 12),
             ForegroundTrackingCard(
               strings: widget.strings,
-              preferences: widget.preferences,
               onTripSaved: _handleTripSaved,
             ),
             const SizedBox(height: 12),
             if (entitlements.canUseAutoDetection)
               AutoDetectionCard(
                 strings: widget.strings,
-                preferences: widget.preferences,
                 onTripSaved: _handleTripSaved,
+                onDetectionStarted: _rememberAutoDetectionOn,
               )
             else
               ProLockedCard(

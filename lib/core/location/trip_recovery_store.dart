@@ -46,6 +46,11 @@ class TripRecoveryStore {
     return operation;
   }
 
+  /// Starts a fresh write queue. Widget tests run each case in its own fake
+  /// clock, and a queue left over from the previous case would never move.
+  @visibleForTesting
+  static void resetForTesting() => _pendingMutation = Future.value();
+
   /// Points are written at most this often; a checkpoint on every GPS fix
   /// would mean disk writes every few metres.
   static const checkpointInterval = Duration(seconds: 30);
