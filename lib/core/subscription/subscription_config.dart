@@ -9,7 +9,7 @@ class SubscriptionConfig {
   /// it; they are not secrets.
   ///
   /// While a platform's key is empty, purchases stay switched off there and
-  /// the app behaves as it did before subscriptions existed.
+  /// every Pro feature is open to everyone.
   static const androidApiKey = '';
   static const iosApiKey = '';
 

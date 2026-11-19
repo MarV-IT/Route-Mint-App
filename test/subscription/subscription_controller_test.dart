@@ -61,19 +61,21 @@ void main() {
   });
 
   group('before payments are switched on', () {
-    test(
-      'without a store, valid saved subscription statuses are preserved',
-      () {
-        final off = SubscriptionController();
-        addTearDown(off.dispose);
+    test('without a store, Pro is open to everyone whatever was saved', () {
+      final off = SubscriptionController();
+      addTearDown(off.dispose);
 
-        expect(off.storeEnabled, isFalse);
-        expect(off.isPremium, isFalse);
-        for (final stored in SubscriptionStatus.values) {
-          expect(off.statusFor(stored), stored);
-        }
-      },
-    );
+      expect(off.storeEnabled, isFalse);
+      // Nothing was bought; the features are simply not locked yet.
+      expect(off.isPremium, isFalse);
+      for (final stored in SubscriptionStatus.values) {
+        expect(off.statusFor(stored), SubscriptionStatus.pro);
+      }
+      expect(
+        off.applyTo(UserPreferences.defaults()).subscriptionStatus,
+        SubscriptionStatus.pro,
+      );
+    });
 
     test('buying is refused rather than silently doing nothing', () async {
       final off = SubscriptionController();
@@ -499,9 +501,12 @@ void main() {
         expect(legacy.country, Country.canada);
         expect(EntitlementService(legacy).isPro, isFalse);
         expect(EntitlementService(controller.applyTo(legacy)).isPro, isFalse);
+        // A build without a store opens Pro to everyone. That is the rule for
+        // such a build, not the old tester value coming back: the saved
+        // status above is still free.
         final unconfigured = SubscriptionController();
         addTearDown(unconfigured.dispose);
-        expect(EntitlementService(unconfigured.applyTo(legacy)).isPro, isFalse);
+        expect(EntitlementService(unconfigured.applyTo(legacy)).isPro, isTrue);
 
         gateway.byUser['A'] = activeAnnual;
         await controller.refresh();

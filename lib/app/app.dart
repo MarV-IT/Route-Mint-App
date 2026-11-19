@@ -369,7 +369,10 @@ class _RouteMintAppState extends State<RouteMintApp>
     _scheduleDailyCloudBackup(updated);
   }
 
-  void _changePreferences(UserPreferences updated) {
+  void _changePreferences(UserPreferences changed) {
+    // Pro is decided by the store, or by the rule for a build without one,
+    // whichever copy of the preferences a screen was working with.
+    final updated = _subscription.applyTo(changed);
     setState(() {
       _preferences = updated;
       _selectedLanguage = updated.language;
@@ -403,7 +406,10 @@ class _RouteMintAppState extends State<RouteMintApp>
   }
 
   void _onOnboardingComplete(UserPreferences prefs) {
-    final updated = prefs.copyWith(language: _selectedLanguage);
+    // Onboarding builds fresh preferences, which know nothing about Pro.
+    final updated = _subscription.applyTo(
+      prefs.copyWith(language: _selectedLanguage),
+    );
     setState(() => _preferences = updated);
     _prefsService.savePreferences(updated);
     _scheduleDailyCloudBackup(updated);

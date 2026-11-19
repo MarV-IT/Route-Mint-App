@@ -1289,13 +1289,31 @@ class AppStrings {
     fa: 'از $store خریداری شده است. مدیریت یا لغو آن در همان‌جا انجام می‌شود.',
   );
 
-  String get paymentsComingSoon => _value(
-    en: 'Payments coming soon',
-    es: 'Pagos próximamente',
-    fr: 'Paiements bientôt disponibles',
-    ru: 'Платежи скоро',
-    uk: 'Платежі скоро',
-    fa: 'پرداخت به‌زودی',
+  String get proFreeNowTitle => _value(
+    en: 'Pro is free for now',
+    es: 'Pro es gratis por ahora',
+    fr: 'Pro est gratuit pour le moment',
+    ru: 'Pro сейчас бесплатный',
+    uk: 'Pro зараз безкоштовний',
+    fa: 'Pro فعلاً رایگان است',
+  );
+
+  String get proFreeNowBody => _value(
+    en: 'Every Pro feature is open to everyone while payments are not available. A paid subscription will arrive in a later update.',
+    es: 'Todas las funciones Pro están abiertas para todos mientras los pagos no estén disponibles. La suscripción de pago llegará en una actualización posterior.',
+    fr: "Toutes les fonctions Pro sont ouvertes à tous tant que le paiement n'est pas disponible. L'abonnement payant arrivera dans une prochaine mise à jour.",
+    ru: 'Все Pro-функции открыты для всех, пока оплата недоступна. Платная подписка появится в одном из следующих обновлений.',
+    uk: "Усі Pro-функції відкриті для всіх, поки оплата недоступна. Платна підписка з'явиться в одному з наступних оновлень.",
+    fa: 'تا زمانی که پرداخت در دسترس نیست، همه امکانات Pro برای همه باز است. اشتراک پولی در یکی از به‌روزرسانی‌های بعدی می‌آید.',
+  );
+
+  String get proFreeNowSummary => _value(
+    en: 'All Pro features are free for now',
+    es: 'Todas las funciones Pro son gratis por ahora',
+    fr: 'Toutes les fonctions Pro sont gratuites pour le moment',
+    ru: 'Все Pro-функции сейчас бесплатны',
+    uk: 'Усі Pro-функції зараз безкоштовні',
+    fa: 'همه امکانات Pro فعلاً رایگان است',
   );
 
   String get help => _value(

@@ -56,8 +56,8 @@ class SubscriptionController extends ChangeNotifier {
   bool _handlingStoreCall = false;
   bool _updateRefreshPending = false;
 
-  /// False until the store is switched on for this build; the app then
-  /// behaves as it did before subscriptions.
+  /// False until the store is switched on for this build. Until then
+  /// nothing can be bought, so every Pro feature is open to everyone.
   bool get storeEnabled => _gateway != null;
 
   SubscriptionState get state => _state;
@@ -67,10 +67,13 @@ class SubscriptionController extends ChangeNotifier {
   /// The subscription status the rest of the app should work with, given
   /// what is [stored] in preferences.
   ///
+  /// While the store is off there is nothing to buy, so Pro is open to
+  /// everyone: features must not sit behind a payment nobody can make.
   /// With the store on, only the store grants Pro; a stored value is at most
-  /// a copy of its last answer. Test purchases use RevenueCat Test Store.
+  /// a copy of its last answer, so Pro from the free period does not carry
+  /// over. Test purchases use RevenueCat Test Store.
   SubscriptionStatus statusFor(SubscriptionStatus stored) {
-    if (!storeEnabled) return stored;
+    if (!storeEnabled) return SubscriptionStatus.pro;
     if (isPremium) return SubscriptionStatus.pro;
     return SubscriptionStatus.free;
   }

@@ -382,50 +382,52 @@ const Map<HelpTopic, Map<AppLanguage, HelpEntry>> helpCatalog = {
   HelpTopic.premium: {
     AppLanguage.english: HelpEntry(
       body:
-          'Pro unlocks PDF and CSV report export, cloud backup, automatic trip '
+          'Pro covers PDF and CSV report export, cloud backup, automatic trip '
           'detection, fuel summaries, the month-end checklist and maintenance '
-          "reminders. Payments aren't available yet. Without Pro, auto "
-          'detection stays off, but all your trips and records remain on your '
-          'device.',
+          'reminders. For now all of it is free for everyone. A paid '
+          'subscription will arrive in a later update, and your trips and '
+          'records will stay on your device.',
     ),
     AppLanguage.spanish: HelpEntry(
       body:
-          'Pro desbloquea exportar informes en PDF y CSV, copia en la nube, '
+          'Pro incluye exportar informes en PDF y CSV, copia en la nube, '
           'detección automática de viajes, resúmenes de combustible, lista de '
-          'cierre mensual y recordatorios de mantenimiento. Los pagos aún no '
-          'están disponibles. Sin Pro, la detección automática queda apagada, '
-          'pero tus viajes y registros siguen en el dispositivo.',
+          'cierre mensual y recordatorios de mantenimiento. Por ahora todo es '
+          'gratis para todos. La suscripción de pago llegará en una '
+          'actualización posterior, y tus viajes y registros seguirán en el '
+          'dispositivo.',
     ),
     AppLanguage.french: HelpEntry(
       body:
-          "Pro débloque l'export des rapports en PDF et CSV, la sauvegarde "
+          "Pro comprend l'export des rapports en PDF et CSV, la sauvegarde "
           'cloud, la détection automatique des trajets, les résumés carburant, '
-          "la liste de clôture du mois et les rappels d'entretien. Le paiement "
-          "n'est pas encore disponible. Sans Pro, la détection automatique "
-          "reste coupée, mais vos trajets et données restent sur l'appareil.",
+          "la liste de clôture du mois et les rappels d'entretien. Pour "
+          "l'instant, tout est gratuit pour tous. L'abonnement payant arrivera "
+          'dans une prochaine mise à jour, et vos trajets et données resteront '
+          "sur l'appareil.",
     ),
     AppLanguage.russian: HelpEntry(
       body:
-          'Pro открывает экспорт отчётов в PDF и CSV, облачную резервную '
+          'Pro включает экспорт отчётов в PDF и CSV, облачную резервную '
           'копию, автоопределение поездок, сводки по топливу, чек-лист '
-          'закрытия месяца и напоминания об обслуживании. Оплата пока '
-          'недоступна. Без Pro автоопределение выключено, но все поездки и '
-          'записи остаются на устройстве.',
+          'закрытия месяца и напоминания об обслуживании. Сейчас всё это '
+          'бесплатно для всех. Платная подписка появится в одном из '
+          'следующих обновлений, а поездки и записи останутся на устройстве.',
     ),
     AppLanguage.ukrainian: HelpEntry(
       body:
-          'Pro відкриває експорт звітів у PDF і CSV, хмарну резервну копію, '
+          'Pro охоплює експорт звітів у PDF і CSV, хмарну резервну копію, '
           'авто-виявлення поїздок, підсумки по пальному, чек-лист закриття '
-          'місяця й нагадування про обслуговування. Оплата поки недоступна. '
-          'Без Pro авто-виявлення вимкнене, але всі поїздки й записи '
-          'залишаються на пристрої.',
+          'місяця й нагадування про обслуговування. Зараз усе це безкоштовне '
+          "для всіх. Платна підписка з'явиться в одному з наступних оновлень, "
+          'а поїздки й записи залишаться на пристрої.',
     ),
     AppLanguage.dari: HelpEntry(
       body:
-          'Pro خروجی گزارش PDF و CSV، پشتیبان ابری، تشخیص خودکار سفر، خلاصه '
-          'سوخت، چک‌لیست پایان ماه و یادآور سرویس را فعال می‌کند. پرداخت هنوز '
-          'در دسترس نیست. بدون Pro تشخیص خودکار خاموش می‌ماند، اما همه سفرها و '
-          'داده‌هایتان روی دستگاه باقی می‌مانند.',
+          'Pro شامل خروجی گزارش PDF و CSV، پشتیبان ابری، تشخیص خودکار سفر، '
+          'خلاصه سوخت، چک‌لیست پایان ماه و یادآور سرویس است. فعلاً همه این‌ها '
+          'برای همه رایگان است. اشتراک پولی در یکی از به‌روزرسانی‌های بعدی '
+          'می‌آید و سفرها و داده‌هایتان روی دستگاه باقی می‌مانند.',
     ),
   },
 };

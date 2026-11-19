@@ -73,17 +73,39 @@ void main() {
   }
 
   group('before payments are switched on', () {
-    testWidgets('the screen is what it was: benefits and "coming soon"', (
+    testWidgets('says Pro is free for now and offers nothing to buy', (
       tester,
     ) async {
       final off = SubscriptionController();
       addTearDown(off.dispose);
       await open(tester, controller: off);
 
+      expect(find.text(uk.proFreeNowTitle), findsOneWidget);
+      expect(find.text(uk.proFreeNowBody), findsOneWidget);
       expect(find.text(uk.proUnlimitedReports), findsOneWidget);
-      expect(find.text(uk.paymentsComingSoon), findsOneWidget);
+      // Nothing is locked, nothing is sold, and nobody is invited to buy.
+      expect(find.byIcon(Icons.lock_outline), findsNothing);
+      expect(find.text(uk.goPro), findsNothing);
+      expect(find.text(uk.unlockProTitle), findsNothing);
       expect(find.text(uk.restorePurchase), findsNothing);
       expect(find.text(uk.subscribeNow), findsNothing);
+    });
+
+    testWidgets('fits 320x568 at 3x text in every language', (tester) async {
+      for (final language in AppLanguage.values) {
+        final off = SubscriptionController();
+        final strings = AppStrings(language);
+        await open(
+          tester,
+          controller: off,
+          strings: strings,
+          size: const Size(320, 568),
+          textScaler: const TextScaler.linear(3),
+        );
+        expect(tester.takeException(), isNull, reason: '$language');
+        expect(find.text(strings.proFreeNowTitle), findsOneWidget);
+        off.dispose();
+      }
     });
   });
 

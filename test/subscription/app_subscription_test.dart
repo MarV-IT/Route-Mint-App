@@ -168,6 +168,56 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  group('a build without a store', () {
+    Future<SubscriptionController> startWithoutStore(
+      WidgetTester tester,
+    ) async {
+      final storeOff = SubscriptionController();
+      addTearDown(storeOff.dispose);
+      await tester.pumpWidget(
+        RouteMintApp(accountSession: session, subscription: storeOff),
+      );
+      await tester.runAsync(pumpEventQueue);
+      await tester.pumpAndSettle();
+      expect(find.byType(OnboardingScreen), findsOneWidget);
+      return storeOff;
+    }
+
+    testWidgets('opens Pro to everyone from the first launch', (tester) async {
+      await launch(tester, stored: SubscriptionStatus.free);
+      final storeOff = await startWithoutStore(tester);
+
+      // Nothing was bought; the features are simply not locked.
+      expect(storeOff.isPremium, isFalse);
+      final preferences = await storedPreferences(tester);
+      expect(preferences.subscriptionStatus, SubscriptionStatus.pro);
+      // Everything else the user set up is left exactly as it was.
+      expect(preferences.driverName, 'Dana');
+      expect(preferences.country, Country.canada);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('keeps Pro open for someone who has just finished onboarding', (
+      tester,
+    ) async {
+      await launch(tester, stored: SubscriptionStatus.free);
+      await startWithoutStore(tester);
+
+      // Onboarding hands back brand-new preferences that know nothing of Pro.
+      final fresh = UserPreferences.fromCountry(Country.usa);
+      expect(fresh.subscriptionStatus, SubscriptionStatus.free);
+      tester
+          .widget<OnboardingScreen>(find.byType(OnboardingScreen))
+          .onComplete(fresh);
+      await tester.runAsync(pumpEventQueue);
+
+      final preferences = await storedPreferences(tester);
+      expect(preferences.subscriptionStatus, SubscriptionStatus.pro);
+      expect(preferences.country, Country.usa);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  });
+
   testWidgets('a subscriber is Pro from the first frame of the next launch, '
       'even with no connection', (tester) async {
     await launch(tester, stored: SubscriptionStatus.free);

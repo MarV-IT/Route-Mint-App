@@ -851,9 +851,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   /// One line under the plan name: what is paid for and what happens next.
   String _subscriptionSummary(AppStrings s, EntitlementService entitlements) {
-    if (!entitlements.isPro || !_subscription.storeEnabled) {
-      return s.unlockProBody;
-    }
+    // Without a store nothing is sold and Pro is open to everyone.
+    if (!_subscription.storeEnabled) return s.proFreeNowSummary;
+    if (!entitlements.isPro) return s.unlockProBody;
     final state = _subscription.state;
     if (state.hasBillingIssue) return s.proBillingIssue;
     final details = [

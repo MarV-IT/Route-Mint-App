@@ -5,8 +5,9 @@ Flutter application for recording trips, mileage, fuel and expenses, with PDF/CS
 The main line includes the Android-tested 1.0.3 app, native rating prompts and
 RevenueCat Pro subscriptions. Build 13 removes the temporary Tester Pro bypass;
 automatic trip detection is controlled from Home. Real store payments still
-require platform keys. For the current Test Store APK and build instructions,
-see [SUBSCRIPTIONS.md](SUBSCRIPTIONS.md).
+require platform keys; while they are empty (build 14 onwards) every Pro
+feature is open to everyone and the Pro screen says so. For the current Test
+Store APK and build instructions, see [SUBSCRIPTIONS.md](SUBSCRIPTIONS.md).
 
 ## Development
 

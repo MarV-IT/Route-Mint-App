@@ -191,7 +191,14 @@ class _GoProScreenState extends State<GoProScreen> {
     return Scaffold(
       appBar: AppBar(
         // "Go Pro" is an invitation; a subscriber is looking at their plan.
-        title: Text(subscribed ? s.subscription : s.goPro),
+        // Without a store nothing is on sale, so there is nowhere to "go".
+        title: Text(
+          !_subscription.storeEnabled
+              ? 'Pro'
+              : subscribed
+              ? s.subscription
+              : s.goPro,
+        ),
         actions: const [HelpHint(HelpTopic.premium)],
       ),
       body: ListView(
@@ -205,7 +212,7 @@ class _GoProScreenState extends State<GoProScreen> {
               ),
             ),
           ...(!_subscription.storeEnabled
-              ? _comingSoon(context)
+              ? _freeForNow(context)
               : _subscription.isPremium
               ? _active(context)
               : _paywall(context)),
@@ -216,18 +223,40 @@ class _GoProScreenState extends State<GoProScreen> {
 
   // ─── Before the store is switched on ──────────────────────────────────────
 
-  List<Widget> _comingSoon(BuildContext context) {
+  /// Nothing can be bought yet, so nothing is locked either: say so instead
+  /// of inviting the user to a purchase that does not exist.
+  List<Widget> _freeForNow(BuildContext context) {
     final s = widget.strings;
+    final theme = Theme.of(context);
     return [
-      _Intro(strings: s),
+      Card(
+        elevation: 0,
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.lock_open_outlined, color: theme.colorScheme.primary),
+              const SizedBox(height: 8),
+              Text(
+                s.proFreeNowTitle,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                s.proFreeNowBody,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       const SizedBox(height: 12),
       _Benefits(strings: s),
-      const SizedBox(height: 12),
-      FilledButton.icon(
-        onPressed: null,
-        icon: const Icon(Icons.lock_outline),
-        label: Text(s.paymentsComingSoon),
-      ),
     ];
   }
 
